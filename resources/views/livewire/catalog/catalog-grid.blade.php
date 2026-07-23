@@ -123,19 +123,31 @@
                 </div>
             </div>
 
-            {{-- Kategori chips --}}
+            {{-- Kategori: wrap rapi (tanpa scroll horizontal) --}}
             @if($categories->count() > 0)
-            <div class="flex items-center gap-2 overflow-x-auto pb-0.5" style="scrollbar-width: thin;">
-                <button wire:click="$set('categoryFilter', '')" wire:key="cat-chip-all"
-                    class="shrink-0 px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all {{ $categoryFilter === '' ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25' : 'bg-slate-50 text-slate-500 border border-slate-200 hover:border-emerald-300 hover:text-emerald-600' }}">
-                    Semua Produk
-                </button>
-                @foreach($categories as $cat)
-                <button wire:click="selectCategory('{{ $cat->id }}')" wire:key="cat-chip-{{ $cat->id }}"
-                    class="shrink-0 px-3.5 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all {{ (string) $categoryFilter === (string) $cat->id ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25' : 'bg-slate-50 text-slate-500 border border-slate-200 hover:border-emerald-300 hover:text-emerald-600' }}">
-                    {{ $cat->name }}
-                </button>
-                @endforeach
+            <div>
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Kategori</p>
+                    @if($categoryFilter !== '')
+                    <button type="button" wire:click="$set('categoryFilter', '')"
+                        class="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
+                        Reset filter
+                    </button>
+                    @endif
+                </div>
+                <div class="flex flex-wrap gap-1.5 sm:gap-2 max-h-36 sm:max-h-44 overflow-y-auto overscroll-contain pr-0.5"
+                    style="scrollbar-width: thin;">
+                    <button type="button" wire:click="$set('categoryFilter', '')" wire:key="cat-chip-all"
+                        class="px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all {{ $categoryFilter === '' ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25' : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50/60' }}">
+                        Semua Produk
+                    </button>
+                    @foreach($categories as $cat)
+                    <button type="button" wire:click="selectCategory('{{ $cat->id }}')" wire:key="cat-chip-{{ $cat->id }}"
+                        class="px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all {{ (string) $categoryFilter === (string) $cat->id ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25' : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50/60' }}">
+                        {{ $cat->name }}
+                    </button>
+                    @endforeach
+                </div>
             </div>
             @endif
         </div>
