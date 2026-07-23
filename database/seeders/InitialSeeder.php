@@ -6,54 +6,91 @@ use Illuminate\Support\Facades\Hash;
 class InitialSeeder extends Seeder {
     public function run(): void {
         DB::table('roles')->insertOrIgnore([
-            ['id'=>1,'name'=>'Kepala Operasional','slug'=>'super_admin','description'=>'Akses penuh kepala operasional','created_at'=>now(),'updated_at'=>now()],
-            ['id'=>2,'name'=>'Kepala Keuangan dan Administrasi','slug'=>'admin_keuangan','description'=>'Akses kepala keuangan dan administrasi','created_at'=>now(),'updated_at'=>now()],
-            ['id'=>3,'name'=>'Staff Administrasi dan Kasir','slug'=>'kasir','description'=>'Akses staff administrasi dan kasir','created_at'=>now(),'updated_at'=>now()],
+            ['id'=>1,'name'=>'Kepala IT','slug'=>'super_admin','description'=>'Akses penuh sistem (IT & seluruh modul)','created_at'=>now(),'updated_at'=>now()],
+            ['id'=>2,'name'=>'Staff Keuangan','slug'=>'admin_keuangan','description'=>'Akses keuangan, laporan, inventori, dan master data terkait','created_at'=>now(),'updated_at'=>now()],
+            ['id'=>3,'name'=>'Khusus Kasir','slug'=>'kasir','description'=>'Hanya akses kasir/POS, resep, pelanggan, dan riwayat penjualan sendiri','created_at'=>now(),'updated_at'=>now()],
             ['id'=>4,'name'=>'Mitra Katalog','slug'=>'mitra','description'=>'Akses portal mitra untuk order/PO dari e-catalog','created_at'=>now(),'updated_at'=>now()],
-            ['id'=>5,'name'=>'Staff Operasional','slug'=>'staff_operasional','description'=>'Akses staff operasional apotek','created_at'=>now(),'updated_at'=>now()],
-        ]);
-        // Pastikan nama role tetap sesuai jabatan (updateOrIgnore tidak mengubah baris yang sudah ada)
-        DB::table('roles')->where('slug', 'super_admin')->update([
-            'name' => 'Kepala Operasional',
-            'description' => 'Akses penuh kepala operasional',
-            'updated_at' => now(),
-        ]);
-        DB::table('roles')->where('slug', 'admin_keuangan')->update([
-            'name' => 'Kepala Keuangan dan Administrasi',
-            'description' => 'Akses kepala keuangan dan administrasi',
-            'updated_at' => now(),
-        ]);
-        DB::table('roles')->where('slug', 'kasir')->update([
-            'name' => 'Staff Administrasi dan Kasir',
-            'description' => 'Akses staff administrasi dan kasir',
-            'updated_at' => now(),
-        ]);
-        DB::table('roles')->where('slug', 'staff_operasional')->update([
-            'name' => 'Staff Operasional',
-            'description' => 'Akses staff operasional apotek',
-            'updated_at' => now(),
-        ]);
-        DB::table('users')->insertOrIgnore([
-            ['name'=>'Taufiqurrahman, S.Kom.','username'=>'taufiq','email'=>'taufiq@apotekalmaira.com','password'=>Hash::make('Almaira@2026'),'role_id'=>1,'is_active'=>1,'email_verified_at'=>now(),'created_at'=>now(),'updated_at'=>now()],
-            ['name'=>'Siti Kamariah, S.Pd.','username'=>'siti','email'=>'siti@apotekalmaira.com','password'=>Hash::make('Almaira@2026'),'role_id'=>2,'is_active'=>1,'email_verified_at'=>now(),'created_at'=>now(),'updated_at'=>now()],
-            ['name'=>'Alyaiqlima, S.Farm.','username'=>'alya','email'=>'alya@apotekalmaira.com','password'=>Hash::make('Almaira@2026'),'role_id'=>3,'is_active'=>1,'email_verified_at'=>now(),'created_at'=>now(),'updated_at'=>now()],
-            ['name'=>'SARAH','username'=>'sarah','email'=>'sarah@apotekalmaira.com','password'=>Hash::make('Almaira@2026'),'role_id'=>3,'is_active'=>1,'email_verified_at'=>now(),'created_at'=>now(),'updated_at'=>now()],
+            ['id'=>5,'name'=>'Staff Operasional','slug'=>'staff_operasional','description'=>'Operasional harian: POS, inventori, stok (tanpa pengadaan & keuangan)','created_at'=>now(),'updated_at'=>now()],
         ]);
 
-        $opsRoleId = DB::table('roles')->where('slug', 'staff_operasional')->value('id');
-        if ($opsRoleId && ! DB::table('users')->where('username', 'taufiqop')->exists()) {
+        foreach ([
+            ['slug' => 'super_admin', 'name' => 'Kepala IT', 'description' => 'Akses penuh sistem (IT & seluruh modul)'],
+            ['slug' => 'admin_keuangan', 'name' => 'Staff Keuangan', 'description' => 'Akses keuangan, laporan, inventori, dan master data terkait'],
+            ['slug' => 'kasir', 'name' => 'Khusus Kasir', 'description' => 'Hanya akses kasir/POS, resep, pelanggan, dan riwayat penjualan sendiri'],
+            ['slug' => 'staff_operasional', 'name' => 'Staff Operasional', 'description' => 'Operasional harian: POS, inventori, stok (tanpa pengadaan & keuangan)'],
+            ['slug' => 'staff_it', 'name' => 'Staff IT', 'description' => 'Manajemen user, backup, log, dan dukungan inventori'],
+            ['slug' => 'kepala_operasional', 'name' => 'Kepala Operasional', 'description' => 'Operasional apotek tanpa akses sistem IT & keuangan murni'],
+        ] as $role) {
+            $exists = DB::table('roles')->where('slug', $role['slug'])->exists();
+            if ($exists) {
+                DB::table('roles')->where('slug', $role['slug'])->update([
+                    'name' => $role['name'],
+                    'description' => $role['description'],
+                    'updated_at' => now(),
+                ]);
+            } else {
+                DB::table('roles')->insert(array_merge($role, [
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]));
+            }
+        }
+
+        $roleIds = DB::table('roles')->pluck('id', 'slug');
+        $password = Hash::make('Almaira@2026');
+
+        $users = [
+            ['name'=>'TAUFIQURRAHMAN, S.Kom','username'=>'taufiqit','email'=>'taufiqit2020@gmail.com','role'=>'super_admin'],
+            ['name'=>'RAHMAN, S.Kom','username'=>'rahman','email'=>'rahman@apotekalmaira.com','role'=>'staff_it'],
+            ['name'=>'TAUFIQURRAHMAN, S.Kom','username'=>'taufiq','email'=>'taufiq@apotekalmaira.com','role'=>'kepala_operasional'],
+            ['name'=>'TAUFIQ','username'=>'taufiqop','email'=>'taufiqop@apotekalmaira.com','role'=>'staff_operasional'],
+            ['name'=>'Staff Keuangan','username'=>'keuangan1','email'=>'keuangan1@apotekalmaira.com','role'=>'admin_keuangan'],
+            ['name'=>'Siti Kamariah, S.Pd.','username'=>'siti','email'=>'siti@apotekalmaira.com','role'=>'admin_keuangan'],
+            ['name'=>'Alyaiqlima, S.Farm.','username'=>'alya','email'=>'alya@apotekalmaira.com','role'=>'kasir'],
+            ['name'=>'SARAH','username'=>'sarah','email'=>'sarah@apotekalmaira.com','role'=>'kasir'],
+        ];
+
+        for ($i = 1; $i <= 5; $i++) {
+            $users[] = [
+                'name' => 'Kasir Almaira '.$i,
+                'username' => 'kasiralmaira'.$i,
+                'email' => 'kasiralmaira'.$i.'@apotekalmaira.com',
+                'role' => 'kasir',
+            ];
+        }
+
+        foreach ($users as $u) {
+            $roleId = $roleIds[$u['role']] ?? null;
+            if (! $roleId) {
+                continue;
+            }
+            $existing = DB::table('users')->where('username', $u['username'])->first();
+            if ($existing) {
+                DB::table('users')->where('id', $existing->id)->update([
+                    'name' => $u['name'],
+                    'email' => $u['email'],
+                    'role_id' => $roleId,
+                    'is_active' => 1,
+                    'updated_at' => now(),
+                ]);
+                continue;
+            }
+            if (DB::table('users')->where('email', $u['email'])->exists()) {
+                $u['email'] = $u['username'].'+seed@apotekalmaira.com';
+            }
             DB::table('users')->insert([
-                'name' => 'TAUFIQ',
-                'username' => 'taufiqop',
-                'email' => 'taufiqop@apotekalmaira.com',
-                'password' => Hash::make('Almaira@2026'),
-                'role_id' => $opsRoleId,
+                'name' => $u['name'],
+                'username' => $u['username'],
+                'email' => $u['email'],
+                'password' => $password,
+                'role_id' => $roleId,
                 'is_active' => 1,
                 'email_verified_at' => now(),
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
         }
+
         $settings = [
             ['key'=>'apotek_name','value'=>'Apotek Almaira'],
             ['key'=>'apotek_phone','value'=>'0851-6665-7070'],
@@ -72,6 +109,6 @@ class InitialSeeder extends Seeder {
             ['key'=>'invoice_prefix','value'=>'APK'],
         ];
         foreach ($settings as $s) DB::table('settings')->updateOrInsert(['key'=>$s['key']],array_merge($s,['updated_at'=>now()]));
-        $this->command->info('✅ Seeder selesai! Login: taufiq / Almaira@2026');
+        $this->command->info('✅ Seeder selesai! Login Kepala IT: taufiqit / Almaira@2026');
     }
 }

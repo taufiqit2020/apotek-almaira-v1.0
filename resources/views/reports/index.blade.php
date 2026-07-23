@@ -7,7 +7,7 @@
 <script>
     window.reportsPortal = function() {
         return {
-            selectedReport: new URLSearchParams(window.location.search).get('type') || 'penjualan_harian',
+            selectedReport: new URLSearchParams(window.location.search).get('type') || @json(auth()->user()->isStaffIt() && !auth()->user()->isKepalaIt() ? 'log_aktivitas' : 'penjualan_harian'),
             previewActive:  false,
             iframeLoading:  false,
             pdfLoading:     false,
@@ -19,27 +19,33 @@
             // Daftar Laporan
             // ─────────────────────────────────────────────────────────────────
             penjualanReports: [
+                @unless(auth()->user()->isStaffIt() && !auth()->user()->isKepalaIt())
                 { id: 'penjualan_harian',     name: 'Penjualan Harian' },
                 { id: 'penjualan_bulanan',    name: 'Penjualan Bulanan' },
                 { id: 'penjualan_per_produk', name: 'Penjualan Per Produk' },
                 { id: 'penjualan_per_kasir',  name: 'Penjualan Per Kasir' },
                 { id: 'transaksi_qris',       name: 'Transaksi QRIS (BNI Wondr)' },
+                @endunless
             ],
             inventoriReports: [
+                @unless(auth()->user()->isStaffIt() && !auth()->user()->isKepalaIt())
                 { id: 'pembelian',         name: 'Pembelian (Barang Masuk)' },
                 { id: 'stok_saat_ini',     name: 'Stok Saat Ini' },
                 { id: 'stok_menipis',      name: 'Stok Menipis (Batas Min)' },
                 { id: 'produk_kadaluarsa', name: 'Produk Kadaluarsa (Expired)' },
                 { id: 'stok_opname',       name: 'Riwayat Stok Opname' },
+                @endunless
             ],
             keuanganReports: [
+                @unless(auth()->user()->isStaffIt() && !auth()->user()->isKepalaIt())
                 { id: 'kredit_piutang',  name: 'Kredit / Piutang (Belum Lunas)' },
                 { id: 'invoice_lunas', name: 'Invoice Lunas' },
                 { id: 'laba_rugi',     name: 'Laba Rugi (Admin Only)' },
                 { id: 'ppn_pajak',     name: 'Pajak (PPN)' },
                 { id: 'diskon',        name: 'Penggunaan Diskon' },
                 { id: 'gaji_karyawan', name: 'Gaji Karyawan' },
-                @if(auth()->user()->isSuperAdmin())
+                @endunless
+                @if(auth()->user()->isKepalaIt() || auth()->user()->isStaffIt())
                 { id: 'log_aktivitas', name: 'Log Aktivitas Sistem (IT)' },
                 @endif
             ],

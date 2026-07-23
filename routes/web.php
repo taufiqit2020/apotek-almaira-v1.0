@@ -67,75 +67,67 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
     Route::post('/mitra/orders/{order}/cancel', [PartnerPortalOrderController::class, 'cancel'])->name('mitra.orders.cancel');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-    // Products
-    Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
-    Route::get('/products/import-template', [ProductController::class, 'downloadTemplate'])->name('products.import.template');
-    Route::get('/products/import', [ProductController::class, 'importForm'])->name('products.import.form');
-    Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
-    Route::patch('/products/{product}/toggle-catalog', [ProductController::class, 'toggleCatalog'])->name('products.toggle-catalog');
-    Route::post('/products/bulk-catalog', [ProductController::class, 'bulkCatalog'])->name('products.bulk-catalog');
-    Route::resource('products', ProductController::class);
-
-    // Categories (ajax-friendly; form create/edit via modal di index)
-    Route::resource('categories', CategoryController::class)->except(['show', 'create', 'edit']);
-    Route::patch('categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
-
-    // Suppliers
-    Route::resource('suppliers', SupplierController::class)->except(['show']);
-
-    // Customers (CRM)
-    Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
-    Route::post('/customers/quick-store', [CustomerController::class, 'quickStore'])->name('customers.quick-store');
-    Route::resource('customers', CustomerController::class);
-
-    Route::get('/partners/search', [PartnerController::class, 'search'])->name('partners.search');
-    Route::post('/partners/quick-store', [PartnerController::class, 'quickStore'])->name('partners.quick-store');
-
-    // Prescriptions (Resep Dokter)
-    Route::get('/prescriptions/{prescription}/json', [PrescriptionController::class, 'getJson'])->name('prescriptions.json');
-    Route::resource('prescriptions', PrescriptionController::class);
-
-    // Purchases (Barang Masuk / PO)
-    Route::get('/purchases/reorder', [PurchaseController::class, 'reorderList'])->name('purchases.reorder');
-    Route::get('/purchases/{purchase}/pdf', [PurchaseController::class, 'downloadPdf'])->name('purchases.pdf');
-    Route::post('/purchases/{purchase}/receive', [PurchaseController::class, 'receive'])->name('purchases.receive');
-    Route::resource('purchases', PurchaseController::class)->except(['destroy']);
-
-    // Stock Outs (Barang Keluar)
-    Route::resource('stock-outs', StockOutController::class)->except(['edit', 'update', 'destroy', 'show']);
-
-    // Stock Opname
-    Route::resource('stock-opnames', StockOpnameController::class)->except(['edit', 'update', 'destroy', 'show']);
-
-    // POS & Sales History & Notifications & Profile
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/pos', [SaleController::class, 'pos'])->name('pos.index');
-    Route::get('/pos/sync', [SaleController::class, 'sync'])->name('pos.sync');
-    Route::post('/pos', [SaleController::class, 'store'])->name('pos.store');
-    Route::post('/pos/partner-order', [SaleController::class, 'createPartnerOrder'])->name('pos.partner-order');
-    Route::get('/sales/{sale}/print', [SaleController::class, 'printReceipt'])->name('sales.print');
-    Route::post('/sales/{sale}/print-thermal', [SaleController::class, 'printThermal'])->name('sales.print-thermal');
-    Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
-    Route::post('/sales/{sale}/pay', [SaleController::class, 'payInvoice'])->name('sales.pay');
-    Route::resource('sales', SaleController::class)->only(['index', 'show']);
 
-    // Invoice Management
-    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-    Route::post('/invoices/{sale}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
-    Route::get('/invoices/{sale}/print', [InvoiceController::class, 'print'])->name('invoices.print');
-    Route::get('/invoices/{sale}/export', [InvoiceController::class, 'export'])->name('invoices.export');
+    // ── POS / belanjaan (Kepala IT, Ops, Staff Ops, Kasir, Keuangan) ──
+    Route::middleware(['role:super_admin,kepala_operasional,staff_operasional,kasir,admin_keuangan'])->group(function () {
+        Route::get('/products/search', [ProductController::class, 'search'])->name('products.search');
+        Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
+        Route::post('/customers/quick-store', [CustomerController::class, 'quickStore'])->name('customers.quick-store');
+        Route::resource('customers', CustomerController::class);
+        Route::get('/partners/search', [PartnerController::class, 'search'])->name('partners.search');
+        Route::post('/partners/quick-store', [PartnerController::class, 'quickStore'])->name('partners.quick-store');
+        Route::get('/prescriptions/{prescription}/json', [PrescriptionController::class, 'getJson'])->name('prescriptions.json');
+        Route::resource('prescriptions', PrescriptionController::class);
+        Route::get('/pos', [SaleController::class, 'pos'])->name('pos.index');
+        Route::get('/pos/sync', [SaleController::class, 'sync'])->name('pos.sync');
+        Route::post('/pos', [SaleController::class, 'store'])->name('pos.store');
+        Route::post('/pos/partner-order', [SaleController::class, 'createPartnerOrder'])->name('pos.partner-order');
+        Route::get('/sales/{sale}/print', [SaleController::class, 'printReceipt'])->name('sales.print');
+        Route::post('/sales/{sale}/print-thermal', [SaleController::class, 'printThermal'])->name('sales.print-thermal');
+        Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel'])->name('sales.cancel');
+        Route::post('/sales/{sale}/pay', [SaleController::class, 'payInvoice'])->name('sales.pay');
+        Route::resource('sales', SaleController::class)->only(['index', 'show']);
+    });
 
-    Route::middleware(['role:super_admin,admin_keuangan'])->group(function () {
-        Route::get('/credits', [CreditController::class, 'index'])->name('credits.index');
-        Route::post('/credits/mitra/{partnerOrder}/pay', [CreditController::class, 'payMitra'])->name('credits.pay-mitra');
+    // ── Inventori (bukan khusus kasir) ──
+    Route::middleware(['role:super_admin,kepala_operasional,staff_operasional,admin_keuangan,staff_it'])->group(function () {
+        Route::get('/products/import-template', [ProductController::class, 'downloadTemplate'])->name('products.import.template');
+        Route::get('/products/import', [ProductController::class, 'importForm'])->name('products.import.form');
+        Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
+        Route::patch('/products/{product}/toggle-catalog', [ProductController::class, 'toggleCatalog'])->name('products.toggle-catalog');
+        Route::post('/products/bulk-catalog', [ProductController::class, 'bulkCatalog'])->name('products.bulk-catalog');
+        Route::resource('products', ProductController::class);
+        Route::resource('categories', CategoryController::class)->except(['show', 'create', 'edit']);
+        Route::patch('categories/{category}/toggle-status', [CategoryController::class, 'toggleStatus'])->name('categories.toggle-status');
+        Route::resource('stock-outs', StockOutController::class)->except(['edit', 'update', 'destroy', 'show']);
+        Route::resource('stock-opnames', StockOpnameController::class)->except(['edit', 'update', 'destroy', 'show']);
+    });
 
+    // ── Pengadaan ──
+    Route::middleware(['role:super_admin,kepala_operasional,admin_keuangan'])->group(function () {
+        Route::get('/purchases/reorder', [PurchaseController::class, 'reorderList'])->name('purchases.reorder');
+        Route::get('/purchases/{purchase}/pdf', [PurchaseController::class, 'downloadPdf'])->name('purchases.pdf');
+        Route::post('/purchases/{purchase}/receive', [PurchaseController::class, 'receive'])->name('purchases.receive');
+        Route::resource('purchases', PurchaseController::class)->except(['destroy']);
+        Route::resource('suppliers', SupplierController::class)->except(['show']);
+    });
+
+    // ── Invoice (keuangan + kepala ops + kepala IT) ──
+    Route::middleware(['role:super_admin,kepala_operasional,admin_keuangan'])->group(function () {
+        Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+        Route::post('/invoices/{sale}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
+        Route::get('/invoices/{sale}/print', [InvoiceController::class, 'print'])->name('invoices.print');
+        Route::get('/invoices/{sale}/export', [InvoiceController::class, 'export'])->name('invoices.export');
+    });
+
+    // ── Master data, mitra, keuangan, laporan ──
+    Route::middleware(['role:super_admin,admin_keuangan,kepala_operasional'])->group(function () {
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
-        // Mitra E-Catalog (B2B)
         Route::get('/partners/pending-updates', [PartnerController::class, 'pendingUpdates'])->name('partners.pending-updates');
         Route::post('/partners/{partner}/approve', [PartnerController::class, 'approve'])->name('partners.approve');
         Route::post('/partners/{partner}/reject', [PartnerController::class, 'reject'])->name('partners.reject');
@@ -153,29 +145,32 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
         Route::post('/partner-orders/{partnerOrder}/cancel', [PartnerOrderAdminController::class, 'cancel'])->name('partner-orders.cancel');
         Route::post('/partner-orders/{partnerOrder}/notes', [PartnerOrderAdminController::class, 'updateNotes'])->name('partner-orders.notes');
 
-        // Master Karyawan + Jabatan + Gaji
         Route::patch('/employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus'])->name('employees.toggle-status');
         Route::resource('employees', EmployeeController::class);
         Route::resource('job-positions', JobPositionController::class)->except(['show', 'create', 'edit']);
         Route::patch('job-positions/{job_position}/toggle-status', [JobPositionController::class, 'toggleStatus'])->name('job-positions.toggle-status');
+    });
+
+    // Keuangan murni — Kepala IT + Staff Keuangan
+    Route::middleware(['role:super_admin,admin_keuangan'])->group(function () {
+        Route::get('/credits', [CreditController::class, 'index'])->name('credits.index');
+        Route::post('/credits/mitra/{partnerOrder}/pay', [CreditController::class, 'payMitra'])->name('credits.pay-mitra');
         Route::get('/salaries/{salary}/print', [\App\Http\Controllers\SalaryController::class, 'printSlip'])->name('salaries.print');
         Route::resource('salaries', \App\Http\Controllers\SalaryController::class)->except(['show']);
-
-        // Reports
-        Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/generate', [\App\Http\Controllers\ReportController::class, 'generate'])->name('reports.generate');
-
-        // Analytics
         Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('/analytics/shift-report', [AnalyticsController::class, 'shiftReport'])->name('analytics.shift-report');
     });
 
-    // User Management & Backup — IT Admin only
-    Route::middleware(['role:super_admin'])->group(function () {
+    // Laporan — Kepala IT, Staff Keuangan, Staff IT (log saja dibatasi di controller)
+    Route::middleware(['role:super_admin,admin_keuangan,staff_it'])->group(function () {
+        Route::get('/reports', [\App\Http\Controllers\ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/generate', [\App\Http\Controllers\ReportController::class, 'generate'])->name('reports.generate');
+    });
+
+    // Sistem & IT — Kepala IT + Staff IT
+    Route::middleware(['role:super_admin,staff_it'])->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
         Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
-        
-        // Database Backup
         Route::get('/backup', [\App\Http\Controllers\BackupController::class, 'index'])->name('backup.index');
         Route::get('/backup/create', [\App\Http\Controllers\BackupController::class, 'create'])->name('backup.create');
         Route::get('/backup/download/{filename}', [\App\Http\Controllers\BackupController::class, 'download'])->name('backup.download');

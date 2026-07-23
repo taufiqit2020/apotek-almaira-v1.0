@@ -43,6 +43,11 @@ class ReportController extends Controller
             abort(400, 'Tipe laporan tidak ditentukan.');
         }
 
+        $user = $request->user();
+        if ($user->isStaffIt() && ! $user->isKepalaIt() && $type !== 'log_aktivitas') {
+            abort(403, 'Staff IT hanya dapat mengakses log aktivitas.');
+        }
+
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $entity = $request->input('entity', 'apotek');

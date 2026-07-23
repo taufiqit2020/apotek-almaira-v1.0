@@ -2,6 +2,7 @@
      SIDEBAR — Apotek Almaira
      Menu dikelompokkan sesuai fungsi & role
      ══════════════════════════════════════════════════════ --}}
+@php $u = auth()->user(); @endphp
 <aside
     class="sidebar no-print transition-all duration-300"
     :class="{ 'collapsed': collapsed, 'is-mobile-open': !collapsed }"
@@ -35,15 +36,15 @@
     <div class="sidebar-user-wrap" :class="{ 'is-collapsed': collapsed }">
         <div class="sidebar-user" :class="{ 'is-collapsed': collapsed }">
             <div class="sidebar-user-avatar">
-                @if(auth()->user()->avatarUrl())
-                    <img src="{{ auth()->user()->avatarUrl() }}" alt="Avatar">
+                @if($u->avatarUrl())
+                    <img src="{{ $u->avatarUrl() }}" alt="Avatar">
                 @else
-                    <span>{{ auth()->user()->initials() }}</span>
+                    <span>{{ $u->initials() }}</span>
                 @endif
             </div>
             <div class="sidebar-user-meta sidebar-hide-collapsed">
-                <p class="sidebar-user-name" title="{{ auth()->user()->name }}">{{ auth()->user()->name }}</p>
-                <p class="sidebar-user-role">{{ auth()->user()->role?->name ?? 'User' }}</p>
+                <p class="sidebar-user-name" title="{{ $u->name }}">{{ $u->name }}</p>
+                <p class="sidebar-user-role">{{ $u->role?->name ?? 'User' }}</p>
             </div>
             <div class="sidebar-user-status sidebar-hide-collapsed">
                 <span class="sidebar-online">
@@ -68,7 +69,7 @@
         </div>
 
         {{-- ══ 2. KASIR & PENJUALAN ══ --}}
-        @if(auth()->user()->isSuperAdmin() || auth()->user()->isKasir())
+        @if($u->canAccessPos())
         <div class="sidebar-section">
             <div class="sidebar-section-label sidebar-hide-collapsed">
                 <span>Kasir & Penjualan</span>
@@ -94,6 +95,7 @@
                 <span class="sidebar-nav-label sidebar-hide-collapsed">Riwayat Penjualan</span>
             </a>
 
+            @if($u->canAccessFinance() || $u->isKepalaOperasional())
             @php
                 $invoiceStats = \App\Services\InvoiceReceivableService::stats();
                 $overdueCount = $invoiceStats['total_overdue'];
@@ -117,6 +119,7 @@
                     @endif
                 </span>
             </a>
+            @endif
 
             <a href="{{ route('customers.index') }}" wire:navigate data-nav="customers" class="sidebar-nav-item" title="Pelanggan (CRM)">
                 <span class="nav-icon">
@@ -128,7 +131,7 @@
         @endif
 
         {{-- ══ 3. INVENTORI & STOK ══ --}}
-        @if(auth()->user()->isSuperAdmin() || auth()->user()->isAdminKeuangan() || auth()->user()->isKasir())
+        @if($u->canAccessInventory())
         <div class="sidebar-section">
             <div class="sidebar-section-label sidebar-hide-collapsed">
                 <span>Inventori & Stok</span>
@@ -147,8 +150,7 @@
                 <span class="sidebar-nav-label sidebar-hide-collapsed">Kategori Produk</span>
             </a>
 
-            {{-- Pengadaan: admin saja — bukan tugas harian kasir --}}
-            @if(auth()->user()->isSuperAdmin() || auth()->user()->isAdminKeuangan())
+            @if($u->canAccessPurchases())
             <a href="{{ route('purchases.index') }}" wire:navigate data-nav="purchases" class="sidebar-nav-item" title="Barang Masuk">
                 <span class="nav-icon">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M3 16l4-4m0 0l4 4m-4-4v12M21 16l-4-4m0 0l-4 4m4-4v12"/></svg>
@@ -173,8 +175,8 @@
         </div>
         @endif
 
-        {{-- ══ 4. MASTER DATA (Admin) ══ --}}
-        @if(auth()->user()->isSuperAdmin() || auth()->user()->isAdminKeuangan())
+        {{-- ══ 4. MASTER DATA ══ --}}
+        @if($u->canAccessMasterData())
         <div class="sidebar-section">
             <div class="sidebar-section-label sidebar-hide-collapsed">
                 <span>Master Data</span>
@@ -186,12 +188,14 @@
                 <span class="sidebar-nav-label sidebar-hide-collapsed">Supplier</span>
             </a>
 
+            @unless($u->canAccessPos())
             <a href="{{ route('customers.index') }}" wire:navigate data-nav="customers" class="sidebar-nav-item" title="Pelanggan (CRM)">
                 <span class="nav-icon">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                 </span>
                 <span class="sidebar-nav-label sidebar-hide-collapsed">Pelanggan (CRM)</span>
             </a>
+            @endunless
 
             <a href="{{ route('employees.index') }}" wire:navigate data-nav="employees" class="sidebar-nav-item" title="Master Karyawan">
                 <span class="nav-icon">
@@ -210,7 +214,7 @@
         @endif
 
         {{-- ══ 5. MITRA B2B & E-CATALOG ══ --}}
-        @if(auth()->user()->isSuperAdmin() || auth()->user()->isAdminKeuangan())
+        @if($u->canAccessMasterData())
         <div class="sidebar-section">
             <div class="sidebar-section-label sidebar-hide-collapsed">
                 <span>Mitra B2B</span>
@@ -237,7 +241,7 @@
         @endif
 
         {{-- ══ 6. KEUANGAN ══ --}}
-        @if(auth()->user()->isSuperAdmin() || auth()->user()->isAdminKeuangan())
+        @if($u->canAccessFinance())
         <div class="sidebar-section">
             <div class="sidebar-section-label sidebar-hide-collapsed">
                 <span>Keuangan</span>
@@ -266,7 +270,7 @@
         @endif
 
         {{-- ══ 7. PENGATURAN ══ --}}
-        @if(auth()->user()->isSuperAdmin() || auth()->user()->isAdminKeuangan())
+        @if($u->canAccessSettings())
         <div class="sidebar-section">
             <div class="sidebar-section-label sidebar-hide-collapsed">
                 <span>Pengaturan</span>
@@ -281,31 +285,37 @@
         @endif
 
         {{-- ══ 8. SISTEM & IT ══ --}}
-        @if(auth()->user()->isSuperAdmin())
+        @if($u->canManageUsers() || $u->canViewActivityLog() || $u->canManageBackup())
         <div class="sidebar-section">
             <div class="sidebar-section-label sidebar-hide-collapsed">
                 <span>Sistem & IT</span>
             </div>
+            @if($u->canManageUsers())
             <a href="{{ route('users.index') }}" wire:navigate data-nav="users" class="sidebar-nav-item" title="Manajemen User">
                 <span class="nav-icon">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 </span>
                 <span class="sidebar-nav-label sidebar-hide-collapsed">Manajemen User</span>
             </a>
+            @endif
 
+            @if($u->canViewActivityLog())
             <a href="{{ route('reports.index') }}?type=log_aktivitas" wire:navigate data-nav="log-aktivitas" class="sidebar-nav-item" title="Log Aktivitas">
                 <span class="nav-icon">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </span>
                 <span class="sidebar-nav-label sidebar-hide-collapsed">Log Aktivitas</span>
             </a>
+            @endif
 
+            @if($u->canManageBackup())
             <a href="{{ route('backup.index') }}" wire:navigate data-nav="backup" class="sidebar-nav-item" title="Database Backup">
                 <span class="nav-icon">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
                 </span>
                 <span class="sidebar-nav-label sidebar-hide-collapsed">Database Backup</span>
             </a>
+            @endif
         </div>
         @endif
     </nav>

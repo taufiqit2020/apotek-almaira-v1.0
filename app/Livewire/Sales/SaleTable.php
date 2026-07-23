@@ -104,7 +104,13 @@ class SaleTable extends Component
         $sales     = $query->paginate($this->perPage);
         $totalRevenue = $query->sum('total');
         $kasirList = User::query()
-            ->whereHas('role', fn ($q) => $q->whereIn('slug', ['super_admin', 'admin_keuangan', 'kasir', 'staff_operasional']))
+            ->whereHas('role', fn ($q) => $q->whereIn('slug', [
+                'super_admin',
+                'kepala_operasional',
+                'staff_operasional',
+                'admin_keuangan',
+                'kasir',
+            ]))
             ->orderBy('name')
             ->get();
 
