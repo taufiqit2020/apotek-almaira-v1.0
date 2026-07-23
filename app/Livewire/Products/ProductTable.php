@@ -215,37 +215,41 @@ class ProductTable extends Component
         $this->clearSelection();
     }
 
-    /** Hitung ulang harga grosir produk terpilih (jual & HET tidak diubah). */
-    public function fixSelectedAgainstHet(): void
+    /** Hitung ulang harga grosir produk terpilih dari harga jual (default markup 5%). */
+    public function syncWholesalePrices(): void
     {
         if (empty($this->selected)) {
-            if ($this->statusFilter === 'exceed_het') {
-                $this->selectAllFiltered();
-            }
-            if (empty($this->selected)) {
-                $this->dispatch('toast', type: 'warning', message: 'Centang produk terlebih dahulu.');
+            $this->dispatch('toast', type: 'warning', message: 'Centang produk terlebih dahulu.');
 
-                return;
-            }
+            return;
         }
 
         $synced = 0;
+        $defaultMarkup = 5;
+
         Product::whereIn('id', $this->selected)
             ->orderBy('id')
-            ->chunkById(200, function ($products) use (&$synced) {
+            ->chunkById(200, function ($products) use (&$synced, $defaultMarkup) {
                 foreach ($products as $product) {
                     $sell = (float) $product->sell_price;
-                    $markup = (int) ($product->wholesale_markup ?? 0);
-                    if ($sell <= 0 || $markup <= 0) {
+                    if ($sell <= 0) {
                         continue;
                     }
+
+                    $markup = (int) ($product->wholesale_markup ?? 0);
+                    if ($markup <= 0) {
+                        $markup = $defaultMarkup;
+                    }
+
                     $wholesale = Product::calcWholesaleFromSell($sell, $markup);
                     $normalized = Product::normalizeSellAgainstHet(
                         $sell,
                         $wholesale,
                         (float) ($product->het_price ?? 0),
                     );
+
                     $product->update([
+                        'wholesale_markup' => $markup,
                         'wholesale_price' => $normalized['wholesale_price'],
                     ]);
                     $synced++;
@@ -256,17 +260,23 @@ class ProductTable extends Component
             'Produk',
             "Sync grosir pada {$synced} produk",
             null,
-            ['synced' => $synced, 'ids_count' => count($this->selected)]
+            ['synced' => $synced, 'ids_count' => count($this->selected), 'default_markup' => $defaultMarkup]
         );
 
         $this->dispatch(
             'toast',
             type: $synced > 0 ? 'success' : 'info',
             message: $synced > 0
-                ? "{$synced} produk: harga grosir dihitung ulang (jual tetap)."
-                : 'Tidak ada produk yang bisa di-sync grosir (butuh markup %).'
+                ? "{$synced} produk: harga grosir diselaraskan (jual − markup %, default 5%)."
+                : 'Tidak ada produk dengan harga jual yang bisa di-sync.'
         );
         $this->clearSelection();
+    }
+
+    /** @deprecated Alias untuk kompatibilitas tombol lama. */
+    public function fixSelectedAgainstHet(): void
+    {
+        $this->syncWholesalePrices();
     }
 
     private function currentPageIds(): array
