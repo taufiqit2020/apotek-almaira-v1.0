@@ -1,10 +1,15 @@
 <?php
+
 namespace App\Models;
+
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
-class User extends Authenticatable {
+
+class User extends Authenticatable
+{
     use Notifiable, SoftDeletes;
+
     protected $fillable = ['name', 'username', 'email', 'password', 'role_id', 'avatar', 'is_active', 'last_login'];
     protected $hidden = ['password', 'remember_token'];
     protected $casts = [
@@ -13,91 +18,153 @@ class User extends Authenticatable {
         'is_active' => 'boolean',
         'password' => 'hashed',
     ];
-    public function role() { return $this->belongsTo(Role::class); }
-    public function activityLogs() { return $this->hasMany(ActivityLog::class); }
-    public function partner() { return $this->hasOne(Partner::class); }
-    public function employee() { return $this->hasOne(Employee::class); }
-    public function hasRole(string $slug): bool { return $this->role?->slug === $slug; }
 
-    public function isSuperAdmin(): bool { return $this->hasRole(Role::SUPER_ADMIN); }
-    public function isKepalaIt(): bool { return $this->isSuperAdmin(); }
-    public function isStaffIt(): bool { return $this->hasRole(Role::STAFF_IT); }
-    public function isKepalaOperasional(): bool { return $this->hasRole(Role::KEPALA_OPERASIONAL); }
-    public function isStaffOperasional(): bool { return $this->hasRole(Role::STAFF_OPERASIONAL); }
-    public function isAdminKeuangan(): bool { return $this->hasRole(Role::ADMIN_KEUANGAN); }
-    public function isStaffKeuangan(): bool { return $this->isAdminKeuangan(); }
-    public function isKasir(): bool { return $this->hasRole(Role::KASIR); }
-    public function isMitra(): bool { return $this->hasRole(Role::MITRA); }
-    public function isActive(): bool { return $this->is_active; }
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
 
-    /** Akses penuh sistem (Kepala IT). */
-    public function canAccessAdmin(): bool { return $this->isKepalaIt(); }
+    public function activityLogs()
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
 
-    /** Manajemen user & sistem IT. */
-    public function canManageUsers(): bool { return $this->isKepalaIt() || $this->isStaffIt(); }
-    public function canManageBackup(): bool { return $this->isKepalaIt() || $this->isStaffIt(); }
-    public function canViewActivityLog(): bool { return $this->isKepalaIt() || $this->isStaffIt(); }
+    public function partner()
+    {
+        return $this->hasOne(Partner::class);
+    }
 
-    /** Kasir & penjualan (belanja). */
+    public function employee()
+    {
+        return $this->hasOne(Employee::class);
+    }
+
+    public function hasRole(string $slug): bool
+    {
+        return $this->role?->slug === $slug;
+    }
+
+    public function allows(string $permission): bool
+    {
+        return (bool) $this->role?->allows($permission);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole(Role::SUPER_ADMIN) || (bool) $this->role?->isFullAccess();
+    }
+
+    public function isKepalaIt(): bool
+    {
+        return $this->hasRole(Role::SUPER_ADMIN);
+    }
+
+    public function isStaffIt(): bool
+    {
+        return $this->hasRole(Role::STAFF_IT);
+    }
+
+    public function isKepalaOperasional(): bool
+    {
+        return $this->hasRole(Role::KEPALA_OPERASIONAL);
+    }
+
+    public function isStaffOperasional(): bool
+    {
+        return $this->hasRole(Role::STAFF_OPERASIONAL);
+    }
+
+    public function isAdminKeuangan(): bool
+    {
+        return $this->hasRole(Role::ADMIN_KEUANGAN);
+    }
+
+    public function isStaffKeuangan(): bool
+    {
+        return $this->isAdminKeuangan();
+    }
+
+    public function isKasir(): bool
+    {
+        return $this->hasRole(Role::KASIR)
+            || ($this->canAccessPos() && ! $this->canAccessInventory() && ! $this->canAccessFinance() && ! $this->canManageUsers());
+    }
+
+    public function isMitra(): bool
+    {
+        return $this->hasRole(Role::MITRA);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->is_active;
+    }
+
+    public function canAccessAdmin(): bool
+    {
+        return $this->isSuperAdmin();
+    }
+
+    public function canManageUsers(): bool
+    {
+        return $this->allows('users');
+    }
+
+    public function canManageBackup(): bool
+    {
+        return $this->allows('backup');
+    }
+
+    public function canViewActivityLog(): bool
+    {
+        return $this->allows('activity_log');
+    }
+
     public function canAccessPos(): bool
     {
-        return $this->isKepalaIt()
-            || $this->isKepalaOperasional()
-            || $this->isStaffOperasional()
-            || $this->isKasir()
-            || $this->isStaffKeuangan();
+        return $this->allows('pos');
     }
 
-    /** Inventori/stok (bukan khusus kasir). */
     public function canAccessInventory(): bool
     {
-        return $this->isKepalaIt()
-            || $this->isKepalaOperasional()
-            || $this->isStaffOperasional()
-            || $this->isStaffKeuangan()
-            || $this->isStaffIt();
+        return $this->allows('inventory');
     }
 
-    /** Pengadaan / barang masuk. */
     public function canAccessPurchases(): bool
     {
-        return $this->isKepalaIt()
-            || $this->isKepalaOperasional()
-            || $this->isStaffKeuangan();
+        return $this->allows('purchases');
     }
 
-    /** Master data & mitra B2B. */
     public function canAccessMasterData(): bool
     {
-        return $this->isKepalaIt()
-            || $this->isKepalaOperasional()
-            || $this->isStaffKeuangan();
+        return $this->allows('master_data');
     }
 
-    /** Keuangan (kredit, gaji, laporan). */
     public function canAccessFinance(): bool
     {
-        return $this->isKepalaIt() || $this->isStaffKeuangan();
+        return $this->allows('finance');
     }
 
-    /** Pengaturan aplikasi. */
+    public function canAccessInvoices(): bool
+    {
+        return $this->allows('invoices') || $this->allows('finance');
+    }
+
+    public function canAccessReports(): bool
+    {
+        return $this->allows('reports') || $this->allows('activity_log');
+    }
+
     public function canAccessSettings(): bool
     {
-        return $this->isKepalaIt() || $this->isStaffKeuangan() || $this->isKepalaOperasional();
+        return $this->allows('settings');
     }
 
-    /** Staff apotek (bukan portal mitra). */
     public function isStaff(): bool
     {
-        return $this->isKepalaIt()
-            || $this->isStaffIt()
-            || $this->isKepalaOperasional()
-            || $this->isStaffOperasional()
-            || $this->isStaffKeuangan()
-            || $this->isKasir();
+        return $this->role && ! $this->isMitra();
     }
 
-    /** Path relatif foto profil di public/, atau null. */
     public function avatarPath(): ?string
     {
         if ($this->avatar && is_file(public_path($this->avatar))) {

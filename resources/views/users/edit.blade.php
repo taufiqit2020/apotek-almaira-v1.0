@@ -38,7 +38,20 @@
     </div>
     @endif
 
-    <div class="card p-6 bg-white border border-gray-100 rounded-2xl shadow-sm">
+    @php
+        $roleOptions = $roles->map(fn ($r) => [
+            'id' => $r->id,
+            'name' => $r->name,
+            'description' => $r->description,
+            'labels' => $r->permissionLabels(),
+        ])->values();
+    @endphp
+    <div class="card p-6 bg-white border border-gray-100 rounded-2xl shadow-sm"
+         x-data="{
+            roleId: @js(old('role_id', $user->role_id)),
+            roles: @js($roleOptions),
+            get selected() { return this.roles.find(r => String(r.id) === String(this.roleId)) || null }
+         }">
         <form method="POST" action="{{ route('users.update', $user) }}">
             @csrf
             @method('PUT')
@@ -71,13 +84,14 @@
                     {{-- Role --}}
                     <div>
                         <label class="form-label font-bold text-gray-700">Role / Hak Akses <span class="text-red-500">*</span></label>
-                        <select name="role_id" class="form-input" required>
+                        <select name="role_id" x-model="roleId" class="form-input" required>
                             <option value="">— Pilih Role —</option>
                             @foreach($roles as $role)
                             <option value="{{ $role->id }}" {{ old('role_id', $user->role_id) == $role->id ? 'selected' : '' }}>{{ $role->name }}</option>
                             @endforeach
                         </select>
                         @error('role_id')<p class="form-error">{{ $message }}</p>@enderror
+                        <p class="text-xs text-gray-400 mt-1">Kelola daftar role di <a href="{{ route('roles.index') }}" class="text-emerald-600 hover:underline" wire:navigate>Master Role / Hak Akses</a></p>
                     </div>
 
                     {{-- Status Aktif --}}
@@ -102,6 +116,16 @@
                         </div>
                         @endif
                         @error('is_active')<p class="form-error">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
+                <div x-show="selected" x-cloak class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
+                    <p class="text-sm font-semibold text-emerald-800" x-text="selected?.name"></p>
+                    <p class="text-xs text-emerald-700/80 mt-1" x-text="selected?.description || 'Hak akses sesuai konfigurasi role'"></p>
+                    <div class="flex flex-wrap gap-1.5 mt-3">
+                        <template x-for="label in (selected?.labels || [])" :key="label">
+                            <span class="inline-flex text-[11px] px-2 py-0.5 rounded-full bg-white text-emerald-700 border border-emerald-200" x-text="label"></span>
+                        </template>
                     </div>
                 </div>
 

@@ -27,12 +27,12 @@ class UserController extends Controller {
         }
         
         $users = $query->paginate(15)->withQueryString();
-        $roles = Role::all();
+        $roles = Role::staffAssignable()->orderBy('name')->get();
         
         return view('users.index', compact('users', 'roles'));
     }
     public function create() {
-        $roles = Role::all();
+        $roles = Role::staffAssignable()->orderBy('name')->get();
         return view('users.create', compact('roles'));
     }
     public function store(Request $request) {
@@ -44,6 +44,10 @@ class UserController extends Controller {
             'role_id' => 'required|exists:roles,id',
             'is_active' => 'boolean',
         ]);
+        $role = Role::staffAssignable()->find($validated['role_id']);
+        if (! $role) {
+            return back()->withInput()->with('toast_error', 'Role tidak valid atau nonaktif.');
+        }
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = $request->boolean('is_active', true);
         $user = User::create($validated);
@@ -55,7 +59,10 @@ class UserController extends Controller {
         return redirect()->route('users.index')->with('toast_success', "User {$user->name} berhasil ditambahkan!");
     }
     public function edit(User $user) {
-        $roles = Role::all();
+        $roles = Role::staffAssignable()->orderBy('name')->get();
+        if ($user->role && ! $roles->contains('id', $user->role_id)) {
+            $roles->prepend($user->role);
+        }
         return view('users.edit', compact('user', 'roles'));
     }
     public function update(Request $request, User $user) {
@@ -67,6 +74,18 @@ class UserController extends Controller {
             'is_active' => 'boolean',
             'password' => ['nullable', Rules\Password::defaults()],
         ]);
+
+        $role = Role::query()
+            ->where('id', $validated['role_id'])
+            ->where(function ($q) use ($user) {
+                $q->where(function ($q2) {
+                    $q2->where('is_active', true)->where('slug', '!=', Role::MITRA);
+                })->orWhere('id', $user->role_id);
+            })
+            ->first();
+        if (! $role) {
+            return back()->withInput()->with('toast_error', 'Role tidak valid atau nonaktif.');
+        }
         
         $oldData = $user->toArray();
         unset($oldData['password']);

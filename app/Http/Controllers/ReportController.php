@@ -44,8 +44,11 @@ class ReportController extends Controller
         }
 
         $user = $request->user();
-        if ($user->isStaffIt() && ! $user->isKepalaIt() && $type !== 'log_aktivitas') {
-            abort(403, 'Staff IT hanya dapat mengakses log aktivitas.');
+        if ($user->allows('activity_log') && ! $user->allows('reports') && ! $user->isSuperAdmin() && $type !== 'log_aktivitas') {
+            abort(403, 'Anda hanya dapat mengakses log aktivitas.');
+        }
+        if ($type === 'log_aktivitas' && ! $user->allows('activity_log') && ! $user->isSuperAdmin()) {
+            abort(403, 'Anda tidak memiliki akses log aktivitas.');
         }
 
         $startDate = $request->input('start_date');
