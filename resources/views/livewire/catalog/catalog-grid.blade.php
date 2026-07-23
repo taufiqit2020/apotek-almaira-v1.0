@@ -244,13 +244,24 @@
                             @endif
                         </div>
 
-                        <div class="mt-2 flex-1">
+                        <div class="mt-2 flex-1 space-y-1">
                             <p class="text-[10px] text-slate-400">per {{ $product->unit?->name ?? 'pcs' }}</p>
-                            <p class="text-sm sm:text-base font-extrabold text-emerald-700 tracking-tight">
-                                Rp {{ number_format($priceInfo['primary'], 0, ',', '.') }}
-                            </p>
-                            @if($priceInfo['label'])
-                            <p class="text-[10px] text-slate-400 mt-0.5">{{ $priceInfo['label'] }}@if($priceInfo['note']) · {{ $priceInfo['note'] }}@endif</p>
+                            <div class="flex items-baseline justify-between gap-2">
+                                <span class="text-[10px] font-bold uppercase tracking-wide text-emerald-700/80">{{ $priceInfo['label'] ?? 'Eceran' }}</span>
+                                <p class="text-sm sm:text-base font-extrabold text-emerald-700 tracking-tight tabular-nums">
+                                    Rp {{ number_format($priceInfo['primary'], 0, ',', '.') }}
+                                </p>
+                            </div>
+                            @if(!empty($priceInfo['secondary']))
+                            <div class="flex items-baseline justify-between gap-2 rounded-lg bg-teal-50/80 border border-teal-100 px-2 py-1">
+                                <span class="text-[10px] font-bold uppercase tracking-wide text-teal-700">{{ $priceInfo['secondary_label'] ?? 'Grosir' }}</span>
+                                <p class="text-xs sm:text-sm font-extrabold text-teal-800 tracking-tight tabular-nums">
+                                    Rp {{ number_format($priceInfo['secondary'], 0, ',', '.') }}
+                                </p>
+                            </div>
+                            @endif
+                            @if($priceInfo['note'])
+                            <p class="text-[10px] text-slate-500 leading-snug">{{ $priceInfo['note'] }}</p>
                             @endif
                         </div>
 

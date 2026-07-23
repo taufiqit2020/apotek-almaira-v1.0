@@ -45,45 +45,55 @@ class PartnerPricingService
     }
 
     /**
-     * Info harga untuk tampilan katalog (mendukung mode auto: eceran + hint grosir).
+     * Info harga untuk tampilan katalog (eceran + grosir).
      *
-     * @return array{primary: float, label: ?string, secondary: ?float, note: ?string}
+     * @return array{
+     *   primary: float,
+     *   label: ?string,
+     *   secondary: ?float,
+     *   secondary_label: ?string,
+     *   note: ?string
+     * }
      */
     public static function catalogPriceInfo(Product $product, ?Partner $partner): array
     {
-        if (!$partner) {
-            return [
-                'primary'   => (float) $product->sell_price,
-                'label'     => null,
-                'secondary' => null,
-                'note'      => null,
-            ];
-        }
-
         $eceran = (float) $product->sell_price;
         $grosir = (float) $product->wholesale_price;
-        if ($grosir <= 0) {
-            $grosir = $eceran;
+        $hasGrosir = $grosir > 0;
+
+        if (! $partner) {
+            return [
+                'primary' => $eceran,
+                'label' => 'Eceran',
+                'secondary' => $hasGrosir ? $grosir : null,
+                'secondary_label' => $hasGrosir ? 'Grosir' : null,
+                'note' => null,
+            ];
         }
 
         return match ($partner->price_mode) {
             Partner::PRICE_GROSIR => [
-                'primary'   => $grosir,
-                'label'     => 'Grosir',
-                'secondary' => $grosir !== $eceran ? $eceran : null,
-                'note'      => $grosir !== $eceran ? 'Eceran Rp ' . number_format($eceran, 0, ',', '.') : null,
+                'primary' => $hasGrosir ? $grosir : $eceran,
+                'label' => 'Grosir',
+                'secondary' => $eceran > 0 && (! $hasGrosir || abs($eceran - $grosir) > 0.009) ? $eceran : null,
+                'secondary_label' => 'Eceran',
+                'note' => null,
             ],
             Partner::PRICE_AUTO => [
-                'primary'   => $eceran,
-                'label'     => 'Eceran',
-                'secondary' => $grosir,
-                'note'      => 'Qty ≥ ' . self::AUTO_GROSIR_MIN_QTY . ': Rp ' . number_format($grosir, 0, ',', '.') . ' (grosir)',
+                'primary' => $eceran,
+                'label' => 'Eceran',
+                'secondary' => $hasGrosir ? $grosir : null,
+                'secondary_label' => $hasGrosir ? 'Grosir' : null,
+                'note' => $hasGrosir
+                    ? 'Qty ≥ '.self::AUTO_GROSIR_MIN_QTY.' otomatis pakai harga grosir'
+                    : null,
             ],
             default => [
-                'primary'   => $eceran,
-                'label'     => 'Eceran',
-                'secondary' => null,
-                'note'      => null,
+                'primary' => $eceran,
+                'label' => 'Eceran',
+                'secondary' => $hasGrosir ? $grosir : null,
+                'secondary_label' => $hasGrosir ? 'Grosir' : null,
+                'note' => null,
             ],
         };
     }

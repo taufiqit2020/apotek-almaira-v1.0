@@ -127,17 +127,25 @@
             </div>
 
             <div class="mt-5 rounded-2xl border border-emerald-100/80 bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/40 px-4 py-4 sm:px-5 sm:py-5">
-                <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700/70 mb-1">Harga</p>
-                <div class="flex flex-wrap items-end gap-x-3 gap-y-1">
-                    <p class="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight leading-none">
-                        Rp {{ number_format($priceInfo['primary'], 0, ',', '.') }}
-                    </p>
-                    @if($priceInfo['label'])
-                    <span class="mb-0.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">{{ $priceInfo['label'] }}</span>
+                <p class="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-700/70 mb-2">Harga</p>
+                <div class="space-y-2.5">
+                    <div class="flex flex-wrap items-end justify-between gap-x-3 gap-y-1">
+                        <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ $priceInfo['label'] ?? 'Eceran' }}</span>
+                        <p class="text-3xl sm:text-4xl font-black text-emerald-600 tracking-tight leading-none tabular-nums">
+                            Rp {{ number_format($priceInfo['primary'], 0, ',', '.') }}
+                        </p>
+                    </div>
+                    @if(!empty($priceInfo['secondary']))
+                    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl bg-teal-50 border border-teal-100 px-3 py-2.5">
+                        <span class="text-[11px] font-bold text-teal-700 uppercase tracking-wider">{{ $priceInfo['secondary_label'] ?? 'Grosir' }}</span>
+                        <p class="text-xl sm:text-2xl font-extrabold text-teal-800 tracking-tight leading-none tabular-nums">
+                            Rp {{ number_format($priceInfo['secondary'], 0, ',', '.') }}
+                        </p>
+                    </div>
                     @endif
                 </div>
                 @if($priceInfo['note'])
-                <p class="mt-1.5 text-xs text-slate-500">{{ $priceInfo['note'] }}</p>
+                <p class="mt-2 text-xs text-slate-500">{{ $priceInfo['note'] }}</p>
                 @endif
             </div>
 
