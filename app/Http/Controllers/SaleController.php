@@ -87,7 +87,7 @@ class SaleController extends Controller {
         }
         $catalogQuery->searchKeyword($q, 'ops');
         $catalog = $catalogQuery
-            ->select(['id', 'name', 'code', 'barcode', 'purchase_price', 'sell_price', 'wholesale_price', 'stock', 'stock_min', 'unit_id', 'images', 'is_active'])
+            ->select(['id', 'name', 'code', 'barcode', 'purchase_price', 'sell_price', 'wholesale_price', 'stock', 'stock_min', 'unit_id', 'images', 'is_active', 'description', 'composition', 'dosage_form', 'manufacturer', 'drug_class', 'route'])
             ->limit(200)
             ->get()
             ->map(fn (Product $p) => $this->mapPosProduct($p));
@@ -103,7 +103,7 @@ class SaleController extends Controller {
         if ($cartIds !== []) {
             $cartProducts = Product::with('unit')
                 ->whereIn('id', $cartIds)
-                ->get(['id', 'name', 'code', 'barcode', 'purchase_price', 'sell_price', 'wholesale_price', 'stock', 'stock_min', 'unit_id', 'images', 'is_active'])
+                ->get(['id', 'name', 'code', 'barcode', 'purchase_price', 'sell_price', 'wholesale_price', 'stock', 'stock_min', 'unit_id', 'images', 'is_active', 'description', 'composition', 'dosage_form', 'manufacturer', 'drug_class', 'route'])
                 ->map(fn (Product $p) => $this->mapPosProduct($p))
                 ->values();
         }
@@ -183,6 +183,8 @@ class SaleController extends Controller {
     /** @return array<string, mixed> */
     private function mapPosProduct(Product $p): array
     {
+        $meta = $p->catalogMeta();
+
         return [
             'id'               => $p->id,
             'name'             => $p->name,
@@ -198,6 +200,9 @@ class SaleController extends Controller {
             'image_url'        => $p->image_url,
             'has_image'        => $p->has_image,
             'is_active'        => (bool) $p->is_active,
+            'indikasi'         => $meta['indikasi'],
+            'kandungan'        => $meta['kandungan'],
+            'bentuk_sediaan'   => $meta['bentuk_sediaan'],
         ];
     }
 

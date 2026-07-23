@@ -1346,7 +1346,7 @@ window.posManager = () => ({
                 <template x-for="product in paginatedProducts" :key="product.id">
                     <div
                         @click="if(product.stock > 0) addToCart(product)"
-                        class="rounded-2xl border transition-all flex items-center p-3.5 group relative overflow-hidden"
+                        class="rounded-2xl border transition-all flex items-start p-3.5 group relative overflow-hidden min-h-[108px]"
                         :class="product.stock <= 0
                             ? 'opacity-50 grayscale-[30%] cursor-not-allowed bg-slate-50 border-slate-200/80'
                             : (product.stock <= product.stock_min
@@ -1361,7 +1361,7 @@ window.posManager = () => ({
                         ></div>
 
                         {{-- Icon / Photo --}}
-                        <div class="w-11 h-11 rounded-xl overflow-hidden mr-3.5 shrink-0 border flex items-center justify-center bg-gradient-to-br"
+                        <div class="w-12 h-12 rounded-xl overflow-hidden mr-3.5 mt-0.5 shrink-0 border flex items-center justify-center bg-gradient-to-br"
                              :class="product.stock <= 0
                                 ? 'bg-slate-100 border-slate-200 text-slate-400'
                                 : 'from-emerald-50 to-emerald-100 text-emerald-600 border-emerald-100/50 group-hover:from-emerald-100 group-hover:to-emerald-200 transition-all'">
@@ -1373,8 +1373,21 @@ window.posManager = () => ({
 
                         {{-- Info --}}
                         <div class="flex flex-col flex-1 min-w-0 pr-3">
-                            <h4 class="font-bold text-slate-800 text-[13.5px] leading-tight truncate group-hover:text-emerald-700 transition-colors" x-text="product.name"></h4>
-                            <div class="flex items-center gap-2 mt-1.5">
+                            <h4 class="font-bold text-slate-800 text-[13.5px] leading-snug line-clamp-2 group-hover:text-emerald-700 transition-colors" x-text="product.name"></h4>
+
+                            <div class="mt-1.5" x-show="product.indikasi" x-cloak>
+                                <div class="inline-flex items-start gap-1.5 max-w-full rounded-lg bg-teal-50/90 border border-teal-100/80 px-2 py-1">
+                                    <svg class="w-3 h-3 text-teal-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
+                                    </svg>
+                                    <div class="min-w-0">
+                                        <p class="text-[9px] font-bold uppercase tracking-wide text-teal-700/80 leading-none mb-0.5">Indikasi / Fungsi</p>
+                                        <p class="text-[11px] leading-snug text-teal-900/80 line-clamp-2" x-text="product.indikasi" :title="product.indikasi"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-1.5 mt-2">
                                 <span
                                     class="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
                                     :class="product.stock <= 0
@@ -1393,7 +1406,7 @@ window.posManager = () => ({
                         </div>
 
                         {{-- Price --}}
-                        <div class="flex flex-col items-end shrink-0">
+                        <div class="flex flex-col items-end shrink-0 pt-0.5">
                             <span class="font-black text-emerald-600 text-[15px] tracking-tight" x-text="formatRupiah(product.sell_price)"></span>
                             <span class="text-[10px] text-slate-400 font-medium mt-0.5" x-show="product.wholesale_price && product.wholesale_price < product.sell_price">
                                 Grosir: <span x-text="formatRupiah(product.wholesale_price)"></span>

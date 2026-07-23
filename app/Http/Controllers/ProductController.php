@@ -242,24 +242,34 @@ class ProductController extends Controller {
         
         $query->searchKeyword($q, 'ops');
 
-        $products = $query->select(['id','name','code','barcode','purchase_price','sell_price','wholesale_price','stock','stock_min','unit_id','images'])
-            ->limit(200)->get();
+        $products = $query->select([
+            'id', 'name', 'code', 'barcode', 'purchase_price', 'sell_price', 'wholesale_price',
+            'stock', 'stock_min', 'unit_id', 'images', 'description', 'composition', 'dosage_form',
+            'manufacturer', 'drug_class', 'route',
+        ])->limit(200)->get();
 
-        return response()->json($products->map(fn($p) => [
-            'id' => $p->id,
-            'name' => $p->name,
-            'code' => $p->code,
-            'barcode' => $p->barcode,
-            'purchase_price' => $p->purchase_price,
-            'sell_price' => $p->sell_price,
-            'wholesale_price' => $p->wholesale_price,
-            'stock' => $p->stock,
-            'stock_min' => $p->stock_min,
-            'unit' => $p->unit?->name,
-            'images' => $p->images,
-            'image_url' => $p->image_url,
-            'has_image' => $p->has_image,
-        ]));
+        return response()->json($products->map(function ($p) {
+            $meta = $p->catalogMeta();
+
+            return [
+                'id' => $p->id,
+                'name' => $p->name,
+                'code' => $p->code,
+                'barcode' => $p->barcode,
+                'purchase_price' => $p->purchase_price,
+                'sell_price' => $p->sell_price,
+                'wholesale_price' => $p->wholesale_price,
+                'stock' => $p->stock,
+                'stock_min' => $p->stock_min,
+                'unit' => $p->unit?->name,
+                'images' => $p->images,
+                'image_url' => $p->image_url,
+                'has_image' => $p->has_image,
+                'indikasi' => $meta['indikasi'],
+                'kandungan' => $meta['kandungan'],
+                'bentuk_sediaan' => $meta['bentuk_sediaan'],
+            ];
+        }));
     }
 
     public function importForm() {
