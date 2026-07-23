@@ -36,14 +36,10 @@ $PHP_BIN artisan config:cache
 $PHP_BIN artisan route:cache
 $PHP_BIN artisan view:cache
 
-# Keep root .htaccess so site works even if document root is still public_html
-if [ ! -f .htaccess ]; then
-  cat > .htaccess <<'EOF'
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    RewriteRule ^(.*)$ public/$1 [L]
-</IfModule>
-EOF
-fi
+# Root .htaccess is tracked in git (needed when Hostinger document root = public_html)
+test -f .htaccess || {
+  echo "ERROR: missing root .htaccess"
+  exit 1
+}
 
 echo "==> Deploy OK"
