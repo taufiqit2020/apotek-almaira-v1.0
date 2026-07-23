@@ -300,6 +300,19 @@
                                 </select>
                             </div>
                         </div>
+
+                        <div class="bg-amber-50/80 p-4 border border-amber-100 rounded-xl">
+                            <label class="form-label font-bold text-gray-700">Markup Harga Invoice (%)</label>
+                            <div class="relative max-w-xs">
+                                <input type="number" min="0" max="100" step="1" name="invoice_price_markup_percent" class="form-input pr-10"
+                                       value="{{ old('invoice_price_markup_percent', $invoiceMarkupPercent) }}" required>
+                                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">%</span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                                Saat metode bayar <strong>Invoice</strong> (POS CRM &amp; PO Mitra), harga unit dihitung dari <strong>harga jual + markup</strong> ini.
+                                Default 5%. Tidak berlaku untuk Tunai / QRIS / Transfer / COD.
+                            </p>
+                        </div>
                     </div>
                 </div>
 

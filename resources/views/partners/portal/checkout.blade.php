@@ -176,6 +176,7 @@
                         </div>
                         <div class="mt-3 rounded-xl bg-amber-100/60 border border-amber-200 px-3 py-2.5 text-xs text-amber-900 leading-relaxed">
                             <span class="font-bold">Catatan:</span> Pembayaran dapat dilakukan sebelum atau pada tanggal jatuh tempo. Keterlambatan dapat mempengaruhi limit kredit mitra.
+                            <span class="block mt-1.5 font-semibold">Harga Invoice = harga jual + {{ (int) ($invoiceMarkupPercent ?? 5) }}% (bukan harga grosir mitra).</span>
                         </div>
                     </div>
                 </div>
@@ -243,19 +244,27 @@
                         <div>
                             <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Detail Produk</p>
                             <div class="rounded-xl border border-slate-100 divide-y divide-slate-100 max-h-72 overflow-y-auto">
-                                @foreach($cart['items'] as $line)
+                                @foreach($cart['items'] as $idx => $line)
                                 @php
                                     $p = $line['product'];
                                     $stockMeta = $stockMetaFor($p);
                                     $overStock = $line['qty'] > $p->stock;
                                     $unitName = $p->unit?->name ?? 'pcs';
+                                    $invLine = $cartInvoice['items'][$idx] ?? null;
                                 @endphp
-                                <div class="px-3.5 py-3 {{ $overStock ? 'bg-red-50/60' : '' }}">
+                                <div class="px-3.5 py-3 checkout-line-row {{ $overStock ? 'bg-red-50/60' : '' }}"
+                                     data-unit-normal="{{ (float) $line['unit_price'] }}"
+                                     data-sub-normal="{{ (float) $line['subtotal'] }}"
+                                     data-unit-invoice="{{ (float) ($invLine['unit_price'] ?? $line['unit_price']) }}"
+                                     data-sub-invoice="{{ (float) ($invLine['subtotal'] ?? $line['subtotal']) }}"
+                                     data-price-type-normal="{{ $line['price_type'] }}"
+                                     data-qty="{{ $line['qty'] }}"
+                                     data-unit-name="{{ $unitName }}">
                                     <div class="flex items-start justify-between gap-2">
                                         <div class="min-w-0 flex-1">
                                             <p class="text-sm font-bold text-slate-800 leading-snug">{{ $p->name }}</p>
                                             <div class="flex flex-wrap items-center gap-1.5 mt-1">
-                                                <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold {{ $line['price_type'] === 'grosir' ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700' }}">
+                                                <span class="checkout-price-type inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold {{ $line['price_type'] === 'grosir' ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700' }}">
                                                     {{ $line['price_type'] === 'grosir' ? 'Grosir' : 'Eceran' }}
                                                 </span>
                                                 <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold {{ $stockMeta['badge'] }}">
@@ -263,10 +272,10 @@
                                                 </span>
                                             </div>
                                         </div>
-                                        <p class="text-sm font-extrabold text-emerald-700 shrink-0">Rp {{ number_format($line['subtotal'], 0, ',', '.') }}</p>
+                                        <p class="checkout-line-subtotal text-sm font-extrabold text-emerald-700 shrink-0">Rp {{ number_format($line['subtotal'], 0, ',', '.') }}</p>
                                     </div>
                                     <div class="mt-2 flex items-center justify-between text-[11px] text-slate-500">
-                                        <span>{{ $line['qty'] }} {{ $unitName }} × Rp {{ number_format($line['unit_price'], 0, ',', '.') }}</span>
+                                        <span class="checkout-line-unit">{{ $line['qty'] }} {{ $unitName }} × Rp {{ number_format($line['unit_price'], 0, ',', '.') }}</span>
                                         <span class="font-semibold {{ $overStock ? 'text-red-600' : 'text-slate-600' }}">
                                             Stok: {{ number_format($p->stock, 0, ',', '.') }} {{ $unitName }}
                                         </span>
@@ -286,7 +295,14 @@
                             @include('partners.portal._order-totals-summary', [
                                 'totals' => $ppn,
                                 'totalLabel' => 'Estimasi Total',
+                                'subtotalId' => 'checkoutSubtotal',
+                                'discId' => 'checkoutDisc',
+                                'ppnId' => 'checkoutPpn',
+                                'grandId' => 'checkoutGrand',
                             ])
+                            <p id="checkoutInvoiceHint" class="text-[11px] text-amber-700 font-semibold mt-2 leading-relaxed {{ $defaultPayment === 'invoice' ? '' : 'hidden' }}">
+                                Estimasi memakai harga jual + {{ (int) ($invoiceMarkupPercent ?? 5) }}% (Invoice).
+                            </p>
                             <p class="text-[11px] text-slate-400 mt-2 leading-relaxed">Harga final dikonfirmasi apotek setelah PO diajukan.</p>
                         </div>
                     </div>
@@ -312,10 +328,76 @@
         invoice: document.getElementById('paymentPanelInvoice'),
     };
 
+    const totalsNormal = @json([
+        'subtotal' => (float) ($ppn['subtotal'] ?? 0),
+        'discount_amount' => (float) ($ppn['discount_amount'] ?? 0),
+        'ppn_amount' => (float) ($ppn['ppn_amount'] ?? 0),
+        'grand_total' => (float) ($ppn['grand_total'] ?? 0),
+    ]);
+    const totalsInvoice = @json([
+        'subtotal' => (float) ($ppnInvoice['subtotal'] ?? $ppn['subtotal'] ?? 0),
+        'discount_amount' => (float) ($ppnInvoice['discount_amount'] ?? $ppn['discount_amount'] ?? 0),
+        'ppn_amount' => (float) ($ppnInvoice['ppn_amount'] ?? $ppn['ppn_amount'] ?? 0),
+        'grand_total' => (float) ($ppnInvoice['grand_total'] ?? $ppn['grand_total'] ?? 0),
+    ]);
+
+    function formatRp(n) {
+        return 'Rp ' + Math.round(Number(n) || 0).toLocaleString('id-ID');
+    }
+
+    function applyCheckoutPricing(method) {
+        const isInvoice = method === 'invoice';
+        const totals = isInvoice ? totalsInvoice : totalsNormal;
+
+        document.querySelectorAll('.checkout-line-row').forEach(function (row) {
+            const unit = parseFloat(row.getAttribute(isInvoice ? 'data-unit-invoice' : 'data-unit-normal') || '0');
+            const sub = parseFloat(row.getAttribute(isInvoice ? 'data-sub-invoice' : 'data-sub-normal') || '0');
+            const qty = row.getAttribute('data-qty') || '1';
+            const unitName = row.getAttribute('data-unit-name') || 'pcs';
+            const typeEl = row.querySelector('.checkout-price-type');
+            const unitEl = row.querySelector('.checkout-line-unit');
+            const subEl = row.querySelector('.checkout-line-subtotal');
+
+            if (unitEl) unitEl.textContent = qty + ' ' + unitName + ' × ' + formatRp(unit);
+            if (subEl) subEl.textContent = formatRp(sub);
+            if (typeEl) {
+                if (isInvoice) {
+                    typeEl.textContent = 'Invoice';
+                    typeEl.className = 'checkout-price-type inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-800';
+                } else {
+                    const t = row.getAttribute('data-price-type-normal') || 'eceran';
+                    typeEl.textContent = t === 'grosir' ? 'Grosir' : 'Eceran';
+                    typeEl.className = 'checkout-price-type inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold ' +
+                        (t === 'grosir' ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700');
+                }
+            }
+        });
+
+        const map = {
+            checkoutSubtotal: totals.subtotal,
+            checkoutDisc: totals.discount_amount,
+            checkoutPpn: totals.ppn_amount,
+            checkoutGrand: totals.grand_total,
+        };
+        Object.keys(map).forEach(function (id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (id === 'checkoutDisc' && map[id] > 0) {
+                el.textContent = '-' + formatRp(map[id]);
+            } else {
+                el.textContent = formatRp(map[id]);
+            }
+        });
+
+        const hint = document.getElementById('checkoutInvoiceHint');
+        if (hint) hint.classList.toggle('hidden', !isInvoice);
+    }
+
     function togglePaymentPanels(method) {
         Object.keys(panels).forEach(function (key) {
             if (panels[key]) panels[key].classList.toggle('hidden', key !== method);
         });
+        applyCheckoutPricing(method);
     }
 
     document.querySelectorAll('.checkout-payment-radio').forEach(function (radio) {

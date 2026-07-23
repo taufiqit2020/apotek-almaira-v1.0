@@ -66,6 +66,7 @@ window.posManager = () => ({
         ppnActive: @json($ppnActive),
         ppnPercent: @json($ppnDefault),
         ppnBearer: @json($ppnBearer === 'buyer' ? 'Ditanggung Pembeli' : 'Ditanggung Penjual'),
+        invoiceMarkupPercent: @json((int) ($invoiceMarkupPercent ?? 5)),
         cashReceived: null,
         notes: '',
         showQrisModal: false,
@@ -124,6 +125,14 @@ window.posManager = () => ({
             return false;
         },
 
+        /** Invoice aktif → harga unit dari jual + markup (bukan grosir). */
+        get isInvoicePricingActive() {
+            if (this.buyerType === 'mitra' && this.partnerId && this.isMitraPoCheckout) {
+                return this.poPaymentMethod === 'invoice';
+            }
+            return this.paymentMethod === 'Invoice';
+        },
+
         get invoiceDisabledReason() {
             if (this.buyerType === 'umum') return 'Pilih pelanggan CRM atau mitra untuk Invoice';
             if (this.buyerType === 'crm' && !this.customerId) return 'Pilih pelanggan CRM terlebih dahulu';
@@ -143,6 +152,10 @@ window.posManager = () => ({
                 this.prescriptionId = urlParams.get('prescription_id');
                 this.loadPrescription(this.prescriptionId);
             }
+
+            this.$watch('paymentMethod', () => this.recalcAllCartPrices());
+            this.$watch('poPaymentMethod', () => this.recalcAllCartPrices());
+            this.$watch('mitraCheckoutMode', () => this.recalcAllCartPrices());
 
             // Bersihkan timer/fetch saat SPA navigate keluar dari POS (hindari reload aneh)
             this._onNavigating = () => this.teardown();
@@ -913,8 +926,22 @@ window.posManager = () => ({
             this.calculateRowSubtotal(item);
         },
 
-        calculateRowSubtotal(item) {
+        unitPriceForItem(item) {
+            if (this.isInvoicePricingActive) {
+                const sell = parseFloat(item.sell_price) || 0;
+                const pct = parseFloat(this.invoiceMarkupPercent) || 0;
+                return Math.round(sell * (1 + pct / 100));
+            }
             const price = item.price_type === 'grosir' ? item.wholesale_price : item.sell_price;
+            return parseFloat(price) || 0;
+        },
+
+        recalcAllCartPrices() {
+            (this.cart || []).forEach((item) => this.calculateRowSubtotal(item));
+        },
+
+        calculateRowSubtotal(item) {
+            const price = this.unitPriceForItem(item);
             const qty = parseInt(item.quantity) || 1;
             const discPercent = parseFloat(item.discount_percent) || 0;
 
@@ -1735,6 +1762,9 @@ window.posManager = () => ({
                                 Invoice<span class="hint" x-text="partnerCreditDays + ' hari'"></span>
                             </button>
                         </div>
+                        <div x-show="poPaymentMethod === 'invoice'" class="px-2.5 py-2 rounded-lg bg-amber-50 border border-amber-100 text-[10px] text-amber-800 font-semibold leading-snug" x-cloak>
+                            Harga Invoice = harga jual + <span x-text="invoiceMarkupPercent"></span>% (bukan harga grosir).
+                        </div>
 
                         <div class="rounded-xl bg-slate-50/80 border border-slate-100 p-2.5 space-y-2">
                             <p class="text-[10px] font-extrabold text-cyan-700 uppercase tracking-wider">Pengiriman</p>
@@ -1770,6 +1800,9 @@ window.posManager = () => ({
                                 :disabled="!canUseInvoice"
                                 :title="invoiceDisabledReason"
                                 :style="!canUseInvoice ? 'opacity:0.4;cursor:not-allowed' : ''">Invoice</button>
+                    </div>
+                    <div x-show="isInvoicePricingActive" class="mt-2 px-2.5 py-2 rounded-lg bg-amber-50 border border-amber-100 text-[10px] text-amber-800 font-semibold leading-snug" x-cloak>
+                        Harga Invoice = harga jual + <span x-text="invoiceMarkupPercent"></span>% (bukan harga grosir).
                     </div>
                     <div x-show="selectedCustomerOverdue" class="mt-2 px-2.5 py-2 rounded-lg bg-red-50 border border-red-100 text-[10px] text-red-600 font-bold" x-cloak>
                         Tagihan jatuh tempo belum lunas — Invoice diblokir.
@@ -2087,7 +2120,7 @@ window.posManager = () => ({
 
                                         {{-- Subtotal --}}
                                         <div class="ml-auto flex flex-col items-end">
-                                            <span class="text-[10px] text-slate-400 line-through" x-show="item.discount_percent > 0" x-text="formatRupiah((item.price_type === 'grosir' ? item.wholesale_price : item.sell_price) * item.quantity)"></span>
+                                            <span class="text-[10px] text-slate-400 line-through" x-show="item.discount_percent > 0" x-text="formatRupiah(unitPriceForItem(item) * item.quantity)"></span>
                                             <span class="font-black text-emerald-600 text-base tracking-tight" x-text="formatRupiah(item.subtotal)"></span>
                                         </div>
                                     </div>
@@ -2218,6 +2251,9 @@ window.posManager = () => ({
                                             <button type="button" x-show="partnerAllowCod" class="pos-pay-method is-cod" :class="poPaymentMethod === 'cod' ? 'is-on' : ''" @click="selectMitraPay('cod')">COD</button>
                                             <button type="button" x-show="partnerInvoiceEnabled && !selectedCustomerOverdue" class="pos-pay-method is-invoice" :class="poPaymentMethod === 'invoice' ? 'is-on' : ''" @click="selectMitraPay('invoice')">Invoice</button>
                                         </div>
+                                        <div x-show="isMitraPoCheckout && poPaymentMethod === 'invoice'" class="mt-2 p-2 bg-amber-50 border border-amber-100 rounded-xl text-[10px] text-amber-800 font-semibold" x-cloak>
+                                            Harga Invoice = harga jual + <span x-text="invoiceMarkupPercent"></span>% (bukan harga grosir).
+                                        </div>
                                     </div>
 
                                     <div x-show="isMitraPoCheckout" class="rounded-xl bg-slate-50 border border-slate-100 p-3 space-y-2" x-cloak>
@@ -2315,6 +2351,9 @@ window.posManager = () => ({
                                              : 'bg-white text-slate-500 border-slate-200 hover:border-orange-300 hover:text-orange-700'">
                                          Invoice
                                      </button>
+                                 </div>
+                                 <div x-show="isInvoicePricingActive" class="mt-1 p-2 bg-amber-50 border border-amber-100 rounded-xl text-[10px] text-amber-800 font-semibold" x-cloak>
+                                     Harga Invoice = harga jual + <span x-text="invoiceMarkupPercent"></span>% (bukan harga grosir).
                                  </div>
                                  <div x-show="selectedCustomerOverdue" class="mt-1 p-2 bg-red-50 border border-red-150 rounded-xl text-[10px] text-red-650 font-bold" x-cloak>
                                      ⚠️ Ada tagihan jatuh tempo belum lunas! Metode Invoice diblokir.

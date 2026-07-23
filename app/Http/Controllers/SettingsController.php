@@ -35,6 +35,7 @@ class SettingsController extends Controller {
         $ppnActive = Setting::get('pos_ppn_active', 'false');
         $ppnPercent = Setting::get('pos_ppn_percent', '11');
         $ppnBearer = Setting::get('pos_ppn_bearer', 'buyer'); // 'buyer' or 'seller'
+        $invoiceMarkupPercent = (int) Setting::get('invoice_price_markup_percent', '5');
         
         $printerConnection = Setting::get('printer_connection', 'LAN');
         $printerIp = Setting::get('printer_ip', '192.168.1.100');
@@ -76,6 +77,7 @@ class SettingsController extends Controller {
             'officeAddress', 'companyEmail', 'companyInstagram', 'companyTagline',
             'companyAbout', 'companyVision', 'companyMission',
             'ppnActive', 'ppnPercent', 'ppnBearer',
+            'invoiceMarkupPercent',
             'printerConnection', 'printerIp', 'printerPort',
             'printerFooter1', 'printerFooter2', 'printerFooter3',
             'discountRules', 'wholesaleMarkupOptions', 'wholesaleMarkupDefault',
@@ -125,6 +127,7 @@ class SettingsController extends Controller {
             'pos_ppn_active' => 'nullable|string',
             'pos_ppn_percent' => 'required|numeric|min:0|max:100',
             'pos_ppn_bearer' => 'required|in:buyer,seller',
+            'invoice_price_markup_percent' => 'required|integer|min:0|max:100',
             
             // Tab 3 Diskon
             'rules' => 'nullable|array',
@@ -183,6 +186,7 @@ class SettingsController extends Controller {
         Setting::set('pos_ppn_active', $request->has('pos_ppn_active') ? 'true' : 'false');
         Setting::set('pos_ppn_percent', $request->pos_ppn_percent);
         Setting::set('pos_ppn_bearer', $request->pos_ppn_bearer);
+        Setting::set('invoice_price_markup_percent', (string) (int) $request->invoice_price_markup_percent);
 
         // Save Tab 3 — aturan diskon bertingkat (boleh kosong)
         $rules = [];

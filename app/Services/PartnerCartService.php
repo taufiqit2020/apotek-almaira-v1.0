@@ -94,8 +94,46 @@ class PartnerCartService
                 'qty'         => $qty,
                 'price_type'  => $priced['price_type'],
                 'unit_price'  => $priced['unit_price'],
+                'sell_price'  => (float) $product->sell_price,
                 'subtotal'    => $lineSubtotal,
             ];
+        }
+
+        return [
+            'items'    => $items,
+            'subtotal' => $subtotal,
+            'count'    => $count,
+        ];
+    }
+
+    /**
+     * Harga keranjang untuk pembayaran Invoice: selalu dari harga jual + markup.
+     *
+     * @param  array{items: array, subtotal: float, count: int}  $cart
+     * @return array{items: array, subtotal: float, count: int}
+     */
+    public static function applyInvoicePricing(array $cart): array
+    {
+        $items = [];
+        $subtotal = 0.0;
+        $count = 0;
+
+        foreach ($cart['items'] ?? [] as $line) {
+            $product = $line['product'] ?? null;
+            $qty = max(1, (int) ($line['qty'] ?? 1));
+            $sell = (float) ($line['sell_price'] ?? ($product?->sell_price ?? 0));
+            $unit = InvoicePricingService::unitFromSellPrice($sell);
+            $lineSubtotal = $unit * $qty;
+            $subtotal += $lineSubtotal;
+            $count += $qty;
+
+            $items[] = array_merge($line, [
+                'price_type'     => 'eceran',
+                'unit_price'     => $unit,
+                'sell_price'     => $sell,
+                'subtotal'       => $lineSubtotal,
+                'invoice_priced' => true,
+            ]);
         }
 
         return [

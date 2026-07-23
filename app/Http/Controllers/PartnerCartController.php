@@ -8,6 +8,7 @@ use App\Models\PartnerOrderItem;
 use App\Models\Product;
 use App\Models\Setting;
 use App\Services\ActivityLogService;
+use App\Services\InvoicePricingService;
 use App\Services\NotificationService;
 use App\Services\PartnerCartService;
 use App\Services\PartnerPricingService;
@@ -258,13 +259,20 @@ class PartnerCartController extends Controller
             return redirect()->route('mitra.cart')->with('toast_error', 'Belum ada metode pembayaran yang diaktifkan untuk mitra Anda. Hubungi apotek.');
         }
 
+        $invoiceMarkupPercent = InvoicePricingService::markupPercent();
+        $cartInvoice = PartnerCartService::applyInvoicePricing($cart);
+        $ppnInvoice = $this->orderTotalsSummary($partner, (float) $cartInvoice['subtotal']);
+
         return view('partners.portal.checkout', array_merge($this->apotekData(), [
-            'partner'     => $partner,
-            'cart'        => $cart,
-            'methods'     => $methods,
-            'priceLabel'  => PartnerPricingService::priceLabel($partner),
-            'stockIssues' => $this->cartStockIssues($cart),
-            'ppn'         => $this->orderTotalsSummary($partner, (float) $cart['subtotal']),
+            'partner'               => $partner,
+            'cart'                  => $cart,
+            'cartInvoice'           => $cartInvoice,
+            'methods'               => $methods,
+            'priceLabel'            => PartnerPricingService::priceLabel($partner),
+            'stockIssues'           => $this->cartStockIssues($cart),
+            'ppn'                   => $this->orderTotalsSummary($partner, (float) $cart['subtotal']),
+            'ppnInvoice'            => $ppnInvoice,
+            'invoiceMarkupPercent'  => $invoiceMarkupPercent,
         ]));
     }
 
@@ -312,6 +320,10 @@ class PartnerCartController extends Controller
             'pic_name.required'         => 'Nama PIC wajib diisi.',
             'pic_phone.required'        => 'Telepon PIC wajib diisi.',
         ]);
+
+        if ($request->payment_method === PartnerOrder::PAY_INVOICE) {
+            $cart = PartnerCartService::applyInvoicePricing($cart);
+        }
 
         try {
             $totals = $this->orderTotalsSummary($partner, (float) $cart['subtotal']);

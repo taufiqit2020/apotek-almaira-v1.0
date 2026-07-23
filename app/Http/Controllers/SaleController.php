@@ -12,6 +12,7 @@ use App\Models\Customer;
 use App\Models\Setting;
 use App\Services\ActivityLogService;
 use App\Services\NotificationService;
+use App\Services\InvoicePricingService;
 use App\Services\PartnerPricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -42,10 +43,12 @@ class SaleController extends Controller {
         $crmPointMultiplier = (int)\App\Models\Setting::get('crm_point_multiplier', 1000);
         $crmPointValue = (int)\App\Models\Setting::get('crm_point_value', 1);
         $partnerTypes = Partner::typeOptions();
+        $invoiceMarkupPercent = InvoicePricingService::markupPercent();
 
         return view('sales.pos', compact(
             'ppnDefault', 'ppnActive', 'ppnBearer', 'qrisNmid', 'discountRules',
-            'categories', 'crmPointMultiplier', 'crmPointValue', 'partnerTypes'
+            'categories', 'crmPointMultiplier', 'crmPointValue', 'partnerTypes',
+            'invoiceMarkupPercent'
         ));
     }
 
@@ -304,6 +307,11 @@ class SaleController extends Controller {
                     // Fallback to sell price if wholesale price is 0
                     if ($item['price_type'] === 'grosir' && floatval($unitPrice) <= 0) {
                         $unitPrice = $product->sell_price;
+                    }
+
+                    // Invoice: selalu harga jual + markup (default +5%)
+                    if (InvoicePricingService::isInvoicePayment($request->payment_method)) {
+                        $unitPrice = InvoicePricingService::unitFromSellPrice((float) $product->sell_price);
                     }
 
                     $itemQty = intval($item['quantity']);
@@ -719,6 +727,12 @@ class SaleController extends Controller {
                     }
 
                     $priced = PartnerPricingService::resolve($product, $partner, $qty);
+                    if (InvoicePricingService::isInvoicePayment($request->payment_method)) {
+                        $priced = [
+                            'price_type' => 'eceran',
+                            'unit_price' => InvoicePricingService::unitFromSellPrice((float) $product->sell_price),
+                        ];
+                    }
                     $lineSubtotal = $priced['unit_price'] * $qty;
                     $subtotal += $lineSubtotal;
 
