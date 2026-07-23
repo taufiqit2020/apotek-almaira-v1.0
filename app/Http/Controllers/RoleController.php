@@ -59,10 +59,10 @@ class RoleController extends Controller
             'permissions.*' => ['string', Rule::in(array_keys(Role::PERMISSION_LABELS))],
         ]);
 
-        $permissions = array_values($v['permissions'] ?? []);
+        $permissions = array_values(array_unique($v['permissions'] ?? []));
 
         // Kepala IT selalu akses penuh
-        if ($role->slug === Role::SUPER_ADMIN) {
+        if ($role->slug === Role::SUPER_ADMIN || $request->boolean('full_access')) {
             $permissions = ['*'];
         }
 
@@ -74,7 +74,7 @@ class RoleController extends Controller
 
         ActivityLogService::updated('Role', $role->name);
 
-        return back()->with('toast_success', "Role {$role->name} berhasil diperbarui!");
+        return redirect()->route('roles.index')->with('toast_success', "Role {$role->name} berhasil diperbarui!");
     }
 
     public function destroy(Role $role)

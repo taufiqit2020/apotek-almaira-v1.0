@@ -8,17 +8,70 @@
 @endsection
 
 @section('content')
-<div class="animate-in">
+@php
+    $permKeys = array_keys($permissionLabels);
+@endphp
+<div
+    class="animate-in"
+    x-data="{
+        showAdd: {{ $errors->any() && !old('_edit_id') ? 'true' : 'false' }},
+        showEdit: {{ $errors->any() && old('_edit_id') ? 'true' : 'false' }},
+        editId: @js(old('_edit_id')),
+        editName: @js(old('name', '')),
+        editDescription: @js(old('description', '')),
+        editPermissions: @js(old('permissions', [])),
+        editFullAccess: false,
+        storeUrl: @js(route('roles.store')),
+        openAdd() {
+            this.showAdd = true;
+            this.showEdit = false;
+        },
+        openEdit(role) {
+            this.editId = role.id;
+            this.editName = role.name || '';
+            this.editDescription = role.description || '';
+            this.editFullAccess = !!role.full_access;
+            this.editPermissions = role.full_access
+                ? @js($permKeys)
+                : (Array.isArray(role.permissions) ? role.permissions : []);
+            this.showEdit = true;
+            this.showAdd = false;
+            this.$nextTick(() => {
+                document.querySelectorAll('#editRoleForm .role-perm').forEach((el) => {
+                    el.checked = this.editFullAccess || this.editPermissions.includes(el.value);
+                    el.disabled = this.editFullAccess;
+                });
+            });
+        },
+        closeModals() {
+            this.showAdd = false;
+            this.showEdit = false;
+        },
+        editAction() {
+            return this.editId ? ('/roles/' + this.editId) : '#';
+        }
+    }"
+>
     <div class="page-header">
         <div>
             <h2 class="page-title">Master Role / Hak Akses</h2>
             <p class="page-subtitle">Kelola role dan modul yang boleh diakses — dipakai di form Tambah/Edit User</p>
         </div>
-        <button type="button" onclick="openAddRoleModal()" class="btn btn-primary">
+        <button type="button" @click="openAdd()" class="btn btn-primary">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             Tambah Role
         </button>
     </div>
+
+    @if($errors->any())
+    <div class="mb-5 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+        <ul class="list-disc pl-5">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
 
     <form method="GET" class="card p-4 mb-5 flex flex-wrap items-center gap-3">
         <div class="flex-1 min-w-[220px] relative">
@@ -27,7 +80,7 @@
         </div>
         <button type="submit" class="btn btn-primary btn-sm">Filter</button>
         @if(request('search'))
-        <a wire:navigate href="{{ route('roles.index') }}" class="btn btn-secondary btn-sm">Reset</a>
+        <a href="{{ route('roles.index') }}" class="btn btn-secondary btn-sm">Reset</a>
         @endif
     </form>
 
@@ -46,6 +99,16 @@
                 </thead>
                 <tbody>
                     @forelse($roles as $i => $role)
+                    @php
+                        $rolePayload = [
+                            'id' => $role->id,
+                            'name' => $role->name,
+                            'description' => $role->description,
+                            'permissions' => $role->isFullAccess() ? $permKeys : array_values($role->permissions ?? []),
+                            'full_access' => $role->isFullAccess(),
+                            'is_system' => (bool) $role->is_system,
+                        ];
+                    @endphp
                     <tr>
                         <td class="text-gray-400">{{ $roles->firstItem() + $i }}</td>
                         <td>
@@ -79,20 +142,9 @@
                         </td>
                         <td>
                             <div class="flex items-center justify-center gap-2">
-                                @php
-                                    $rolePayload = [
-                                        'id' => $role->id,
-                                        'name' => $role->name,
-                                        'description' => $role->description,
-                                        'permissions' => $role->isFullAccess() ? array_keys($permissionLabels) : ($role->permissions ?? []),
-                                        'full_access' => $role->isFullAccess(),
-                                        'is_system' => $role->is_system,
-                                    ];
-                                @endphp
                                 <button type="button"
-                                    data-role="{{ e(json_encode($rolePayload, JSON_UNESCAPED_UNICODE)) }}"
-                                    onclick="openEditRoleModal(JSON.parse(this.dataset.role))"
-                                    class="btn btn-icon btn-sm btn-secondary" title="Edit">
+                                    @click='openEdit(@json($rolePayload))'
+                                    class="btn btn-icon btn-sm btn-secondary" title="Edit Role">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
 
@@ -138,90 +190,93 @@
         <div class="p-4 border-t border-gray-100">{{ $roles->links() }}</div>
         @endif
     </div>
-</div>
 
-{{-- Modal Tambah / Edit --}}
-<div id="modalRole" class="fixed inset-0 z-50 hidden">
-    <div class="absolute inset-0 bg-black/40" onclick="closeRoleModal()"></div>
-    <div class="relative mx-auto mt-10 w-full max-w-2xl px-4">
-        <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h3 id="modalRoleTitle" class="font-bold text-lg text-gray-800">Tambah Role</h3>
-                <button type="button" onclick="closeRoleModal()" class="text-gray-400 hover:text-gray-600">
+    {{-- Modal Tambah --}}
+    <div x-show="showAdd" x-cloak class="fixed inset-0 z-[80] flex items-center justify-center p-4" style="display: none;">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="closeModals()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 class="font-bold text-lg text-gray-800">Tambah Role</h3>
+                <button type="button" @click="closeModals()" class="text-gray-400 hover:text-gray-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <form id="formRole" method="POST" action="{{ route('roles.store') }}" class="p-6 space-y-4">
+            <form method="POST" action="{{ route('roles.store') }}" class="p-6 space-y-4">
                 @csrf
-                <input type="hidden" name="_method" id="roleMethod" value="POST">
-
                 <div>
                     <label class="form-label font-bold text-gray-700">Nama Role <span class="text-red-500">*</span></label>
-                    <input type="text" name="name" id="roleName" class="form-input" required placeholder="Contoh: Supervisor Gudang">
+                    <input type="text" name="name" value="{{ old('name') }}" class="form-input" required placeholder="Contoh: Supervisor Gudang">
                 </div>
                 <div>
                     <label class="form-label font-bold text-gray-700">Deskripsi</label>
-                    <textarea name="description" id="roleDescription" rows="2" class="form-input" placeholder="Ringkas fungsi role ini"></textarea>
+                    <textarea name="description" rows="2" class="form-input" placeholder="Ringkas fungsi role ini">{{ old('description') }}</textarea>
                 </div>
-
                 <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <label class="form-label font-bold text-gray-700 mb-0">Hak Akses Modul</label>
-                        <p id="roleFullAccessHint" class="hidden text-xs text-rose-600 font-medium">Kepala IT selalu punya akses penuh</p>
-                    </div>
-                    <div id="rolePermissionsWrap" class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 rounded-xl border border-gray-100 bg-gray-50/80">
+                    <label class="form-label font-bold text-gray-700">Hak Akses Modul</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 rounded-xl border border-gray-100 bg-gray-50/80">
                         @foreach($permissionLabels as $key => $label)
                         <label class="flex items-start gap-2 text-sm text-gray-700 cursor-pointer p-2 rounded-lg hover:bg-white">
-                            <input type="checkbox" name="permissions[]" value="{{ $key }}" class="role-perm mt-0.5 text-emerald-600 focus:ring-emerald-500 rounded">
+                            <input type="checkbox" name="permissions[]" value="{{ $key }}" class="mt-0.5 text-emerald-600 focus:ring-emerald-500 rounded" @checked(collect(old('permissions', []))->contains($key))>
                             <span>{{ $label }}</span>
                         </label>
                         @endforeach
                     </div>
                 </div>
-
                 <div class="flex justify-end gap-3 pt-2 border-t border-gray-100">
-                    <button type="button" onclick="closeRoleModal()" class="btn btn-secondary">Batal</button>
+                    <button type="button" @click="closeModals()" class="btn btn-secondary">Batal</button>
                     <button type="submit" class="btn btn-primary">Simpan Role</button>
                 </div>
             </form>
         </div>
     </div>
+
+    {{-- Modal Edit --}}
+    <div x-show="showEdit" x-cloak class="fixed inset-0 z-[80] flex items-center justify-center p-4" style="display: none;">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="closeModals()"></div>
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" @click.stop>
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white z-10">
+                <h3 class="font-bold text-lg text-gray-800">Edit Role</h3>
+                <button type="button" @click="closeModals()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="editRoleForm" method="POST" :action="editAction()" class="p-6 space-y-4">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="_edit_id" :value="editId">
+
+                <div>
+                    <label class="form-label font-bold text-gray-700">Nama Role <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" x-model="editName" class="form-input" required>
+                </div>
+                <div>
+                    <label class="form-label font-bold text-gray-700">Deskripsi</label>
+                    <textarea name="description" rows="2" class="form-input" x-model="editDescription" placeholder="Ringkas fungsi role ini"></textarea>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="form-label font-bold text-gray-700 mb-0">Hak Akses Modul</label>
+                        <p x-show="editFullAccess" x-cloak class="text-xs text-rose-600 font-medium">Kepala IT selalu punya akses penuh</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 rounded-xl border border-gray-100 bg-gray-50/80">
+                        @foreach($permissionLabels as $key => $label)
+                        <label class="flex items-start gap-2 text-sm text-gray-700 cursor-pointer p-2 rounded-lg hover:bg-white" :class="editFullAccess && 'opacity-70'">
+                            <input type="checkbox" name="permissions[]" value="{{ $key }}" class="role-perm mt-0.5 text-emerald-600 focus:ring-emerald-500 rounded">
+                            <span>{{ $label }}</span>
+                        </label>
+                        @endforeach
+                    </div>
+                    {{-- Pastikan Kepala IT tetap kirim penanda full access --}}
+                    <template x-if="editFullAccess">
+                        <input type="hidden" name="full_access" value="1">
+                    </template>
+                </div>
+                <div class="flex justify-end gap-3 pt-2 border-t border-gray-100">
+                    <button type="button" @click="closeModals()" class="btn btn-secondary">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-
-<script>
-function openAddRoleModal() {
-    document.getElementById('modalRoleTitle').textContent = 'Tambah Role';
-    document.getElementById('formRole').action = @json(route('roles.store'));
-    document.getElementById('roleMethod').value = 'POST';
-    document.getElementById('roleName').value = '';
-    document.getElementById('roleDescription').value = '';
-    document.getElementById('roleFullAccessHint').classList.add('hidden');
-    document.querySelectorAll('.role-perm').forEach(el => {
-        el.checked = false;
-        el.disabled = false;
-    });
-    document.getElementById('modalRole').classList.remove('hidden');
-}
-
-function openEditRoleModal(role) {
-    document.getElementById('modalRoleTitle').textContent = 'Edit Role';
-    document.getElementById('formRole').action = `/roles/${role.id}`;
-    document.getElementById('roleMethod').value = 'PUT';
-    document.getElementById('roleName').value = role.name || '';
-    document.getElementById('roleDescription').value = role.description || '';
-    const hint = document.getElementById('roleFullAccessHint');
-    const perms = role.permissions || [];
-    document.querySelectorAll('.role-perm').forEach(el => {
-        el.checked = role.full_access || perms.includes(el.value);
-        el.disabled = !!role.full_access;
-    });
-    if (role.full_access) hint.classList.remove('hidden');
-    else hint.classList.add('hidden');
-    document.getElementById('modalRole').classList.remove('hidden');
-}
-
-function closeRoleModal() {
-    document.getElementById('modalRole').classList.add('hidden');
-}
-</script>
 @endsection
