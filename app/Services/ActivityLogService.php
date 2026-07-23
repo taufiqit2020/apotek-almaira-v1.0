@@ -3,9 +3,14 @@ namespace App\Services;
 use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
+use Illuminate\Support\Facades\Schema;
 class ActivityLogService {
     public static function log(string $action, string $module = '', string $description = '', ?int $userId = null, $oldData = null, $newData = null): void {
         try {
+            if (! Schema::hasTable('activity_logs')) {
+                return;
+            }
+
             ActivityLog::create([
                 'user_id' => $userId ?? Auth::id(),
                 'action' => $action,

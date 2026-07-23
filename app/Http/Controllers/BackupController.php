@@ -76,24 +76,43 @@ class BackupController extends Controller
             }
 
             foreach ($tables as $table) {
+                // Lewati tabel yang sudah tidak ada (race / schema tidak lengkap)
+                if (! Schema::hasTable($table)) {
+                    continue;
+                }
+
                 // Drop table statement
                 $sql .= "DROP TABLE IF EXISTS `{$table}`;\n";
 
                 // Create table statement
                 if ($driver === 'sqlite') {
-                    $createObj = DB::select("SELECT sql FROM sqlite_master WHERE type='table' AND name=?", [$table])[0];
-                    $sql .= $createObj->sql . ";\n\n";
+                    $createRows = DB::select("SELECT sql FROM sqlite_master WHERE type='table' AND name=?", [$table]);
+                    if ($createRows === []) {
+                        continue;
+                    }
+                    $sql .= $createRows[0]->sql . ";\n\n";
                 } else {
-                    $createObj = DB::select("SHOW CREATE TABLE `{$table}`")[0];
+                    try {
+                        $createObj = DB::select("SHOW CREATE TABLE `{$table}`")[0];
+                    } catch (\Throwable $e) {
+                        \Log::warning("Backup skip table {$table}: ".$e->getMessage());
+                        continue;
+                    }
                     $createSql = $createObj->{'Create Table'} ?? ((array) $createObj)['Create Table'] ?? null;
                     if (! $createSql) {
-                        throw new \RuntimeException("Tidak bisa membaca struktur tabel: {$table}");
+                        \Log::warning("Backup skip table {$table}: struktur tidak terbaca");
+                        continue;
                     }
                     $sql .= $createSql . ";\n\n";
                 }
 
                 // Inserts
-                $rows = DB::table($table)->get();
+                try {
+                    $rows = DB::table($table)->get();
+                } catch (\Throwable $e) {
+                    \Log::warning("Backup skip data {$table}: ".$e->getMessage());
+                    continue;
+                }
                 if ($rows->count() > 0) {
                     $sql .= "-- Data for table `{$table}`\n";
                     foreach ($rows as $row) {
@@ -127,21 +146,34 @@ class BackupController extends Controller
             File::put($filePath, $sql);
 
             // Trigger Backup notification alert
-            \App\Services\NotificationService::triggerBackupAlert($filename, File::size($filePath));
+            try {
+                \App\Services\NotificationService::triggerBackupAlert($filename, File::size($filePath));
+            } catch (\Throwable $e) {
+                \Log::warning('Backup alert gagal: '.$e->getMessage());
+            }
 
-            ActivityLogService::log(
-                'BACKUP_CREATE',
-                'Backup',
-                "Membuat backup database berhasil: {$filename}"
-            );
+            try {
+                ActivityLogService::log(
+                    'BACKUP_CREATE',
+                    'Backup',
+                    "Membuat backup database berhasil: {$filename}"
+                );
+            } catch (\Throwable $e) {
+                \Log::warning('Backup activity log gagal: '.$e->getMessage());
+            }
 
             return redirect()->route('backup.index')->with('toast_success', 'Backup database berhasil dibuat!');
         } catch (\Exception $e) {
-            ActivityLogService::log(
-                'BACKUP_ERROR',
-                'Backup',
-                "Gagal membuat backup database: " . $e->getMessage()
-            );
+            try {
+                ActivityLogService::log(
+                    'BACKUP_ERROR',
+                    'Backup',
+                    "Gagal membuat backup database: " . $e->getMessage()
+                );
+            } catch (\Throwable $ignored) {
+                // jangan tutupi error backup asli
+            }
+            \Log::error('Backup gagal: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return redirect()->route('backup.index')->with('toast_error', 'Gagal membuat backup: ' . $e->getMessage());
         }
     }
