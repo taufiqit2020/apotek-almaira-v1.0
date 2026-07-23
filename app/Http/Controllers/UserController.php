@@ -55,6 +55,7 @@ class UserController extends Controller
             'role_id' => 'required|exists:roles,id',
             'is_active' => 'boolean',
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'cropped_avatar' => 'nullable|string',
         ], [
             'avatar.image' => 'File foto profil harus berupa gambar.',
             'avatar.mimes' => 'Format foto: jpeg, png, jpg, atau webp.',
@@ -68,11 +69,17 @@ class UserController extends Controller
 
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = $request->boolean('is_active', true);
-        unset($validated['avatar']);
+        unset($validated['avatar'], $validated['cropped_avatar']);
 
         $user = User::create($validated);
 
-        if ($request->hasFile('avatar')) {
+        if ($request->filled('cropped_avatar')) {
+            $path = $this->storeCroppedAvatar($request->input('cropped_avatar'), $user->id);
+            if ($path) {
+                $user->avatar = $path;
+                $user->save();
+            }
+        } elseif ($request->hasFile('avatar')) {
             $user->avatar = $this->storeAvatar($request, $user->id);
             $user->save();
         }
@@ -105,6 +112,7 @@ class UserController extends Controller
             'is_active' => 'boolean',
             'password' => ['nullable', Rules\Password::defaults()],
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'cropped_avatar' => 'nullable|string',
             'remove_avatar' => 'nullable|boolean',
         ], [
             'avatar.image' => 'File foto profil harus berupa gambar.',
@@ -135,11 +143,16 @@ class UserController extends Controller
         }
 
         $validated['is_active'] = $request->boolean('is_active');
-        unset($validated['avatar'], $validated['remove_avatar']);
+        unset($validated['avatar'], $validated['remove_avatar'], $validated['cropped_avatar']);
 
         if ($request->boolean('remove_avatar')) {
             $this->deleteOwnedAvatar($user);
             $validated['avatar'] = null;
+        } elseif ($request->filled('cropped_avatar')) {
+            $path = $this->storeCroppedAvatar($request->input('cropped_avatar'), $user->id, $user);
+            if ($path) {
+                $validated['avatar'] = $path;
+            }
         } elseif ($request->hasFile('avatar')) {
             $this->deleteOwnedAvatar($user);
             $validated['avatar'] = $this->storeAvatar($request, $user->id);
@@ -217,6 +230,37 @@ class UserController extends Controller
         $file = $request->file('avatar');
         $filename = 'avatar_'.$userId.'_'.time().'.'.$file->getClientOriginalExtension();
         $file->move($dir, $filename);
+
+        return 'uploads/avatars/'.$filename;
+    }
+
+    private function storeCroppedAvatar(string $base64Data, int $userId, ?User $existing = null): ?string
+    {
+        if (! preg_match('/^data:image\/(\w+);base64,/', $base64Data, $typeMatches)) {
+            return null;
+        }
+
+        $fileData = base64_decode(substr($base64Data, strpos($base64Data, ',') + 1), true);
+        $extension = strtolower($typeMatches[1]);
+        if ($extension === 'jpg') {
+            $extension = 'jpeg';
+        }
+
+        if (! in_array($extension, ['jpeg', 'png', 'webp'], true) || $fileData === false) {
+            return null;
+        }
+
+        if ($existing) {
+            $this->deleteOwnedAvatar($existing);
+        }
+
+        $dir = public_path('uploads/avatars');
+        if (! File::isDirectory($dir)) {
+            File::makeDirectory($dir, 0755, true);
+        }
+
+        $filename = 'avatar_'.$userId.'_'.time().'.'.$extension;
+        file_put_contents($dir.DIRECTORY_SEPARATOR.$filename, $fileData);
 
         return 'uploads/avatars/'.$filename;
     }

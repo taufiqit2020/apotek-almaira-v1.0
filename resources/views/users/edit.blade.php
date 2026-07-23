@@ -10,6 +10,22 @@
 @endsection
 
 @section('content')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
+<style>
+    .user-cropper-box {
+        width: 100%;
+        height: min(58vh, 360px);
+        min-height: 260px;
+        background: #0f172a;
+        border-radius: 0.9rem;
+        overflow: hidden;
+        position: relative;
+    }
+    .user-cropper-box img { display: block; max-width: 100%; }
+    .user-cropper-box .cropper-container { max-width: 100% !important; }
+    .user-cropper-modal { max-height: min(92vh, 640px); }
+</style>
 <div class="animate-in max-w-2xl mx-auto" x-data="{ showResetModal: false }">
     <div class="page-header mb-6">
         <div>
@@ -53,20 +69,95 @@
             preview: @js($user->avatarUrl()),
             initials: @js($user->initials()),
             removeAvatar: false,
+            showCropModal: false,
+            rawImageUrl: null,
+            cropper: null,
+            _initTimer: null,
             get selected() { return this.roles.find(r => String(r.id) === String(this.roleId)) || null },
-            onFile(e) {
+            fileChosen(e) {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                this.removeAvatar = false;
+                if (!file.type.startsWith('image/')) {
+                    alert('File harus berupa gambar (JPG, PNG, atau WEBP).');
+                    e.target.value = '';
+                    return;
+                }
                 const reader = new FileReader();
-                reader.onload = (ev) => { this.preview = ev.target.result; };
+                reader.onload = (ev) => {
+                    this.destroyCropper();
+                    this.rawImageUrl = ev.target.result;
+                    this.showCropModal = true;
+                    this.$nextTick(() => this.initCropper());
+                };
                 reader.readAsDataURL(file);
+            },
+            initCropper() {
+                clearTimeout(this._initTimer);
+                this._initTimer = setTimeout(() => {
+                    const image = this.$refs.cropperImage;
+                    if (!image || !this.rawImageUrl) return;
+                    const start = () => {
+                        this.destroyCropper();
+                        this.cropper = new Cropper(image, {
+                            aspectRatio: 1,
+                            viewMode: 1,
+                            dragMode: 'move',
+                            autoCropArea: 0.85,
+                            responsive: true,
+                            restore: false,
+                            checkOrientation: true,
+                            background: false,
+                            modal: true,
+                            guides: true,
+                            center: true,
+                            highlight: true,
+                            cropBoxMovable: true,
+                            cropBoxResizable: true,
+                            toggleDragModeOnDblclick: false,
+                        });
+                    };
+                    if (image.complete) start();
+                    else image.onload = () => start();
+                }, 80);
+            },
+            destroyCropper() {
+                clearTimeout(this._initTimer);
+                if (this.cropper) {
+                    this.cropper.destroy();
+                    this.cropper = null;
+                }
+            },
+            zoomIn() { this.cropper?.zoom(0.1); },
+            zoomOut() { this.cropper?.zoom(-0.1); },
+            rotate() { this.cropper?.rotate(90); },
+            cancelCrop() {
+                this.showCropModal = false;
+                this.destroyCropper();
+                this.rawImageUrl = null;
+                if (this.$refs.avatarInput) this.$refs.avatarInput.value = '';
+            },
+            applyCrop() {
+                if (!this.cropper) return;
+                const canvas = this.cropper.getCroppedCanvas({
+                    width: 400,
+                    height: 400,
+                    imageSmoothingEnabled: true,
+                    imageSmoothingQuality: 'high',
+                });
+                if (!canvas) return;
+                this.preview = canvas.toDataURL('image/jpeg', 0.92);
+                this.$refs.croppedAvatar.value = this.preview;
+                this.removeAvatar = false;
+                if (this.$refs.avatarInput) this.$refs.avatarInput.value = '';
+                this.showCropModal = false;
+                this.destroyCropper();
+                this.rawImageUrl = null;
             },
             clearAvatar() {
                 this.removeAvatar = true;
                 this.preview = null;
-                const input = this.$refs.avatarInput;
-                if (input) input.value = '';
+                if (this.$refs.croppedAvatar) this.$refs.croppedAvatar.value = '';
+                if (this.$refs.avatarInput) this.$refs.avatarInput.value = '';
             }
          }">
         <form method="POST" action="{{ route('users.update', $user) }}" enctype="multipart/form-data">
@@ -77,7 +168,7 @@
                 {{-- Foto Profil --}}
                 <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl border border-gray-100 bg-slate-50/70">
                     <div class="relative shrink-0">
-                        <div class="w-24 h-24 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-emerald-100 flex items-center justify-center text-emerald-700 text-2xl font-bold">
+                        <div class="w-24 h-24 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-emerald-100 flex items-center justify-center text-emerald-700 text-2xl font-bold ring-2 ring-emerald-100">
                             <template x-if="preview && !removeAvatar">
                                 <img :src="preview" alt="Foto profil" class="w-full h-full object-cover">
                             </template>
@@ -88,7 +179,7 @@
                     </div>
                     <div class="flex-1 min-w-0">
                         <label class="form-label font-bold text-gray-700 mb-1">Foto Profil</label>
-                        <p class="text-xs text-gray-500 mb-3">JPG, PNG, atau WEBP · maksimal 2 MB. Tampil di sidebar dan daftar user.</p>
+                        <p class="text-xs text-gray-500 mb-3">Pilih foto, lalu atur crop & posisi sebelum disimpan. JPG/PNG/WEBP maks. 2 MB.</p>
                         <div class="flex flex-wrap items-center gap-2">
                             <button type="button" class="btn btn-secondary btn-sm" @click="$refs.avatarInput.click()">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -98,7 +189,8 @@
                                 Hapus Foto
                             </button>
                         </div>
-                        <input type="file" name="avatar" x-ref="avatarInput" class="hidden" accept="image/jpeg,image/png,image/jpg,image/webp" @change="onFile($event)">
+                        <input type="file" x-ref="avatarInput" class="hidden" accept="image/jpeg,image/png,image/jpg,image/webp" @change="fileChosen($event)">
+                        <input type="hidden" name="cropped_avatar" x-ref="croppedAvatar" value="">
                         <input type="hidden" name="remove_avatar" :value="removeAvatar ? 1 : 0">
                         @error('avatar')<p class="form-error mt-2">{{ $message }}</p>@enderror
                     </div>
@@ -186,6 +278,68 @@
                 </div>
             </div>
         </form>
+
+        {{-- Modal crop foto --}}
+        <template x-teleport="body">
+            <div x-show="showCropModal"
+                 x-cloak
+                 class="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-sm"
+                 @keydown.escape.window="if (showCropModal) cancelCrop()"
+                 @click.self="cancelCrop()">
+                <div @click.stop
+                     class="user-cropper-modal bg-white rounded-2xl w-full max-w-lg shadow-2xl border border-slate-100 flex flex-col overflow-hidden"
+                     x-show="showCropModal"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 translate-y-2 scale-[0.98]"
+                     x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0">
+                    <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/90 flex-shrink-0">
+                        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                            <span class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </span>
+                            Atur Crop & Posisi Foto
+                        </h3>
+                        <button type="button" @click="cancelCrop()" class="text-slate-400 hover:text-slate-600 transition-colors p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="p-4 sm:p-5 flex-1 min-h-0">
+                        <div class="user-cropper-box ring-1 ring-slate-800">
+                            <img x-ref="cropperImage" :src="rawImageUrl" alt="Foto untuk dipotong">
+                        </div>
+                        <p class="text-[11px] text-slate-400 font-medium text-center mt-3 leading-relaxed">
+                            Seret, perbesar, atau putar foto lalu sesuaikan kotak potong agar wajah berada di tengah.
+                        </p>
+                    </div>
+
+                    <div class="px-4 sm:px-5 py-3.5 border-t border-slate-100 flex flex-wrap justify-between items-center bg-slate-50/90 gap-3 flex-shrink-0">
+                        <div class="flex gap-1.5">
+                            <button type="button" @click="zoomIn()" class="p-2 bg-white border border-slate-200 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors cursor-pointer" title="Zoom masuk">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"/></svg>
+                            </button>
+                            <button type="button" @click="zoomOut()" class="p-2 bg-white border border-slate-200 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors cursor-pointer" title="Zoom keluar">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/></svg>
+                            </button>
+                            <button type="button" @click="rotate()" class="p-2 bg-white border border-slate-200 rounded-lg hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors cursor-pointer" title="Putar 90°">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            </button>
+                        </div>
+                        <div class="flex gap-2">
+                            <button type="button" @click="cancelCrop()" class="py-2 px-3.5 text-xs font-bold rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer">
+                                Batal
+                            </button>
+                            <button type="button" @click="applyCrop()" class="py-2 px-4 text-xs font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 cursor-pointer">
+                                Terapkan
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
 
     {{-- Reset Password Modal --}}
