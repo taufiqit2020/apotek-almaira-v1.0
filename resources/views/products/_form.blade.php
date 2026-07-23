@@ -23,34 +23,21 @@
             hetAutoNote: false,
 
             init() {
-                this.$watch('purchasePrice', () => this.updateHetPrice());
-                this.$watch('hetMarkup', () => this.updateHetPrice());
-                this.clampSellAgainstHet();
+                this.$watch('purchasePrice', () => this.syncWholesaleFromSell());
+                this.$watch('hetMarkup', () => this.syncWholesaleFromSell());
             },
 
             /**
-             * HET Markup (%):
-             * - HET & jual = beli × (1 + %)
-             * - Grosir otomatis lebih rendah dari jual (proporsional terhadap %)
-             * Acuan: 30% pada jual 3.500 → turun 860 → grosir 2.640
+             * HET Markup (%): hanya mengotomasi harga grosir dari jual saat ini.
+             * Harga jual & HET dari data real TIDAK ditimpa (boleh jual > HET).
              */
             updateHetPrice() {
-                if (this.hetMarkup > 0 && this.purchasePrice > 0) {
-                    const markup = Number(this.hetMarkup);
-                    const jual = Math.round(this.purchasePrice * (1 + markup / 100));
-                    this.hetPrice = jual;
-                    this.sellPrice = jual;
-                    this.wholesalePrice = this.calcWholesale(jual, markup);
-                    this.hetAutoNote = false;
-                    return;
-                }
-                this.clampSellAgainstHet();
+                this.syncWholesaleFromSell();
             },
 
             /**
              * Grosir otomatis dari jual + markup.
-             * Pola acuan user: markup 30% & jual 3500 → drop 860 → grosir 2640.
-             * Diskon = (markup/30) × (860/3500) dari jual — konsisten untuk 5–30%.
+             * Acuan: markup 30% & jual 3500 → drop 860 → grosir 2640.
              */
             calcWholesale(jual, markup) {
                 const j = Math.max(0, Math.round(Number(jual) || 0));
@@ -65,7 +52,7 @@
                 if (this.hetMarkup > 0 && this.sellPrice > 0) {
                     this.wholesalePrice = this.calcWholesale(this.sellPrice, this.hetMarkup);
                 }
-                this.clampSellAgainstHet();
+                this.ensureWholesaleNotAboveSell();
             },
 
             get isExceedingHet() {
@@ -77,18 +64,16 @@
                 return Math.max(0, this.sellPrice - this.wholesalePrice);
             },
 
-            /** Jika jual > HET → tutup ke HET saja (jangan lompat ke grosir). */
-            clampSellAgainstHet() {
-                if (this.hetPrice > 0 && this.sellPrice > this.hetPrice) {
-                    this.sellPrice = this.hetPrice;
-                    this.hetAutoNote = true;
-                    if (this.hetMarkup > 0) {
-                        this.wholesalePrice = this.calcWholesale(this.sellPrice, this.hetMarkup);
-                    }
-                }
+            /** Jual boleh > HET; hanya pastikan grosir tidak melebihi jual. */
+            ensureWholesaleNotAboveSell() {
                 if (this.sellPrice > 0 && this.wholesalePrice > this.sellPrice) {
                     this.wholesalePrice = this.sellPrice;
                 }
+            },
+
+            /** @deprecated alias — tetap aman dipanggil dari blade lama */
+            clampSellAgainstHet() {
+                this.ensureWholesaleNotAboveSell();
             },
 
             adjustPercent: 10,
@@ -105,7 +90,7 @@
                 } else if (this.wholesalePrice > 0) {
                     this.wholesalePrice = Math.round(this.wholesalePrice * factor);
                 }
-                this.clampSellAgainstHet();
+                this.ensureWholesaleNotAboveSell();
             },
 
             formatRupiah(val) {
@@ -713,14 +698,14 @@
                         </div>
                         <div class="mt-1.5 space-y-1">
                             <span x-show="isExceedingHet" x-cloak
-                                  class="inline-flex items-center gap-1 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg font-bold">
+                                  class="inline-flex items-center gap-1 text-[11px] text-rose-800 bg-rose-50 border border-rose-200 px-2 py-1 rounded-lg font-bold">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                                Melebihi HET — akan disesuaikan ke HET
+                                Melebihi HET — harga jual tetap dipakai
                             </span>
                             <span x-show="hetAutoNote && !isExceedingHet" x-cloak
                                   class="inline-flex items-center gap-1 text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg font-bold">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                Jual disesuaikan ke HET
+                                Harga tersimpan
                             </span>
                         </div>
                         @error('sell_price')<p class="form-error">{{ $message }}</p>@enderror

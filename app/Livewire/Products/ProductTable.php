@@ -155,14 +155,15 @@ class ProductTable extends Component
         $factor = 1 + ($percent / 100);
         $updated = 0;
         $skipped = 0;
-        $hetAdjusted = 0;
+        $exceedHet = 0;
 
         Product::whereIn('id', $this->selected)
             ->orderBy('id')
-            ->chunkById(200, function ($products) use ($factor, &$updated, &$skipped, &$hetAdjusted) {
+            ->chunkById(200, function ($products) use ($factor, &$updated, &$skipped, &$exceedHet) {
                 foreach ($products as $product) {
                     $sell = (float) $product->sell_price;
                     $wholesale = (float) $product->wholesale_price;
+                    $markup = (int) ($product->het_markup ?? 0);
 
                     if ($sell <= 0 && $wholesale <= 0) {
                         $skipped++;
@@ -170,7 +171,11 @@ class ProductTable extends Component
                     }
 
                     $newSell = $sell > 0 ? (float) round($sell * $factor) : $sell;
-                    $newWholesale = $wholesale > 0 ? (float) round($wholesale * $factor) : $wholesale;
+                    if ($markup > 0 && $newSell > 0) {
+                        $newWholesale = Product::calcWholesaleFromMarkup($newSell, $markup);
+                    } else {
+                        $newWholesale = $wholesale > 0 ? (float) round($wholesale * $factor) : $wholesale;
+                    }
 
                     $normalized = Product::normalizeSellAgainstHet(
                         $newSell,
@@ -178,8 +183,8 @@ class ProductTable extends Component
                         (float) ($product->het_price ?? 0),
                     );
 
-                    if ($normalized['adjusted'] && $newSell > (float) ($product->het_price ?? 0)) {
-                        $hetAdjusted++;
+                    if (! empty($normalized['exceeds_het'])) {
+                        $exceedHet++;
                     }
 
                     $product->update([
@@ -195,72 +200,71 @@ class ProductTable extends Component
         if ($skipped > 0) {
             $msg .= " {$skipped} dilewati (harga 0).";
         }
-        if ($hetAdjusted > 0) {
-            $msg .= " {$hetAdjusted} jual otomatis diturunkan ke HET.";
+        if ($exceedHet > 0) {
+            $msg .= " {$exceedHet} tetap melebihi HET (harga jual tetap dipakai).";
         }
 
         ActivityLogService::updated(
             'Produk',
             "Bulk harga {$sign}% pada {$updated} produk",
             null,
-            ['percent' => $percent, 'updated' => $updated, 'het_adjusted' => $hetAdjusted, 'ids_count' => count($this->selected)]
+            ['percent' => $percent, 'updated' => $updated, 'exceed_het' => $exceedHet, 'ids_count' => count($this->selected)]
         );
 
         $this->dispatch('toast', type: 'success', message: $msg);
         $this->clearSelection();
     }
 
-    /** Perbaiki harga jual produk terpilih yang melebihi HET (tutup ke HET). */
+    /** Hitung ulang harga grosir produk terpilih (jual & HET tidak diubah). */
     public function fixSelectedAgainstHet(): void
     {
         if (empty($this->selected)) {
-            // Jika filter melebihi HET & belum ada centang → pilih semua hasil filter dulu
             if ($this->statusFilter === 'exceed_het') {
                 $this->selectAllFiltered();
             }
             if (empty($this->selected)) {
-                $this->dispatch('toast', type: 'warning', message: 'Centang produk yang ingin diperbaiki, atau filter Melebihi HET lalu klik lagi.');
+                $this->dispatch('toast', type: 'warning', message: 'Centang produk terlebih dahulu.');
 
                 return;
             }
         }
 
-        $fixed = 0;
+        $synced = 0;
         Product::whereIn('id', $this->selected)
             ->orderBy('id')
-            ->chunkById(200, function ($products) use (&$fixed) {
+            ->chunkById(200, function ($products) use (&$synced) {
                 foreach ($products as $product) {
-                    if (! $product->exceedsHet()) {
+                    $sell = (float) $product->sell_price;
+                    $markup = (int) ($product->het_markup ?? 0);
+                    if ($sell <= 0 || $markup <= 0) {
                         continue;
                     }
+                    $wholesale = Product::calcWholesaleFromMarkup($sell, $markup);
                     $normalized = Product::normalizeSellAgainstHet(
-                        (float) $product->sell_price,
-                        (float) ($product->wholesale_price ?? 0),
+                        $sell,
+                        $wholesale,
                         (float) ($product->het_price ?? 0),
                     );
-                    if ($normalized['adjusted']) {
-                        $product->update([
-                            'sell_price' => $normalized['sell_price'],
-                            'wholesale_price' => $normalized['wholesale_price'],
-                        ]);
-                        $fixed++;
-                    }
+                    $product->update([
+                        'wholesale_price' => $normalized['wholesale_price'],
+                    ]);
+                    $synced++;
                 }
             });
 
         ActivityLogService::updated(
             'Produk',
-            "Perbaiki HET pada {$fixed} produk",
+            "Sync grosir pada {$synced} produk",
             null,
-            ['fixed' => $fixed, 'ids_count' => count($this->selected)]
+            ['synced' => $synced, 'ids_count' => count($this->selected)]
         );
 
         $this->dispatch(
             'toast',
-            type: $fixed > 0 ? 'success' : 'info',
-            message: $fixed > 0
-                ? "{$fixed} produk diperbaiki: harga jual disesuaikan ke HET."
-                : 'Tidak ada produk terpilih yang melebihi HET.'
+            type: $synced > 0 ? 'success' : 'info',
+            message: $synced > 0
+                ? "{$synced} produk: harga grosir dihitung ulang (jual tetap)."
+                : 'Tidak ada produk yang bisa di-sync grosir (butuh markup %).'
         );
         $this->clearSelection();
     }

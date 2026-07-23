@@ -61,20 +61,15 @@ class Product extends Model {
     }
 
     /**
-     * Jika harga jual melebihi HET: tutup jual ke HET.
-     * Grosir tidak boleh melebihi jual setelah normalisasi.
-     * (Tidak lagi menurunkan jual ke grosir dulu — grosir bisa jauh di bawah HET.)
+     * Normalisasi harga: harga jual DIBIARKAN meski melebihi HET
+     * (tanda "Melebihi HET" lewat exceedsHet()). Grosir tidak boleh > jual.
      *
-     * @return array{sell_price: float, wholesale_price: float, adjusted: bool}
+     * @return array{sell_price: float, wholesale_price: float, adjusted: bool, exceeds_het: bool}
      */
     public static function normalizeSellAgainstHet(float $sell, float $wholesale, float $het): array
     {
         $adjusted = false;
-
-        if ($het > 0 && $sell > $het) {
-            $sell = $het;
-            $adjusted = true;
-        }
+        $exceedsHet = $het > 0 && $sell > $het;
 
         if ($sell > 0 && $wholesale > $sell) {
             $wholesale = $sell;
@@ -85,6 +80,7 @@ class Product extends Model {
             'sell_price' => round($sell, 2),
             'wholesale_price' => round(max(0, $wholesale), 2),
             'adjusted' => $adjusted,
+            'exceeds_het' => $exceedsHet,
         ];
     }
 

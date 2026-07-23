@@ -123,13 +123,8 @@
     <div class="mb-4 flex flex-wrap items-center gap-3 p-3.5 bg-gradient-to-r from-rose-50 via-white to-amber-50 border border-rose-200 rounded-xl text-sm text-rose-800 shadow-sm">
         <div class="flex-1 min-w-0">
             <p class="font-bold text-rose-900">Filter aktif: Melebihi HET</p>
-            <p class="text-xs text-rose-700/80 mt-0.5">Centang produk lalu klik <strong>Perbaiki HET</strong> — jual otomatis ke grosir/HET.</p>
+            <p class="text-xs text-rose-700/80 mt-0.5">Harga jual dari data real <strong>tetap dipakai</strong> di kasir. Tanda hanya sebagai peringatan di master produk.</p>
         </div>
-        <button type="button" wire:click="fixSelectedAgainstHet"
-                wire:confirm="Perbaiki harga jual produk terpilih yang melebihi HET?"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition-colors whitespace-nowrap">
-            Perbaiki HET terpilih
-        </button>
     </div>
     @endif
 
@@ -144,7 +139,7 @@
                     <p class="text-sm font-extrabold text-emerald-950 tracking-tight">Sesuaikan Harga Massal</p>
                     <p class="text-xs text-emerald-800/65 mt-0.5 leading-relaxed">
                         Naikkan/turunkan <strong>harga jual &amp; grosir</strong> sekaligus. Harga beli &amp; HET tetap.
-                        Jika jual melebihi HET, otomatis diturunkan ke harga grosir, lalu ke HET jika masih melebihi.
+                        Jika jual melebihi HET, harga jual <strong>tetap dipakai</strong> dan ditandai Melebihi HET.
                     </p>
                 </div>
             </div>
@@ -197,18 +192,18 @@
                     </div>
                     <button type="button"
                             wire:click="bulkAdjustPrices"
-                            wire:confirm="Sesuaikan harga jual & grosir {{ count($selected) }} produk sebesar {{ $bulkPricePercent }}%? Harga beli dan HET tidak berubah. Jika melebihi HET, jual otomatis ke grosir/HET."
+                            wire:confirm="Sesuaikan harga jual & grosir {{ count($selected) }} produk sebesar {{ $bulkPricePercent }}%? Harga beli dan HET tidak berubah. Jika melebihi HET, harga jual tetap dipakai."
                             class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold bg-amber-400 hover:bg-amber-300 text-slate-900 shadow-lg shadow-amber-500/20 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         Sesuaikan Harga
                     </button>
                     <button type="button"
                             wire:click="fixSelectedAgainstHet"
-                            wire:confirm="Perbaiki harga jual yang melebihi HET pada produk terpilih?"
-                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-extrabold bg-rose-500/90 hover:bg-rose-400 text-white border border-rose-400/40 transition-colors"
-                            title="Turunkan jual ke grosir/HET">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                        Perbaiki HET
+                            wire:confirm="Hitung ulang harga grosir produk terpilih? Harga jual & HET tidak diubah."
+                            class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-extrabold bg-teal-500/90 hover:bg-teal-400 text-white border border-teal-400/40 transition-colors"
+                            title="Hitung ulang harga grosir dari markup">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Sync Grosir
                     </button>
                 </div>
 
