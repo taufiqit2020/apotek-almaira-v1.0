@@ -103,7 +103,10 @@ class SaleTable extends Component
 
         $sales     = $query->paginate($this->perPage);
         $totalRevenue = $query->sum('total');
-        $kasirList = User::whereIn('role', ['admin', 'kasir', 'it_admin'])->orderBy('name')->get();
+        $kasirList = User::query()
+            ->whereHas('role', fn ($q) => $q->whereIn('slug', ['super_admin', 'admin_keuangan', 'kasir']))
+            ->orderBy('name')
+            ->get();
 
         return view('livewire.sales.sale-table', compact('sales', 'totalRevenue', 'kasirList'));
     }
