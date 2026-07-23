@@ -41,8 +41,8 @@ return new class extends Migration
         // ─── Produk / Obat ────────────────────────────────────────
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->string('barcode', 50)->unique()->nullable();
-            $table->string('code', 50)->unique()->nullable();
+            $table->string('barcode', 50)->nullable()->unique();
+            $table->string('code', 50)->nullable()->unique();
             $table->string('name', 200);
             $table->foreignId('category_id')->nullable()->constrained('categories')->nullOnDelete();
             $table->foreignId('unit_id')->nullable()->constrained('units')->nullOnDelete();

@@ -53,6 +53,32 @@
                         Hubungi WhatsApp
                     </a>
                 </div>
+
+                {{-- Akses login: Mitra vs Staff --}}
+                <div class="mt-5 max-w-xl mx-auto lg:mx-0 p-3.5 sm:p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
+                    <p class="text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] text-emerald-100/90 mb-3 text-center lg:text-left">Masuk ke sistem</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <a href="{{ route('mitra.login') }}" class="group flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-extrabold text-sm shadow-lg shadow-amber-900/20 hover:from-amber-300 hover:to-amber-400 transition-all hover:-translate-y-0.5">
+                            <span class="w-9 h-9 rounded-lg bg-white/30 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </span>
+                            <span class="text-left leading-tight">
+                                <span class="block">Login Mitra</span>
+                                <span class="block text-[11px] font-semibold opacity-80">Portal B2B &amp; PO</span>
+                            </span>
+                        </a>
+                        <a href="{{ route('login') }}" class="group flex items-center gap-3 px-4 py-3 rounded-xl bg-white text-emerald-900 font-extrabold text-sm shadow-lg shadow-black/15 hover:bg-emerald-50 transition-all hover:-translate-y-0.5">
+                            <span class="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            </span>
+                            <span class="text-left leading-tight">
+                                <span class="block">Login Staff</span>
+                                <span class="block text-[11px] font-semibold text-emerald-700/80">Kasir &amp; Admin</span>
+                            </span>
+                        </a>
+                    </div>
+                </div>
+
                 <a href="#tentang" class="inline-flex items-center gap-2 mt-4 px-2 py-2 text-white/90 font-semibold text-sm hover:text-white transition-colors">
                     Pelajari Lebih Lanjut
                     <svg class="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -77,13 +103,13 @@
             {{-- Logo showcase --}}
             <div class="flex flex-col items-center order-1 lg:order-2">
                 <div class="flex items-center justify-center gap-5 sm:gap-8">
-                    <div class="text-center">
+                    <div class="text-center logo-float">
                         <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-white p-5 hero-glow ring-4 ring-white/25 flex items-center justify-center">
                             <img src="{{ asset('assets/images/logo-ptnmf.png') }}" alt="{{ $companyName }}" class="w-full h-full object-contain">
                         </div>
                         <p class="mt-4 text-xs font-extrabold text-white uppercase tracking-[0.2em] hero-text-shadow">Perusahaan</p>
                     </div>
-                    <div class="text-center">
+                    <div class="text-center logo-float logo-float-delay">
                         <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-white p-5 hero-glow ring-4 ring-white/25 flex items-center justify-center">
                             <img src="{{ asset('assets/images/logo-apotek.png') }}" alt="{{ $apotekName }}" class="w-full h-full object-contain">
                         </div>
@@ -399,6 +425,9 @@
                     <a href="https://wa.me/{{ $waNumber }}" target="_blank" rel="noopener" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-emerald-600 hover:bg-emerald-500 font-bold rounded-xl transition-colors">
                         Chat WhatsApp
                     </a>
+                    <a href="{{ route('mitra.login') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-amber-500 hover:bg-amber-400 text-amber-950 font-bold rounded-xl transition-colors">
+                        Login Mitra
+                    </a>
                     <a href="{{ route('mitra.register') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/15 border border-white/20 font-bold rounded-xl transition-colors">
                         Daftar Mitra
                     </a>
@@ -413,12 +442,15 @@
     <div class="max-w-4xl mx-auto px-4 sm:px-6 text-center">
         <h2 class="font-banner text-2xl sm:text-3xl font-extrabold text-white">Butuh Obat atau Produk Kesehatan?</h2>
         <p class="mt-3 text-emerald-100">Cek ketersediaan produk di E-Catalog kami atau hubungi langsung via WhatsApp.</p>
-        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
             <a href="{{ route('catalog.index') }}" class="inline-flex items-center gap-2 px-8 py-3.5 bg-white text-emerald-800 font-bold rounded-xl shadow-xl hover:bg-emerald-50 transition-colors">
                 Buka E-Catalog Sekarang
             </a>
-            <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-8 py-3.5 text-white font-semibold border border-white/30 rounded-xl hover:bg-white/10 transition-colors">
-                Login Sistem Internal
+            <a href="{{ route('mitra.login') }}" class="inline-flex items-center gap-2 px-7 py-3.5 bg-amber-400 text-amber-950 font-bold rounded-xl shadow-lg hover:bg-amber-300 transition-colors">
+                Login Mitra
+            </a>
+            <a href="{{ route('login') }}" class="inline-flex items-center gap-2 px-7 py-3.5 text-white font-semibold border border-white/30 rounded-xl hover:bg-white/10 transition-colors">
+                Login Staff
             </a>
         </div>
     </div>

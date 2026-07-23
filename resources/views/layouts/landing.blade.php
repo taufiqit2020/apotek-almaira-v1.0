@@ -55,6 +55,21 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.12);
         }
         #landing-nav.nav-hero .nav-btn-login:hover { background: #fff; }
+        #landing-nav.nav-hero .nav-btn-mitra {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #78350f;
+            border-color: transparent;
+            box-shadow: 0 2px 12px rgba(245,158,11,0.35);
+        }
+        #landing-nav.nav-hero .nav-btn-mitra:hover {
+            background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 100%);
+            transform: translateY(-1px);
+        }
+        #landing-nav.nav-hero .nav-login-group {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.18);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+        }
         #landing-nav.nav-hero .nav-btn-menu { color: #fff; }
         #landing-nav.nav-hero .nav-btn-menu:hover { background: rgba(255,255,255,0.12); }
 
@@ -86,13 +101,34 @@
             background: linear-gradient(135deg, #25D366, #16a34a);
             box-shadow: 0 4px 12px rgba(22,163,74,0.25);
         }
-        #landing-nav.nav-scrolled .nav-btn-login { color: #475569; background: #fff; border-color: #e2e8f0; }
+        #landing-nav.nav-scrolled .nav-btn-login { color: #065f46; background: #fff; border-color: #a7f3d0; }
+        #landing-nav.nav-scrolled .nav-btn-login:hover { background: #ecfdf5; border-color: #6ee7b7; }
+        #landing-nav.nav-scrolled .nav-btn-mitra {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 2px 10px rgba(217,119,6,0.25);
+        }
+        #landing-nav.nav-scrolled .nav-btn-mitra:hover { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        #landing-nav.nav-scrolled .nav-login-group {
+            background: #ecfdf5;
+            border: 1px solid #a7f3d0;
+        }
         #landing-nav.nav-scrolled .nav-btn-menu { color: #475569; }
         #landing-nav.nav-scrolled .nav-btn-menu:hover { background: #f1f5f9; }
 
         .hero-text-shadow { text-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 2px 20px rgba(0,0,0,0.2); }
         .hero-glow { box-shadow: 0 0 60px rgba(16, 185, 129, 0.15), 0 25px 50px rgba(0,0,0,0.25); }
         .location-card { background: linear-gradient(160deg, #ffffff 0%, #f0fdf4 100%); }
+        @keyframes logo-float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .logo-float { animation: logo-float 4.5s ease-in-out infinite; }
+        .logo-float-delay { animation-delay: 1.2s; }
+        @media (prefers-reduced-motion: reduce) {
+            .logo-float, .logo-float-delay { animation: none; }
+        }
     </style>
     @stack('head')
 </head>
@@ -125,17 +161,24 @@
                 <a href="#kontak" class="nav-link text-sm font-semibold px-3.5 py-2 rounded-lg transition-colors">Kontak</a>
             </div>
 
-            <div class="hidden lg:flex items-center gap-2.5">
-                <a href="{{ route('catalog.index') }}" class="nav-btn-catalog inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold border rounded-xl transition-colors">
+            <div class="hidden lg:flex items-center gap-2">
+                <a href="{{ route('catalog.index') }}" class="nav-btn-catalog inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-bold border rounded-xl transition-colors">
                     E-Catalog
                 </a>
-                <a href="https://wa.me/{{ $waNumber }}" target="_blank" rel="noopener" class="nav-btn-wa inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold text-white rounded-xl transition-all hover:-translate-y-0.5">
+                <a href="https://wa.me/{{ $waNumber }}" target="_blank" rel="noopener" class="nav-btn-wa inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-bold text-white rounded-xl transition-all hover:-translate-y-0.5">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.11.55 4.09 1.514 5.805L0 24l6.336-1.662C8.09 23.45 10.004 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
                     WhatsApp
                 </a>
-                <a href="{{ route('login') }}" class="nav-btn-login inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-bold border rounded-xl transition-colors">
-                    Login Staff
-                </a>
+                <div class="nav-login-group flex items-center gap-1.5 p-1 rounded-2xl" title="Pilih jenis login">
+                    <a href="{{ route('mitra.login') }}" class="nav-btn-mitra inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-bold rounded-xl transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Login Mitra
+                    </a>
+                    <a href="{{ route('login') }}" class="nav-btn-login inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-bold border rounded-xl transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        Login Staff
+                    </a>
+                </div>
             </div>
 
             <button type="button" id="mobile-menu-btn" class="nav-btn-menu lg:hidden p-2.5 rounded-xl transition-colors" aria-label="Menu" aria-expanded="false">
@@ -154,8 +197,12 @@
             <a href="#kontak" class="mobile-nav-link block px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-emerald-50 rounded-lg">Kontak</a>
             <div class="pt-3 flex flex-col gap-2 border-t border-slate-100">
                 <a href="{{ route('catalog.index') }}" class="btn btn-primary text-center">E-Catalog</a>
-                <a href="{{ route('mitra.login') }}" class="btn btn-secondary text-center">Portal Mitra</a>
-                <a href="{{ route('login') }}" class="btn btn-secondary text-center">Login Staff</a>
+                <a href="https://wa.me/{{ $waNumber }}" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#25D366] text-white text-sm font-bold">WhatsApp</a>
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="{{ route('mitra.login') }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-amber-500 text-amber-950 text-sm font-bold shadow-sm">Login Mitra</a>
+                    <a href="{{ route('login') }}" class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-emerald-700 text-white text-sm font-bold shadow-sm">Login Staff</a>
+                </div>
+                <a href="{{ route('mitra.register') }}" class="text-center text-xs font-semibold text-emerald-700 hover:text-emerald-800 py-1">Belum punya akun? Daftar Mitra B2B</a>
             </div>
         </div>
     </div>

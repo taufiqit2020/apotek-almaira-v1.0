@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Schema;
 
 class BackupController extends Controller
 {
@@ -58,40 +59,37 @@ class BackupController extends Controller
         try {
             $driver = DB::getDriverName();
             $pdo = DB::connection()->getPdo();
-            
-            if ($driver === 'sqlite') {
-                $tables = array_map('current', DB::select("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"));
-            } else {
-                $tables = array_map('current', DB::select('SHOW TABLES'));
-            }
-            
+            $tables = collect(Schema::getTableListing())
+                ->reject(fn (string $table) => str_starts_with($table, 'sqlite_'))
+                ->values()
+                ->all();
+
             $sql = "-- Backup Apotek Almaira\n";
             $sql .= "-- Generate Date: " . now()->format('Y-m-d H:i:s') . "\n";
             $sql .= "-- Database Driver: " . $driver . "\n";
-            
+
             if ($driver === 'sqlite') {
                 $sql .= "PRAGMA foreign_keys = OFF;\n\n";
             } else {
                 $sql .= "SET FOREIGN_KEY_CHECKS=0;\n\n";
+                $sql .= "SET NAMES utf8mb4;\n\n";
             }
 
             foreach ($tables as $table) {
-                if ($driver === 'sqlite' && ($table === 'sqlite_sequence' || $table === 'sqlite_stat1')) {
-                    continue;
-                }
-                
                 // Drop table statement
                 $sql .= "DROP TABLE IF EXISTS `{$table}`;\n";
-                
+
                 // Create table statement
                 if ($driver === 'sqlite') {
-                    $createObj = DB::select("SELECT sql FROM sqlite_master WHERE type='table' AND name='{$table}'")[0];
+                    $createObj = DB::select("SELECT sql FROM sqlite_master WHERE type='table' AND name=?", [$table])[0];
                     $sql .= $createObj->sql . ";\n\n";
                 } else {
                     $createObj = DB::select("SHOW CREATE TABLE `{$table}`")[0];
-                    $createSqlField = 'Create Table';
-                    $createSqlObj = (array) $createObj;
-                    $sql .= $createSqlObj[$createSqlField] . ";\n\n";
+                    $createSql = $createObj->{'Create Table'} ?? ((array) $createObj)['Create Table'] ?? null;
+                    if (! $createSql) {
+                        throw new \RuntimeException("Tidak bisa membaca struktur tabel: {$table}");
+                    }
+                    $sql .= $createSql . ";\n\n";
                 }
 
                 // Inserts
