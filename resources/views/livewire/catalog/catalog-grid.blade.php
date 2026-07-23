@@ -110,46 +110,40 @@
     {{-- ═══ SEARCH + FILTER (satu-satunya elemen sticky, top-0, agar tidak tabrakan) ═══ --}}
     <div class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 space-y-3">
-            {{-- Search --}}
-            <div class="relative">
-                <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                <input
-                    wire:model.live.debounce.400ms="search"
-                    type="text"
-                    placeholder="Cari nama, kandungan, atau indikasi/fungsi..."
-                    class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 focus:bg-white transition-colors">
-                <div wire:loading wire:target="search" class="absolute right-3.5 top-1/2 -translate-y-1/2">
-                    <svg class="w-4 h-4 text-emerald-500 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            {{-- Search + Kategori (dropdown kompak agar produk tetap terlihat) --}}
+            <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(200px,260px)] gap-2.5">
+                <div class="relative min-w-0">
+                    <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input
+                        wire:model.live.debounce.400ms="search"
+                        type="text"
+                        placeholder="Cari nama, kandungan, atau indikasi/fungsi..."
+                        class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 focus:bg-white transition-colors">
+                    <div wire:loading wire:target="search" class="absolute right-3.5 top-1/2 -translate-y-1/2">
+                        <svg class="w-4 h-4 text-emerald-500 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    </div>
                 </div>
-            </div>
 
-            {{-- Kategori: wrap rapi (tanpa scroll horizontal) --}}
-            @if($categories->count() > 0)
-            <div>
-                <div class="flex items-center justify-between gap-2 mb-2">
-                    <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Kategori</p>
-                    @if($categoryFilter !== '')
-                    <button type="button" wire:click="$set('categoryFilter', '')"
-                        class="text-[11px] font-semibold text-emerald-600 hover:text-emerald-700 transition-colors">
-                        Reset filter
-                    </button>
-                    @endif
+                @if($categories->count() > 0)
+                <div class="relative min-w-0">
+                    <label for="catalog-category-filter" class="sr-only">Kategori</label>
+                    <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h10M4 18h7"/></svg>
+                    <select
+                        id="catalog-category-filter"
+                        wire:model.live="categoryFilter"
+                        class="w-full appearance-none pl-10 pr-10 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 focus:bg-white transition-colors cursor-pointer">
+                        <option value="">Semua Kategori</option>
+                        @foreach($categories as $cat)
+                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                    <svg class="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <div wire:loading wire:target="categoryFilter" class="absolute right-9 top-1/2 -translate-y-1/2">
+                        <svg class="w-3.5 h-3.5 text-emerald-500 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                    </div>
                 </div>
-                <div class="flex flex-wrap gap-1.5 sm:gap-2 max-h-36 sm:max-h-44 overflow-y-auto overscroll-contain pr-0.5"
-                    style="scrollbar-width: thin;">
-                    <button type="button" wire:click="$set('categoryFilter', '')" wire:key="cat-chip-all"
-                        class="px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all {{ $categoryFilter === '' ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25' : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50/60' }}">
-                        Semua Produk
-                    </button>
-                    @foreach($categories as $cat)
-                    <button type="button" wire:click="selectCategory('{{ $cat->id }}')" wire:key="cat-chip-{{ $cat->id }}"
-                        class="px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-semibold transition-all {{ (string) $categoryFilter === (string) $cat->id ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/25' : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50/60' }}">
-                        {{ $cat->name }}
-                    </button>
-                    @endforeach
-                </div>
+                @endif
             </div>
-            @endif
         </div>
     </div>
 
