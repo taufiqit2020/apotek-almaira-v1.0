@@ -12,6 +12,38 @@ class ProductController extends Controller {
         // View hanya berisi header + <livewire:products.product-table />
         return view('products.index');
     }
+
+    /** Unduh Excel Master Produk — mengikuti filter q/cat/status yang sama dengan tabel. */
+    public function export(Request $request)
+    {
+        $search = $request->query('q', $request->query('search', ''));
+        $categoryId = $request->query('cat', $request->query('category', ''));
+        $status = $request->query('status', 'active');
+
+        [$query, $filterLabel] = \App\Exports\ProductsExport::filteredQuery(
+            is_string($search) ? $search : '',
+            is_string($categoryId) ? $categoryId : '',
+            is_string($status) ? $status : 'active',
+        );
+
+        $products = $query->limit(10000)->get();
+
+        ActivityLogService::log(
+            'EXPORT',
+            'Produk',
+            "Mengunduh Master Produk Excel ({$products->count()} baris). Filter: {$filterLabel}"
+        );
+
+        $stamp = now()->timezone('Asia/Makassar')->format('Ymd_His');
+        $slug = \Illuminate\Support\Str::slug(\Illuminate\Support\Str::limit($filterLabel, 40, ''), '-');
+        $filename = 'master-produk'.($slug ? '-'.$slug : '').'-'.$stamp.'.xlsx';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \App\Exports\ProductsExport($products, $filterLabel),
+            $filename
+        );
+    }
+
     public function create() {
         $categories = Category::active()->orderBy('name')->get();
         $suppliers = Supplier::active()->orderBy('name')->get();

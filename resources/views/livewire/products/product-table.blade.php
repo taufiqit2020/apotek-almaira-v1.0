@@ -38,6 +38,17 @@
                 <option value="exceed_het">Melebihi HET</option>
             </select>
 
+            <a href="{{ route('products.export', array_filter([
+                    'q' => $search !== '' ? $search : null,
+                    'cat' => $categoryFilter !== '' ? $categoryFilter : null,
+                    'status' => $statusFilter !== '' ? $statusFilter : 'active',
+                ], fn ($v) => $v !== null && $v !== '')) }}"
+               class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl text-sm font-bold border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 hover:border-emerald-300 transition-colors whitespace-nowrap"
+               title="Unduh Excel sesuai filter yang tampil di tabel">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/></svg>
+                Unduh
+            </a>
+
             @if($search || $categoryFilter || $statusFilter !== 'active')
             <button wire:click="clearFilters" class="btn btn-secondary flex items-center justify-center gap-1.5 whitespace-nowrap rounded-xl">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>

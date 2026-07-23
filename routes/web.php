@@ -96,6 +96,7 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
     // ── Inventori ──
     Route::middleware(['permission:inventory'])->group(function () {
         Route::get('/products/import-template', [ProductController::class, 'downloadTemplate'])->name('products.import.template');
+        Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
         Route::get('/products/import', [ProductController::class, 'importForm'])->name('products.import.form');
         Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
         Route::patch('/products/{product}/toggle-catalog', [ProductController::class, 'toggleCatalog'])->name('products.toggle-catalog');

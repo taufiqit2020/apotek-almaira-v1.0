@@ -19,6 +19,13 @@
                 <p class="mt-1.5 text-sm text-emerald-50/90 max-w-xl">Kelola produk, harga jual &amp; grosir, serta tampilan E-Catalog.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+                <a href="{{ route('products.export') }}"
+                   onclick="this.href='{{ route('products.export') }}'+window.location.search;"
+                   class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/15 border border-white/25 text-white text-sm font-bold hover:bg-white/25 transition-colors"
+                   title="Unduh Excel sesuai filter aktif di Master Produk">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/></svg>
+                    Unduh Excel
+                </a>
                 <a href="{{ route('catalog.index') }}" target="_blank" class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/15 border border-white/25 text-white text-sm font-bold hover:bg-white/25 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L10.828 14H8v-2.828l8.586-8.586z"/></svg>
                     E-Catalog
