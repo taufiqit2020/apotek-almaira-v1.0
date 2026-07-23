@@ -196,7 +196,7 @@ class ProductTable extends Component
             $msg .= " {$skipped} dilewati (harga 0).";
         }
         if ($hetAdjusted > 0) {
-            $msg .= " {$hetAdjusted} jual otomatis diturunkan ke grosir karena melebihi HET.";
+            $msg .= " {$hetAdjusted} jual otomatis diturunkan ke HET.";
         }
 
         ActivityLogService::updated(
@@ -210,7 +210,7 @@ class ProductTable extends Component
         $this->clearSelection();
     }
 
-    /** Perbaiki harga jual produk terpilih yang melebihi HET (ke grosir, lalu HET). */
+    /** Perbaiki harga jual produk terpilih yang melebihi HET (tutup ke HET). */
     public function fixSelectedAgainstHet(): void
     {
         if (empty($this->selected)) {
@@ -259,7 +259,7 @@ class ProductTable extends Component
             'toast',
             type: $fixed > 0 ? 'success' : 'info',
             message: $fixed > 0
-                ? "{$fixed} produk diperbaiki: harga jual disesuaikan ke grosir/HET."
+                ? "{$fixed} produk diperbaiki: harga jual disesuaikan ke HET."
                 : 'Tidak ada produk terpilih yang melebihi HET.'
         );
         $this->clearSelection();

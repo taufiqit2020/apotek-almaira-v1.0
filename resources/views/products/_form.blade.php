@@ -28,10 +28,42 @@
                 this.clampSellAgainstHet();
             },
 
+            /**
+             * HET Markup (%):
+             * - HET & jual = beli × (1 + %)
+             * - Grosir otomatis lebih rendah dari jual (proporsional terhadap %)
+             * Acuan: 30% pada jual 3.500 → turun 860 → grosir 2.640
+             */
             updateHetPrice() {
-                if (this.hetMarkup > 0) {
-                    this.sellPrice = Math.round(this.purchasePrice * (1 + this.hetMarkup / 100));
-                    this.wholesalePrice = Math.round(this.sellPrice * (1 - 1 / 100));
+                if (this.hetMarkup > 0 && this.purchasePrice > 0) {
+                    const markup = Number(this.hetMarkup);
+                    const jual = Math.round(this.purchasePrice * (1 + markup / 100));
+                    this.hetPrice = jual;
+                    this.sellPrice = jual;
+                    this.wholesalePrice = this.calcWholesale(jual, markup);
+                    this.hetAutoNote = false;
+                    return;
+                }
+                this.clampSellAgainstHet();
+            },
+
+            /**
+             * Grosir otomatis dari jual + markup.
+             * Pola acuan user: markup 30% & jual 3500 → drop 860 → grosir 2640.
+             * Diskon = (markup/30) × (860/3500) dari jual — konsisten untuk 5–30%.
+             */
+            calcWholesale(jual, markup) {
+                const j = Math.max(0, Math.round(Number(jual) || 0));
+                const m = Math.max(0, Number(markup) || 0);
+                if (j <= 0) return 0;
+                if (m <= 0) return this.wholesalePrice || 0;
+                const drop = Math.round(j * m * 860 / (30 * 3500));
+                return Math.max(0, Math.min(j - drop, j - 1));
+            },
+
+            syncWholesaleFromSell() {
+                if (this.hetMarkup > 0 && this.sellPrice > 0) {
+                    this.wholesalePrice = this.calcWholesale(this.sellPrice, this.hetMarkup);
                 }
                 this.clampSellAgainstHet();
             },
@@ -40,16 +72,19 @@
                 return this.hetPrice > 0 && this.sellPrice > this.hetPrice;
             },
 
-            /** Jika jual > HET → ke grosir dulu; jika masih melebihi → ke HET. */
+            get wholesaleDrop() {
+                if (!this.sellPrice || !this.wholesalePrice) return 0;
+                return Math.max(0, this.sellPrice - this.wholesalePrice);
+            },
+
+            /** Jika jual > HET → tutup ke HET saja (jangan lompat ke grosir). */
             clampSellAgainstHet() {
                 if (this.hetPrice > 0 && this.sellPrice > this.hetPrice) {
-                    if (this.wholesalePrice > 0) {
-                        this.sellPrice = this.wholesalePrice;
-                    }
-                    if (this.sellPrice > this.hetPrice) {
-                        this.sellPrice = this.hetPrice;
-                    }
+                    this.sellPrice = this.hetPrice;
                     this.hetAutoNote = true;
+                    if (this.hetMarkup > 0) {
+                        this.wholesalePrice = this.calcWholesale(this.sellPrice, this.hetMarkup);
+                    }
                 }
                 if (this.sellPrice > 0 && this.wholesalePrice > this.sellPrice) {
                     this.wholesalePrice = this.sellPrice;
@@ -65,7 +100,9 @@
                 if (this.sellPrice > 0) {
                     this.sellPrice = Math.round(this.sellPrice * factor);
                 }
-                if (this.wholesalePrice > 0) {
+                if (this.hetMarkup > 0) {
+                    this.wholesalePrice = this.calcWholesale(this.sellPrice, this.hetMarkup);
+                } else if (this.wholesalePrice > 0) {
                     this.wholesalePrice = Math.round(this.wholesalePrice * factor);
                 }
                 this.clampSellAgainstHet();
@@ -646,7 +683,10 @@
                     <div class="rounded-2xl border border-teal-200 bg-teal-50/70 p-3.5">
                         <p class="text-[10px] font-bold uppercase tracking-wider text-teal-600 mb-1">Harga Grosir</p>
                         <p class="text-lg font-extrabold text-teal-700 tabular-nums">Rp <span x-text="formatRupiah(wholesalePrice) || '0'"></span></p>
-                        <p class="text-[10px] text-teal-600/70 mt-1">Mitra/B2B · ikut penyesuaian %</p>
+                        <p class="text-[10px] text-teal-600/70 mt-1" x-show="hetMarkup > 0 && wholesaleDrop > 0" x-cloak>
+                            Otomatis dari markup <span x-text="hetMarkup"></span>% · turun Rp <span x-text="formatRupiah(wholesaleDrop)"></span>
+                        </p>
+                        <p class="text-[10px] text-teal-600/70 mt-1" x-show="!(hetMarkup > 0 && wholesaleDrop > 0)">Mitra/B2B · lebih rendah dari eceran</p>
                     </div>
                 </div>
 
@@ -667,35 +707,43 @@
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-500 text-sm font-semibold">Rp</span>
                             <input type="hidden" name="sell_price" :value="sellPrice">
                             <input type="text" :value="formatRupiah(sellPrice)"
-                                   @input="sellPrice = parseRupiah($event.target.value); hetAutoNote = false"
-                                   @blur="clampSellAgainstHet()"
+                                   @input="sellPrice = parseRupiah($event.target.value); hetAutoNote = false; syncWholesaleFromSell()"
+                                   @blur="syncWholesaleFromSell()"
                                    class="form-input rounded-xl pl-9 font-bold text-emerald-800 border-emerald-100 focus:ring-emerald-400" placeholder="0">
                         </div>
                         <div class="mt-1.5 space-y-1">
                             <span x-show="isExceedingHet" x-cloak
                                   class="inline-flex items-center gap-1 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded-lg font-bold">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                                Melebihi HET — akan disesuaikan ke grosir/HET
+                                Melebihi HET — akan disesuaikan ke HET
                             </span>
                             <span x-show="hetAutoNote && !isExceedingHet" x-cloak
                                   class="inline-flex items-center gap-1 text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg font-bold">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
-                                Jual disesuaikan (grosir / HET)
+                                Jual disesuaikan ke HET
                             </span>
                         </div>
                         @error('sell_price')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
 
                     <div>
-                        <label class="form-label font-bold">Harga Grosir</label>
+                        <label class="form-label font-bold">
+                            Harga Grosir
+                            <span x-show="hetMarkup > 0" x-cloak class="ml-1 text-[10px] font-bold uppercase tracking-wide text-teal-600">Otomatis</span>
+                        </label>
                         <div class="relative">
                             <span class="absolute left-3 top-1/2 -translate-y-1/2 text-teal-500 text-sm font-semibold">Rp</span>
                             <input type="hidden" name="wholesale_price" :value="wholesalePrice">
                             <input type="text" :value="formatRupiah(wholesalePrice)"
                                    @input="wholesalePrice = parseRupiah($event.target.value); clampSellAgainstHet()"
                                    @blur="clampSellAgainstHet()"
+                                   :readonly="hetMarkup > 0"
+                                   :class="hetMarkup > 0 ? 'bg-teal-50/80 cursor-default' : ''"
                                    class="form-input rounded-xl pl-9 font-semibold text-teal-800 border-teal-100 focus:ring-teal-400" placeholder="0">
                         </div>
+                        <p x-show="hetMarkup > 0" x-cloak class="text-[11px] text-teal-700/80 mt-1.5">
+                            Otomatis dari markup <span x-text="hetMarkup"></span>% · selisih Rp <span x-text="formatRupiah(wholesaleDrop)"></span>
+                        </p>
                         @error('wholesale_price')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
 
@@ -710,6 +758,7 @@
                             <option value="25">25%</option>
                             <option value="30">30%</option>
                         </select>
+                        <p class="text-[11px] text-slate-400 mt-1.5">Mengisi HET, jual, dan grosir otomatis</p>
                         @error('het_markup')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
 

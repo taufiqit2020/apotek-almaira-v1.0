@@ -369,8 +369,13 @@ class ProductImportService
             $sellPrice = round($purchasePrice * (1 + ($hetMarkup / 100)));
         }
 
-        // Grosir default: sedikit di bawah jual (1%) agar selaras form master.
-        $wholesalePrice = $sellPrice > 0 ? (float) round($sellPrice * 0.99) : 0.0;
+        // Grosir otomatis dari markup (selaras form master produk).
+        $wholesalePrice = $sellPrice > 0
+            ? Product::calcWholesaleFromMarkup($sellPrice, (int) $hetMarkup)
+            : 0.0;
+        if ($wholesalePrice <= 0 && $sellPrice > 0) {
+            $wholesalePrice = (float) max(0, $sellPrice - 1);
+        }
 
         $mapped['name'] = isset($rowData[8]) ? trim((string) $rowData[8]) : null;
         $mapped['code'] = isset($rowData[1]) ? trim((string) $rowData[1]) : null;
@@ -655,7 +660,10 @@ class ProductImportService
                 $hetPrice = round($purchasePrice * 1.30);
             }
             if ($wholesalePrice <= 0.0) {
-                $wholesalePrice = $sellPrice;
+                $markup = (int) ($mapped['hetMarkup'] ?? 0);
+                $wholesalePrice = $markup > 0
+                    ? Product::calcWholesaleFromMarkup($sellPrice, $markup)
+                    : $sellPrice;
             }
 
             $normalized = Product::normalizeSellAgainstHet($sellPrice, $wholesalePrice, $hetPrice);

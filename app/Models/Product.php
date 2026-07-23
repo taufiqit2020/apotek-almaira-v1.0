@@ -42,10 +42,28 @@ class Product extends Model {
     public function scopeInCatalog($q) { return $q->where('show_in_catalog', true); }
 
     /**
-     * Jika harga jual melebihi HET:
-     * 1) turunkan jual ke harga grosir (bila ada),
-     * 2) jika masih melebihi HET → turunkan ke HET.
+     * Harga grosir otomatis dari jual + HET markup (%).
+     * Acuan bisnis: markup 30% pada jual 3.500 → turun 860 → grosir 2.640.
+     * Proporsional untuk 5–30%.
+     */
+    public static function calcWholesaleFromMarkup(float $sell, int $markup): float
+    {
+        $sell = max(0, round($sell));
+        $markup = max(0, $markup);
+        if ($sell <= 0 || $markup <= 0) {
+            return 0.0;
+        }
+
+        $drop = (int) round($sell * $markup * 860 / (30 * 3500));
+        $wholesale = $sell - $drop;
+
+        return (float) max(0, min($wholesale, $sell - 1));
+    }
+
+    /**
+     * Jika harga jual melebihi HET: tutup jual ke HET.
      * Grosir tidak boleh melebihi jual setelah normalisasi.
+     * (Tidak lagi menurunkan jual ke grosir dulu — grosir bisa jauh di bawah HET.)
      *
      * @return array{sell_price: float, wholesale_price: float, adjusted: bool}
      */
@@ -54,12 +72,7 @@ class Product extends Model {
         $adjusted = false;
 
         if ($het > 0 && $sell > $het) {
-            if ($wholesale > 0) {
-                $sell = $wholesale;
-            }
-            if ($sell > $het) {
-                $sell = $het;
-            }
+            $sell = $het;
             $adjusted = true;
         }
 
