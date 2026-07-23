@@ -12,7 +12,7 @@ window.posManager = () => ({
         categories: @json($categories),
         productsList: [],
         currentPage: 1,
-        pageSize: 10,
+        pageSize: 8,
         posRevision: null,
         settingsRevision: null,
         isSyncing: false,
@@ -1375,13 +1375,11 @@ window.posManager = () => ({
                         <div class="flex flex-col flex-1 min-w-0 pr-3">
                             <h4 class="font-bold text-slate-800 text-[13.5px] leading-snug line-clamp-2 group-hover:text-emerald-700 transition-colors" x-text="product.name"></h4>
 
-                            {{-- Fungsi: tanpa kotak, teks lembut 1 baris --}}
-                            <p class="mt-1.5 text-[11px] leading-snug text-slate-500 truncate"
+                            {{-- Fungsi: font kecil, wrap ke bawah (tanpa kotak), sejajar nama --}}
+                            <p class="mt-1 text-[10.5px] leading-relaxed text-slate-500 line-clamp-2 break-words"
                                x-show="product.indikasi" x-cloak
                                :title="'Indikasi / Fungsi: ' + product.indikasi">
-                                <span class="font-semibold text-teal-600/90">Fungsi</span>
-                                <span class="text-slate-300 mx-1">·</span>
-                                <span class="text-slate-600/90" x-text="product.indikasi"></span>
+                                <span class="font-semibold text-teal-600/90">Fungsi</span><span class="text-slate-300 mx-1">·</span><span class="text-slate-600/90" x-text="product.indikasi"></span>
                             </p>
                         </div>
 
