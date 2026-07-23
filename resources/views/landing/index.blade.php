@@ -132,7 +132,6 @@
                         <div>
                             <p class="text-xs font-bold text-emerald-700 uppercase tracking-wide mb-1.5">Alamat</p>
                             <p class="text-sm text-slate-700 font-medium leading-relaxed">{{ $apotekAddress }}</p>
-                            <p class="mt-1 text-sm text-emerald-800 font-bold">Banjarbaru, Kalimantan Selatan 70714</p>
                         </div>
                         <div class="pt-4 border-t border-emerald-100">
                             <div class="flex items-start gap-3">
