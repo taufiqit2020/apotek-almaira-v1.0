@@ -197,6 +197,13 @@
     </script>
 
     @stack('scripts')
+    <script>
+        window.AlmairaLiveSyncConfig = { url: @json(route('catalog.live')) };
+    </script>
+    <style>
+        .live-flash { border-radius: 0.35rem; transition: background-color .7s ease; background-color: rgba(167, 243, 208, 0.55) !important; }
+    </style>
+    <script src="{{ asset('js/product-live-sync.js') }}?v=1" defer></script>
     @livewireScripts
 </body>
 </html>

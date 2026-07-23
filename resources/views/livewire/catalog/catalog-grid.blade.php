@@ -181,6 +181,7 @@
                     );
                 @endphp
                 <article wire:key="catalog-product-{{ $product->id }}"
+                    data-live-product="{{ $product->id }}"
                     class="group bg-white rounded-2xl border border-slate-100/80 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-[0_12px_28px_rgba(16,185,129,0.12)] hover:border-emerald-200/60 hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col">
 
                     {{-- Gambar (klik ke detail) --}}
@@ -200,9 +201,10 @@
                         </span>
                         @endif
 
-                        <span class="absolute top-2 right-2 z-[1] inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold shadow-sm border {{ $stockBadge['chip'] }}">
-                            <span class="w-1.5 h-1.5 rounded-full {{ $stockBadge['dot'] }}"></span>
-                            {{ $stockBadge['short'] }}
+                        <span data-live-stock-chip data-live-stock-base="absolute top-2 right-2 z-[1] inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold shadow-sm border"
+                              class="absolute top-2 right-2 z-[1] inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold shadow-sm border {{ $stockBadge['chip'] }}">
+                            <span data-live-stock-dot data-live-dot-base="w-1.5 h-1.5 rounded-full" class="w-1.5 h-1.5 rounded-full {{ $stockBadge['dot'] }}"></span>
+                            <span data-live-field="stock_short">{{ $stockBadge['short'] }}</span>
                         </span>
                     </a>
 
@@ -230,9 +232,10 @@
                         </div>
 
                         <div class="mt-2 flex flex-wrap gap-1.5">
-                            <p class="inline-flex items-center gap-1.5 text-[10px] font-bold {{ $stockBadge['chip'] }} border px-2 py-0.5 rounded-lg">
-                                <span class="w-1.5 h-1.5 rounded-full {{ $stockBadge['dot'] }}"></span>
-                                {{ $stockBadge['label'] }}
+                            <p data-live-stock-chip data-live-stock-base="inline-flex items-center gap-1.5 text-[10px] font-bold border px-2 py-0.5 rounded-lg"
+                               class="inline-flex items-center gap-1.5 text-[10px] font-bold {{ $stockBadge['chip'] }} border px-2 py-0.5 rounded-lg">
+                                <span data-live-stock-dot data-live-dot-base="w-1.5 h-1.5 rounded-full" class="w-1.5 h-1.5 rounded-full {{ $stockBadge['dot'] }}"></span>
+                                <span data-live-field="stock_label">{{ $stockBadge['label'] }}</span>
                             </p>
                             @if($expiryBadge['has_date'])
                             <p class="inline-flex items-center gap-1 text-[10px] font-bold {{ $expiryBadge['chip'] }} border px-2 py-0.5 rounded-lg" title="{{ $expiryBadge['note'] }}">
@@ -247,21 +250,21 @@
                         <div class="mt-2 flex-1 space-y-1">
                             <p class="text-[10px] text-slate-400">per {{ $product->unit?->name ?? 'pcs' }}</p>
                             <div class="flex items-baseline justify-between gap-2">
-                                <span class="text-[10px] font-bold uppercase tracking-wide text-emerald-700/80">{{ $priceInfo['label'] ?? 'Eceran' }}</span>
-                                <p class="text-sm sm:text-base font-extrabold text-emerald-700 tracking-tight tabular-nums">
+                                <span class="text-[10px] font-bold uppercase tracking-wide text-emerald-700/80" data-live-field="price_primary_label">{{ $priceInfo['label'] ?? 'Eceran' }}</span>
+                                <p class="text-sm sm:text-base font-extrabold text-emerald-700 tracking-tight tabular-nums" data-live-field="price_primary_formatted">
                                     Rp {{ number_format($priceInfo['primary'], 0, ',', '.') }}
                                 </p>
                             </div>
-                            @if(!empty($priceInfo['secondary']))
-                            <div class="flex items-baseline justify-between gap-2 rounded-lg bg-teal-50/80 border border-teal-100 px-2 py-1">
-                                <span class="text-[10px] font-bold uppercase tracking-wide text-teal-700">{{ $priceInfo['secondary_label'] ?? 'Grosir' }}</span>
-                                <p class="text-xs sm:text-sm font-extrabold text-teal-800 tracking-tight tabular-nums">
+                            <div data-live-field="price_secondary_wrap" class="flex items-baseline justify-between gap-2 rounded-lg bg-teal-50/80 border border-teal-100 px-2 py-1" @if(empty($priceInfo['secondary'])) style="display:none" @endif>
+                                <span class="text-[10px] font-bold uppercase tracking-wide text-teal-700" data-live-field="price_secondary_label">{{ $priceInfo['secondary_label'] ?? 'Grosir' }}</span>
+                                <p class="text-xs sm:text-sm font-extrabold text-teal-800 tracking-tight tabular-nums" data-live-field="price_secondary_formatted">
+                                    @if(!empty($priceInfo['secondary']))
                                     Rp {{ number_format($priceInfo['secondary'], 0, ',', '.') }}
+                                    @endif
                                 </p>
                             </div>
-                            @endif
                             @if($priceInfo['note'])
-                            <p class="text-[10px] text-slate-500 leading-snug">{{ $priceInfo['note'] }}</p>
+                            <p class="text-[10px] text-slate-500 leading-snug" data-live-field="price_note">{{ $priceInfo['note'] }}</p>
                             @endif
                         </div>
 

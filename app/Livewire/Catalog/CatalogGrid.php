@@ -4,6 +4,7 @@ namespace App\Livewire\Catalog;
 
 use App\Models\Category;
 use App\Models\Product;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -41,6 +42,13 @@ class CatalogGrid extends Component
         $this->search = '';
         $this->categoryFilter = '';
         $this->resetPage();
+    }
+
+    /** Soft refresh saat master produk berubah (tanpa reset filter/pencarian). */
+    #[On('products-live-refresh')]
+    public function softLiveRefresh(): void
+    {
+        // render() mengambil data terbaru; state search/filter tetap.
     }
 
     public function render()

@@ -5,6 +5,8 @@ namespace App\Livewire\Products;
 use App\Models\Category;
 use App\Models\Product;
 use App\Services\ActivityLogService;
+use App\Services\ProductLiveSync;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -120,6 +122,7 @@ class ProductTable extends Component
         $this->dispatch('toast', type: 'success', message: $product->show_in_catalog
             ? "{$product->name} tampil di E-Catalog"
             : "{$product->name} disembunyikan dari E-Catalog");
+        $this->notifyLiveViews();
     }
 
     /**
@@ -132,6 +135,7 @@ class ProductTable extends Component
         }
         $count = Product::whereIn('id', $this->selected)->update(['show_in_catalog' => true]);
         $this->dispatch('toast', type: 'success', message: "{$count} produk ditampilkan di E-Catalog");
+        $this->notifyLiveViews();
         $this->clearSelection();
     }
 
@@ -145,6 +149,7 @@ class ProductTable extends Component
         }
         $count = Product::whereIn('id', $this->selected)->update(['show_in_catalog' => false]);
         $this->dispatch('toast', type: 'success', message: "{$count} produk disembunyikan dari E-Catalog");
+        $this->notifyLiveViews();
         $this->clearSelection();
     }
 
@@ -238,6 +243,7 @@ class ProductTable extends Component
         );
 
         $this->dispatch('toast', type: 'success', message: $msg);
+        $this->notifyLiveViews();
         $this->clearSelection();
     }
 
@@ -330,6 +336,7 @@ class ProductTable extends Component
             type: $synced > 0 ? 'success' : 'warning',
             message: $message
         );
+        $this->notifyLiveViews();
         $this->clearSelection();
     }
 
@@ -337,6 +344,19 @@ class ProductTable extends Component
     public function fixSelectedAgainstHet(): void
     {
         $this->syncWholesalePrices();
+    }
+
+    /** Soft refresh saat produk berubah di tab/halaman lain. */
+    #[On('products-live-refresh')]
+    public function softLiveRefresh(): void
+    {
+        // Properti filter & seleksi tetap — hanya render ulang data terbaru.
+    }
+
+    private function notifyLiveViews(): void
+    {
+        ProductLiveSync::bump();
+        $this->js('window.AlmairaLiveSync && window.AlmairaLiveSync.notify()');
     }
 
     private function currentPageIds(): array

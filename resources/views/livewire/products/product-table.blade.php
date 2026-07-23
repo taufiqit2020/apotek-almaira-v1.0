@@ -290,6 +290,7 @@
                             $bentuk = $meta['bentuk_sediaan'] ?? null;
                         @endphp
                         <tr wire:key="product-row-{{ $product->id }}"
+                            data-live-product="{{ $product->id }}"
                             class="group transition-colors duration-150 {{ $isSelected ? 'bg-emerald-50/90 ring-1 ring-inset ring-emerald-200/70 shadow-[inset_3px_0_0_0_#10b981]' : 'hover:bg-slate-50/80' }}">
                             <td class="text-center">
                                 <button type="button"
@@ -356,11 +357,11 @@
                                 @endif
                             </td>
 
-                            <td class="text-right text-sm text-gray-500 tabular-nums whitespace-nowrap">Rp {{ number_format($product->purchase_price, 0, ',', '.') }}</td>
+                            <td class="text-right text-sm text-gray-500 tabular-nums whitespace-nowrap" data-live-field="purchase_formatted">Rp {{ number_format($product->purchase_price, 0, ',', '.') }}</td>
                             <td class="text-right whitespace-nowrap">
                                 @php $exceedsHet = $product->exceedsHet(); @endphp
                                 <div class="inline-flex flex-col items-end gap-1">
-                                    <span class="font-bold text-sm tabular-nums {{ $exceedsHet ? 'text-rose-700' : 'text-emerald-700' }}">
+                                    <span data-live-field="sell_formatted" class="font-bold text-sm tabular-nums {{ $exceedsHet ? 'text-rose-700' : 'text-emerald-700' }}">
                                         Rp {{ number_format($product->sell_price, 0, ',', '.') }}
                                     </span>
                                     @if($exceedsHet)
@@ -372,7 +373,7 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="text-right font-semibold text-sm text-teal-700 tabular-nums whitespace-nowrap">
+                            <td class="text-right font-semibold text-sm text-teal-700 tabular-nums whitespace-nowrap" data-live-field="wholesale_formatted">
                                 @if(($product->wholesale_price ?? 0) > 0)
                                 Rp {{ number_format($product->wholesale_price, 0, ',', '.') }}
                                 @else

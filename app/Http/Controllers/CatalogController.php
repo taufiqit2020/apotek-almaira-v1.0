@@ -29,6 +29,31 @@ class CatalogController extends Controller
     }
 
     /**
+     * Snapshot harga/stok untuk update UI tanpa reload (E-Catalog + Master Produk).
+     */
+    public function live(\Illuminate\Http\Request $request)
+    {
+        $idsRaw = $request->query('ids', '');
+        $ids = is_array($idsRaw)
+            ? $idsRaw
+            : preg_split('/\s*,\s*/', (string) $idsRaw, -1, PREG_SPLIT_NO_EMPTY);
+
+        $partner = null;
+        $user = Auth::user();
+        if ($user && $user->isMitra() && $user->partner?->isApproved()) {
+            $partner = $user->partner;
+        }
+
+        $payload = \App\Services\ProductLiveSync::snapshot($ids ?: [], $partner);
+        $since = (int) $request->query('since', 0);
+
+        return response()->json($payload)
+            ->header('Cache-Control', 'no-store, private')
+            ->header('X-Products-Revision', (string) $payload['revision'])
+            ->header('X-Products-Changed', $since > 0 && $payload['revision'] > $since ? '1' : '0');
+    }
+
+    /**
      * Detail produk publik dari e-catalog.
      */
     public function show(Product $product)

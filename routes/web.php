@@ -32,6 +32,7 @@ Route::get('/', [LandingController::class, 'index'])->name('home');
 
 // E-Catalog — Halaman publik tanpa login, bisa dibagikan ke pelanggan
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog.index');
+Route::get('/catalog/live', [CatalogController::class, 'live'])->name('catalog.live')->middleware('throttle:60,1');
 Route::get('/catalog/{product}', [CatalogController::class, 'show'])->name('catalog.show');
 
 // Portal Mitra B2B (daftar mandiri + login)
