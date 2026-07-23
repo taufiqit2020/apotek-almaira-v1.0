@@ -25,6 +25,7 @@
 /database/*.sqlite-journal
 /storage/app/imports/*
 !/storage/app/imports/.gitignore
+/storage/app/hostinger-master-export.json
 _ide_helper.php
 Homestead.json
 Homestead.yaml

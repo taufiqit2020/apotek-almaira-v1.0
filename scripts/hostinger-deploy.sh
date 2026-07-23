@@ -36,6 +36,9 @@ fi
 
 echo "==> Migrate + optimize"
 $PHP_BIN artisan migrate --force
+# Seeding is intentional/manual on production. Master data import:
+#   php tools/export_master_for_hostinger.php   (local)
+#   php tools/import_master_on_hostinger.php    (server)
 $PHP_BIN artisan config:cache
 $PHP_BIN artisan route:cache
 $PHP_BIN artisan view:cache
