@@ -215,7 +215,7 @@ class ProductTable extends Component
         $this->clearSelection();
     }
 
-    /** Hitung ulang harga grosir produk terpilih dari harga jual (default markup 5%). */
+    /** Hitung ulang harga grosir dari harga jual memakai markup produk / pengaturan (tanpa fallback 5%). */
     public function syncWholesalePrices(): void
     {
         if (empty($this->selected)) {
@@ -225,23 +225,28 @@ class ProductTable extends Component
         }
 
         $synced = 0;
-        $defaultMarkup = \App\Models\Setting::wholesaleMarkupDefault();
-        if ($defaultMarkup <= 0) {
-            $defaultMarkup = 5;
-        }
+        $skipped = 0;
+        $fallbackMarkup = \App\Models\Setting::wholesaleMarkupDefault();
 
         Product::whereIn('id', $this->selected)
             ->orderBy('id')
-            ->chunkById(200, function ($products) use (&$synced, $defaultMarkup) {
+            ->chunkById(200, function ($products) use (&$synced, &$skipped, $fallbackMarkup) {
                 foreach ($products as $product) {
                     $sell = (float) $product->sell_price;
                     if ($sell <= 0) {
+                        $skipped++;
                         continue;
                     }
 
                     $markup = (int) ($product->wholesale_markup ?? 0);
                     if ($markup <= 0) {
-                        $markup = $defaultMarkup;
+                        $markup = $fallbackMarkup;
+                    }
+
+                    // 0% = manual: jangan paksa markup default 5%
+                    if ($markup <= 0) {
+                        $skipped++;
+                        continue;
                     }
 
                     $wholesale = Product::calcWholesaleFromSell($sell, $markup);
@@ -263,15 +268,21 @@ class ProductTable extends Component
             'Produk',
             "Sync grosir pada {$synced} produk",
             null,
-            ['synced' => $synced, 'ids_count' => count($this->selected), 'default_markup' => $defaultMarkup]
+            ['synced' => $synced, 'skipped' => $skipped, 'ids_count' => count($this->selected), 'fallback_markup' => $fallbackMarkup]
         );
+
+        $message = $synced > 0
+            ? "{$synced} produk: harga grosir diselaraskan dari aturan markup."
+            : 'Tidak ada produk yang bisa di-sync. Pastikan markup grosir produk atau default di Pengaturan > 0%.';
+
+        if ($synced > 0 && $skipped > 0) {
+            $message .= " ({$skipped} dilewati — markup 0%/manual.)";
+        }
 
         $this->dispatch(
             'toast',
             type: $synced > 0 ? 'success' : 'info',
-            message: $synced > 0
-                ? "{$synced} produk: harga grosir diselaraskan (jual − markup %, default 5%)."
-                : 'Tidak ada produk dengan harga jual yang bisa di-sync.'
+            message: $message
         );
         $this->clearSelection();
     }

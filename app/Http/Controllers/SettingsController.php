@@ -199,7 +199,7 @@ class SettingsController extends Controller {
         Setting::set('product_wholesale_markup_options', implode(',', $wholesaleOpts));
         Setting::set(
             'product_wholesale_markup_default',
-            (string) (int) ($request->product_wholesale_markup_default ?? 5)
+            (string) (int) ($request->product_wholesale_markup_default ?? 0)
         );
 
         // Save Tab 4

@@ -198,11 +198,11 @@
                     </button>
                     <button type="button"
                             wire:click="syncWholesalePrices"
-                            wire:confirm="Hitung ulang harga grosir produk terpilih dari harga jual (markup grosir, default 5%)? Harga jual & HET tidak diubah."
+                            wire:confirm="Hitung ulang harga grosir produk terpilih dari harga jual memakai markup grosir produk (atau default di Pengaturan)? Harga jual & HET tidak diubah. Markup 0% dilewati."
                             wire:loading.attr="disabled"
                             wire:target="syncWholesalePrices"
                             class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold bg-sky-500 hover:bg-sky-400 text-white shadow-md shadow-sky-500/25 border border-sky-400 transition-colors disabled:opacity-60"
-                            title="Hitung ulang harga grosir = jual − markup % (default 5%)">
+                            title="Hitung ulang harga grosir = jual − markup % (ikuti pengaturan, tanpa paksa 5%)">
                         <svg wire:loading.remove wire:target="syncWholesalePrices" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         <svg wire:loading wire:target="syncWholesalePrices" class="w-3.5 h-3.5 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                         Sync Grosir

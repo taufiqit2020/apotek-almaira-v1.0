@@ -27,7 +27,7 @@
     });
     window.wholesaleMarkupManager = () => ({
         options: @json(array_values($wholesaleMarkupOptions ?? range(1, 30))),
-        defaultMarkup: {{ (int) ($wholesaleMarkupDefault ?? 5) }},
+        defaultMarkup: {{ (int) ($wholesaleMarkupDefault ?? 0) }},
         all: Array.from({ length: 30 }, (_, i) => i + 1),
         isOn(n) {
             return this.options.map(Number).includes(Number(n));
@@ -345,56 +345,66 @@
                         </div>
                     </div>
 
-                    <div class="mt-8 pt-6 border-t border-gray-100" x-data="wholesaleMarkupManager()">
-                        <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                                    <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                    HET Markup Grosir (%)
-                                </h3>
-                                <p class="text-xs text-gray-500 mt-1 leading-relaxed">
-                                    Opsi ini otomatis muncul di dropdown <strong class="text-gray-700">Master Produk → HET Markup Grosir</strong>.
-                                    Grosir dihitung dari harga jual − %.
-                                </p>
+                    <div class="mt-8 pt-6 border-t border-slate-200" x-data="wholesaleMarkupManager()">
+                        <div class="rounded-2xl border-2 border-teal-200 bg-teal-50 p-5 sm:p-6 shadow-sm">
+                            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
+                                <div>
+                                    <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-teal-600 text-white">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        </span>
+                                        HET Markup Grosir (%)
+                                    </h3>
+                                    <p class="text-sm text-slate-700 mt-2 leading-relaxed max-w-2xl">
+                                        Opsi ini otomatis muncul di dropdown <strong class="text-slate-900">Master Produk → HET Markup Grosir</strong>.
+                                        Grosir dihitung dari harga jual − %. Tidak ada paksaan default 5%.
+                                    </p>
+                                </div>
+                                <div class="flex flex-wrap gap-2 shrink-0">
+                                    <button type="button" @click="selectAll()"
+                                            class="px-3 py-2 rounded-xl text-xs font-extrabold bg-teal-700 text-white hover:bg-teal-600 shadow-md shadow-teal-700/20">
+                                        Pilih 1–30%
+                                    </button>
+                                    <button type="button" @click="selectSteps()"
+                                            class="px-3 py-2 rounded-xl text-xs font-extrabold bg-white text-teal-800 border-2 border-teal-300 hover:bg-teal-100">
+                                        5 / 10 / 15 / 20 / 25 / 30
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex flex-wrap gap-2 shrink-0">
-                                <button type="button" @click="selectAll()" class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-teal-600 text-white hover:bg-teal-500 shadow-sm shadow-teal-600/20">
-                                    Pilih 1–30%
-                                </button>
-                                <button type="button" @click="selectSteps()" class="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-white text-teal-700 border border-teal-200 hover:bg-teal-50">
-                                    5 / 10 / 15 / 20 / 25 / 30
-                                </button>
-                            </div>
-                        </div>
 
-                        <input type="hidden" name="product_wholesale_markup_options" :value="optionsCsv()">
+                            <input type="hidden" name="product_wholesale_markup_options" :value="optionsCsv()">
 
-                        <div class="grid grid-cols-5 sm:grid-cols-10 gap-2 mb-4">
-                            <template x-for="n in all" :key="n">
+                            <div class="grid grid-cols-5 sm:grid-cols-10 gap-2 mb-5 p-3 rounded-xl bg-white border border-teal-100">
+                                @foreach(range(1, 30) as $n)
                                 <button type="button"
-                                        @click="toggle(n)"
-                                        class="py-2 rounded-xl text-xs font-extrabold border transition-all"
-                                        :class="isOn(n)
-                                            ? 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-600/20'
-                                            : 'bg-white text-slate-700 border-slate-200 hover:border-teal-300 hover:bg-teal-50'">
-                                    <span x-text="n + '%'"></span>
+                                        @click="toggle({{ $n }})"
+                                        class="py-2.5 rounded-xl text-xs font-black border-2 transition-all"
+                                        :style="isOn({{ $n }})
+                                            ? 'background:#0f766e;color:#ffffff;border-color:#0f766e;'
+                                            : 'background:#f8fafc;color:#0f172a;border-color:#94a3b8;'">
+                                    {{ $n }}%
                                 </button>
-                            </template>
-                        </div>
-
-                        <div class="flex flex-col sm:flex-row sm:items-end gap-3 p-4 rounded-xl bg-teal-50/80 border border-teal-100">
-                            <div class="flex-1">
-                                <label class="form-label text-[11px] font-bold text-teal-900 uppercase tracking-wide">Default Markup Grosir</label>
-                                <select name="product_wholesale_markup_default" x-model.number="defaultMarkup" class="form-input text-sm font-bold text-slate-800 bg-white">
-                                    <option value="0">0% (Manual)</option>
-                                    <template x-for="n in all" :key="'def-'+n">
-                                        <option :value="n" x-text="n + '%'"></option>
-                                    </template>
-                                </select>
-                                <p class="text-[11px] text-teal-800/70 mt-1.5">Dipakai untuk produk baru & tombol Sync Grosir jika markup produk kosong.</p>
+                                @endforeach
                             </div>
-                            <div class="text-xs text-teal-900 font-semibold whitespace-nowrap pb-2">
-                                <span x-text="options.length"></span> opsi aktif
+
+                            <div class="flex flex-col sm:flex-row sm:items-end gap-4 p-4 rounded-xl bg-white border-2 border-teal-200">
+                                <div class="flex-1">
+                                    <label class="block text-xs font-extrabold text-slate-800 uppercase tracking-wide mb-1.5">Default Markup Grosir</label>
+                                    <select name="product_wholesale_markup_default" x-model.number="defaultMarkup"
+                                            class="form-input text-sm font-bold text-slate-900 bg-white border-2 border-slate-300">
+                                        <option value="0">0% (Manual — tanpa auto markup)</option>
+                                        @foreach(range(1, 30) as $n)
+                                            <option value="{{ $n }}">{{ $n }}%</option>
+                                        @endforeach
+                                    </select>
+                                    <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                                        Dipakai untuk produk baru &amp; Sync Grosir hanya jika markup produk kosong.
+                                        Pilih <strong>0% Manual</strong> jika tidak ingin fallback otomatis.
+                                    </p>
+                                </div>
+                                <div class="text-sm font-extrabold text-teal-800 whitespace-nowrap pb-2 px-3 py-2 rounded-lg bg-teal-100 border border-teal-200">
+                                    <span x-text="options.length"></span> opsi aktif
+                                </div>
                             </div>
                         </div>
                     </div>

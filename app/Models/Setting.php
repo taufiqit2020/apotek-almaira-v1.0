@@ -20,12 +20,12 @@ class Setting extends Model {
         return static::parseMarkupPercents((string) $raw);
     }
 
-    /** Default markup grosir saat produk baru / sync (0–30). */
+    /** Default markup grosir saat produk baru / sync (0–30). 0 = manual, tanpa fallback 5%. */
     public static function wholesaleMarkupDefault(): int
     {
-        $default = (int) static::get('product_wholesale_markup_default', '5');
+        $default = (int) static::get('product_wholesale_markup_default', '0');
         if ($default < 0 || $default > 30) {
-            return 5;
+            return 0;
         }
 
         return $default;
