@@ -44,12 +44,41 @@
          x-data="{
             roleId: @js(old('role_id', '')),
             roles: @js($roleOptions),
-            get selected() { return this.roles.find(r => String(r.id) === String(this.roleId)) || null }
+            preview: null,
+            get selected() { return this.roles.find(r => String(r.id) === String(this.roleId)) || null },
+            onFile(e) {
+                const file = e.target.files?.[0];
+                if (!file) { this.preview = null; return; }
+                const reader = new FileReader();
+                reader.onload = (ev) => { this.preview = ev.target.result; };
+                reader.readAsDataURL(file);
+            }
          }">
-        <form method="POST" action="{{ route('users.store') }}">
+        <form method="POST" action="{{ route('users.store') }}" enctype="multipart/form-data">
             @csrf
 
             <div class="space-y-5">
+                {{-- Foto Profil --}}
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl border border-gray-100 bg-slate-50/70">
+                    <div class="w-24 h-24 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-emerald-100 flex items-center justify-center text-emerald-700 text-sm font-semibold shrink-0">
+                        <template x-if="preview">
+                            <img :src="preview" alt="Preview" class="w-full h-full object-cover">
+                        </template>
+                        <template x-if="!preview">
+                            <span>Foto</span>
+                        </template>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <label class="form-label font-bold text-gray-700 mb-1">Foto Profil <span class="text-gray-400 font-normal">(opsional)</span></label>
+                        <p class="text-xs text-gray-500 mb-3">JPG, PNG, atau WEBP · maksimal 2 MB.</p>
+                        <button type="button" class="btn btn-secondary btn-sm" @click="$refs.avatarInput.click()">
+                            Pilih Foto
+                        </button>
+                        <input type="file" name="avatar" x-ref="avatarInput" class="hidden" accept="image/jpeg,image/png,image/jpg,image/webp" @change="onFile($event)">
+                        @error('avatar')<p class="form-error mt-2">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
                 {{-- Nama Lengkap --}}
                 <div>
                     <label class="form-label font-bold text-gray-700">Nama Lengkap <span class="text-red-500">*</span></label>

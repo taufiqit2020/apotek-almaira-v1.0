@@ -50,13 +50,60 @@
          x-data="{
             roleId: @js(old('role_id', $user->role_id)),
             roles: @js($roleOptions),
-            get selected() { return this.roles.find(r => String(r.id) === String(this.roleId)) || null }
+            preview: @js($user->avatarUrl()),
+            initials: @js($user->initials()),
+            removeAvatar: false,
+            get selected() { return this.roles.find(r => String(r.id) === String(this.roleId)) || null },
+            onFile(e) {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                this.removeAvatar = false;
+                const reader = new FileReader();
+                reader.onload = (ev) => { this.preview = ev.target.result; };
+                reader.readAsDataURL(file);
+            },
+            clearAvatar() {
+                this.removeAvatar = true;
+                this.preview = null;
+                const input = this.$refs.avatarInput;
+                if (input) input.value = '';
+            }
          }">
-        <form method="POST" action="{{ route('users.update', $user) }}">
+        <form method="POST" action="{{ route('users.update', $user) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
             <div class="space-y-5">
+                {{-- Foto Profil --}}
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl border border-gray-100 bg-slate-50/70">
+                    <div class="relative shrink-0">
+                        <div class="w-24 h-24 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-emerald-100 flex items-center justify-center text-emerald-700 text-2xl font-bold">
+                            <template x-if="preview && !removeAvatar">
+                                <img :src="preview" alt="Foto profil" class="w-full h-full object-cover">
+                            </template>
+                            <template x-if="!preview || removeAvatar">
+                                <span x-text="initials"></span>
+                            </template>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <label class="form-label font-bold text-gray-700 mb-1">Foto Profil</label>
+                        <p class="text-xs text-gray-500 mb-3">JPG, PNG, atau WEBP · maksimal 2 MB. Tampil di sidebar dan daftar user.</p>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" class="btn btn-secondary btn-sm" @click="$refs.avatarInput.click()">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                Ganti Foto
+                            </button>
+                            <button type="button" class="btn btn-sm bg-red-50 text-red-600 hover:bg-red-100 border border-red-100" x-show="preview && !removeAvatar" x-cloak @click="clearAvatar()">
+                                Hapus Foto
+                            </button>
+                        </div>
+                        <input type="file" name="avatar" x-ref="avatarInput" class="hidden" accept="image/jpeg,image/png,image/jpg,image/webp" @change="onFile($event)">
+                        <input type="hidden" name="remove_avatar" :value="removeAvatar ? 1 : 0">
+                        @error('avatar')<p class="form-error mt-2">{{ $message }}</p>@enderror
+                    </div>
+                </div>
+
                 {{-- Nama Lengkap --}}
                 <div>
                     <label class="form-label font-bold text-gray-700">Nama Lengkap <span class="text-red-500">*</span></label>
