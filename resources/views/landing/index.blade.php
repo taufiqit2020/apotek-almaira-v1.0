@@ -20,7 +20,7 @@
                     Apotek Terdaftar & Terpercaya
                 </span>
 
-                <h1 class="font-banner mt-7 text-[2rem] sm:text-5xl lg:text-[3.5rem] font-black text-white leading-[1.08] uppercase tracking-wide hero-text-shadow">
+                <h1 class="font-banner mt-7 text-[clamp(1.05rem,2.8vw+0.55rem,2.35rem)] font-black text-white leading-none uppercase tracking-[0.01em] hero-text-shadow whitespace-nowrap">
                     {{ $companyName }}
                 </h1>
 
