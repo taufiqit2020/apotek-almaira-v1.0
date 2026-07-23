@@ -2,6 +2,7 @@
 @section('title', 'Login Mitra')
 @section('container-class', 'auth-container--wide')
 @section('card-class', 'auth-card--split')
+@section('brand-subtitle', 'Portal Mitra B2B — Login Mitra')
 
 @section('content')
 @php
@@ -18,7 +19,16 @@
 <div class="auth-grid">
     <div class="auth-col auth-col--form">
         <div class="card-title">Login Mitra</div>
-        <p class="card-subtitle">Portal B2B untuk mitra yang sudah disetujui admin. Masuk untuk memesan produk melalui E-Catalog.</p>
+        <p class="card-subtitle">Masuk ke portal B2B untuk mitra yang sudah disetujui admin: pesan produk dan pantau PO.</p>
+        <div class="purpose-box purpose-box--mitra">
+            <strong>Untuk siapa?</strong>
+            <p>Mitra usaha / institusi (klinik, toko, rekanan) yang sudah punya akun portal setelah approval admin.</p>
+            <ul>
+                <li>Pesan produk via E-Catalog mitra</li>
+                <li>Ajukan PO &amp; pantau status pesanan</li>
+                <li>Upload bukti bayar &amp; riwayat transaksi</li>
+            </ul>
+        </div>
 
         @if($errors->any())
         <div class="error-box">
@@ -69,7 +79,7 @@
 
             <button type="submit" class="btn-submit" id="mitraSubmitBtn">
                 <svg id="mitraSubmitIcon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
-                <span id="mitraSubmitLabel">Masuk ke Portal Mitra</span>
+                <span id="mitraSubmitLabel">Masuk sebagai Mitra</span>
             </button>
         </form>
 
@@ -87,35 +97,50 @@
                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                 Portal &amp; Bantuan
             </div>
-            <h2 class="side-title">Akses Cepat Lainnya</h2>
-            <p class="side-subtitle">Belum punya akun mitra, butuh katalog, atau ingin login sebagai staff apotek.</p>
+            <h2 class="side-title">Bukan Mitra?</h2>
+            <p class="side-subtitle">Pilih akses sesuai kebutuhan Anda. Setiap login punya fungsi berbeda.</p>
         </div>
 
         <div class="auth-links">
             <a href="{{ route('mitra.register') }}" class="btn-secondary-link btn-secondary-link--primary">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                Daftar Mitra Baru
+                <span class="link-body">
+                    <span class="link-title">Daftar Mitra Baru</span>
+                    <span class="link-desc">Ajukan kemitraan B2B (menunggu approval admin)</span>
+                </span>
             </a>
             <a href="{{ route('login') }}" class="btn-secondary-link btn-secondary-link--muted">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Staff Apotek — Login Sistem Kasir
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                <span class="link-body">
+                    <span class="link-title">Login Staff</span>
+                    <span class="link-desc">Untuk karyawan apotek: kasir, stok, laporan &amp; admin</span>
+                </span>
             </a>
             <a href="{{ route('catalog.index') }}" class="btn-secondary-link btn-secondary-link--muted">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                Lihat E-Catalog Publik
+                <span class="link-body">
+                    <span class="link-title">E-Catalog Publik</span>
+                    <span class="link-desc">Cek produk &amp; harga tanpa login</span>
+                </span>
             </a>
             <a href="{{ route('home') }}" class="btn-secondary-link btn-secondary-link--muted">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                Beranda Website
+                <span class="link-body">
+                    <span class="link-title">Beranda Website</span>
+                    <span class="link-desc">Info apotek, lokasi, dan kontak</span>
+                </span>
             </a>
             <a href="{{ $waHelpUrl }}" target="_blank" rel="noopener" class="btn-secondary-link btn-secondary-link--wa">
                 <svg fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.11.55 4.09 1.514 5.805L0 24l6.336-1.662C8.09 23.45 10.004 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
-                Bantuan via WhatsApp {{ $apotekPhone }}
+                <span class="link-body">
+                    <span class="link-title">Bantuan WhatsApp</span>
+                    <span class="link-desc">{{ $apotekPhone }} — status akun &amp; reset password</span>
+                </span>
             </a>
         </div>
 
         <div class="help-box">
-            <p>Portal ini hanya untuk mitra B2B yang sudah disetujui admin. Belum terdaftar? Ajukan pendaftaran mitra terlebih dahulu. Staff apotek silakan gunakan login sistem kasir terpisah.</p>
+            <p><strong>Login Mitra</strong> hanya untuk mitra B2B yang sudah disetujui. Karyawan apotek wajib pakai <strong>Login Staff</strong>. Belum terdaftar? Ajukan daftar mitra terlebih dahulu.</p>
         </div>
     </div>
 </div>

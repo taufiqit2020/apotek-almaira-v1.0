@@ -170,11 +170,11 @@
                     WhatsApp
                 </a>
                 <div class="nav-login-group flex items-center gap-1.5 p-1 rounded-2xl" title="Pilih jenis login">
-                    <a href="{{ route('mitra.login') }}" class="nav-btn-mitra inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-bold rounded-xl transition-all">
+                    <a href="{{ route('mitra.login') }}" class="nav-btn-mitra inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-bold rounded-xl transition-all" title="Untuk mitra B2B: pesan produk & PO">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         Login Mitra
                     </a>
-                    <a href="{{ route('login') }}" class="nav-btn-login inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-bold border rounded-xl transition-colors">
+                    <a href="{{ route('login') }}" class="nav-btn-login inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-bold border rounded-xl transition-colors" title="Untuk karyawan apotek: kasir, stok & admin">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                         Login Staff
                     </a>

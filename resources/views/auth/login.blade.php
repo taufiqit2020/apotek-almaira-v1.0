@@ -317,7 +317,7 @@
             font-size: 18px;
             font-weight: 700;
             color: rgba(255,255,255,0.9);
-            margin-bottom: 24px;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -331,6 +331,44 @@
             border-radius: 2px;
             flex-shrink: 0;
         }
+        .card-subtitle {
+            font-size: 13px;
+            color: rgba(203,213,225,0.9);
+            line-height: 1.55;
+            margin: 0 0 12px 14px;
+            font-weight: 500;
+        }
+        .purpose-box {
+            margin: 0 0 20px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(37,99,235,0.12);
+            border: 1px solid rgba(96,165,250,0.3);
+        }
+        .purpose-box strong {
+            display: block;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #93c5fd;
+            margin-bottom: 4px;
+        }
+        .purpose-box p {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.55;
+            color: rgba(226,232,240,0.92);
+            font-weight: 500;
+        }
+        .purpose-box ul {
+            margin: 8px 0 0;
+            padding-left: 1.1rem;
+            font-size: 12px;
+            line-height: 1.55;
+            color: rgba(203,213,225,0.88);
+        }
+        .purpose-box li + li { margin-top: 2px; }
 
         /* ===== ERROR BOX ===== */
         .error-box {
@@ -498,7 +536,7 @@
         }
         .btn-secondary-link {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: flex-start;
             gap: 10px;
             width: 100%;
@@ -518,7 +556,11 @@
             border-color: rgba(148,163,184,0.38);
             transform: translateX(4px);
         }
-        .btn-secondary-link svg { width: 17px; height: 17px; opacity: 0.8; flex-shrink: 0; }
+        .btn-secondary-link svg { width: 17px; height: 17px; opacity: 0.8; flex-shrink: 0; margin-top: 2px; }
+        .link-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; text-align: left; }
+        .link-title { font-size: 13px; font-weight: 700; line-height: 1.3; color: inherit; }
+        .link-desc { font-size: 11px; font-weight: 500; line-height: 1.4; color: rgba(148,163,184,0.95); }
+        .btn-secondary-link:hover .link-desc { color: rgba(203,213,225,0.95); }
         .btn-secondary-link--primary {
             background: linear-gradient(135deg, rgba(37,99,235,0.22), rgba(16,185,129,0.14));
             border-color: rgba(96,165,250,0.35);
@@ -659,7 +701,7 @@
             <div class="brand-name">
                 <span style="color: #34d399; font-weight: 800;">Apotek</span> <span style="color: #ffffff; font-weight: 300;">Almaira</span>
             </div>
-            <div class="brand-sub">PT Nur Madani Farma &mdash; Sistem Kasir</div>
+            <div class="brand-sub">PT Nur Madani Farma &mdash; Login Staff (Sistem Internal)</div>
             <div class="brand-divider">
                 <span></span>
                 <div class="dot"></div>
@@ -690,7 +732,17 @@
 
             <div class="login-grid">
                 <div class="login-col login-col--form">
-                    <div class="card-title">Masuk ke Sistem</div>
+                    <div class="card-title">Login Staff</div>
+                    <p class="card-subtitle">Masuk ke sistem internal apotek untuk kasir, stok, laporan, dan administrasi.</p>
+                    <div class="purpose-box">
+                        <strong>Untuk siapa?</strong>
+                        <p>Karyawan apotek yang punya akun staff (dibuat admin): kasir, admin, keuangan, dan apoteker.</p>
+                        <ul>
+                            <li>Kasir &amp; penjualan harian</li>
+                            <li>Stok, pembelian, dan laporan</li>
+                            <li>Manajemen mitra, karyawan, dan pengaturan</li>
+                        </ul>
+                    </div>
 
                     {{-- Error Messages --}}
                     @if($errors->any())
@@ -775,7 +827,7 @@
                             <svg id="submitIcon" style="width:18px;height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                             </svg>
-                            <span id="submitLabel">Masuk ke Sistem</span>
+                            <span id="submitLabel">Masuk sebagai Staff</span>
                         </button>
                     </form>
 
@@ -793,35 +845,50 @@
                             <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             Portal &amp; Bantuan
                         </div>
-                        <h2 class="side-title">Akses Cepat Lainnya</h2>
-                        <p class="side-subtitle">Navigasi ke portal mitra, katalog publik, atau hubungi admin apotek.</p>
+                        <h2 class="side-title">Bukan Staff?</h2>
+                        <p class="side-subtitle">Pilih akses sesuai kebutuhan Anda. Setiap login punya fungsi berbeda.</p>
                     </div>
 
                     <div class="auth-links">
                         <a href="{{ route('mitra.login') }}" class="btn-secondary-link btn-secondary-link--primary">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            Login Portal Mitra B2B
+                            <span class="link-body">
+                                <span class="link-title">Login Mitra B2B</span>
+                                <span class="link-desc">Untuk mitra usaha: pesan produk, PO, dan pantau pesanan</span>
+                            </span>
                         </a>
                         <a href="{{ route('mitra.register') }}" class="btn-secondary-link btn-secondary-link--muted">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-                            Daftar Mitra Baru
+                            <span class="link-body">
+                                <span class="link-title">Daftar Mitra Baru</span>
+                                <span class="link-desc">Ajukan kemitraan B2B (menunggu approval admin)</span>
+                            </span>
                         </a>
                         <a href="{{ route('catalog.index') }}" class="btn-secondary-link btn-secondary-link--muted">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                            Lihat E-Catalog Publik
+                            <span class="link-body">
+                                <span class="link-title">E-Catalog Publik</span>
+                                <span class="link-desc">Cek produk &amp; harga tanpa login</span>
+                            </span>
                         </a>
                         <a href="{{ route('home') }}" class="btn-secondary-link btn-secondary-link--muted">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                            Beranda Website
+                            <span class="link-body">
+                                <span class="link-title">Beranda Website</span>
+                                <span class="link-desc">Info apotek, lokasi, dan kontak</span>
+                            </span>
                         </a>
                         <a href="{{ $waForgotUrl }}" target="_blank" rel="noopener" class="btn-secondary-link btn-secondary-link--wa">
                             <svg fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.11.55 4.09 1.514 5.805L0 24l6.336-1.662C8.09 23.45 10.004 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
-                            Bantuan via WhatsApp {{ $apotekPhone }}
+                            <span class="link-body">
+                                <span class="link-title">Bantuan WhatsApp</span>
+                                <span class="link-desc">{{ $apotekPhone }} — reset password &amp; bantuan akun</span>
+                            </span>
                         </a>
                     </div>
 
                     <div class="help-box">
-                        <p>Akun staff dibuat oleh administrator. Lupa password? Hubungi admin apotek via WhatsApp untuk reset. Mitra B2B silakan gunakan portal mitra terpisah.</p>
+                        <p><strong>Login Staff</strong> hanya untuk karyawan apotek. Mitra B2B wajib pakai <strong>Login Mitra</strong>. Akun staff dibuat admin; lupa password hubungi WhatsApp admin.</p>
                     </div>
                 </div>
             </div>
@@ -867,7 +934,7 @@
                     if (secondsLeft <= 0) {
                         clearInterval(timer);
                         setLocked(false);
-                        submitLabel.textContent = 'Masuk ke Sistem';
+                        submitLabel.textContent = 'Masuk sebagai Staff';
                         return;
                     }
                     submitLabel.textContent = 'Terkunci (' + secondsLeft + 's)';

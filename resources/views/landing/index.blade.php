@@ -56,7 +56,7 @@
 
                 {{-- Akses login: Mitra vs Staff --}}
                 <div class="mt-5 max-w-xl mx-auto lg:mx-0 p-3.5 sm:p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
-                    <p class="text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] text-emerald-100/90 mb-3 text-center lg:text-left">Masuk ke sistem</p>
+                    <p class="text-[11px] sm:text-xs font-bold uppercase tracking-[0.18em] text-emerald-100/90 mb-3 text-center lg:text-left">Pilih jenis login</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         <a href="{{ route('mitra.login') }}" class="group flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 text-amber-950 font-extrabold text-sm shadow-lg shadow-amber-900/20 hover:from-amber-300 hover:to-amber-400 transition-all hover:-translate-y-0.5">
                             <span class="w-9 h-9 rounded-lg bg-white/30 flex items-center justify-center shrink-0">
@@ -64,7 +64,7 @@
                             </span>
                             <span class="text-left leading-tight">
                                 <span class="block">Login Mitra</span>
-                                <span class="block text-[11px] font-semibold opacity-80">Portal B2B &amp; PO</span>
+                                <span class="block text-[11px] font-semibold opacity-80">Mitra B2B: pesan produk &amp; PO</span>
                             </span>
                         </a>
                         <a href="{{ route('login') }}" class="group flex items-center gap-3 px-4 py-3 rounded-xl bg-white text-emerald-900 font-extrabold text-sm shadow-lg shadow-black/15 hover:bg-emerald-50 transition-all hover:-translate-y-0.5">
@@ -73,7 +73,7 @@
                             </span>
                             <span class="text-left leading-tight">
                                 <span class="block">Login Staff</span>
-                                <span class="block text-[11px] font-semibold text-emerald-700/80">Kasir &amp; Admin</span>
+                                <span class="block text-[11px] font-semibold text-emerald-700/80">Karyawan: kasir, stok &amp; admin</span>
                             </span>
                         </a>
                     </div>
