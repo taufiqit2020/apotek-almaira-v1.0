@@ -32,4 +32,29 @@ class PartnerOrderItem extends Model
     {
         return $this->price_type === 'grosir' ? 'Grosir' : 'Eceran';
     }
+
+    /**
+     * Meta produk untuk daftar item PO & cetakan (kode, kategori, satuan, kandungan, bentuk).
+     *
+     * @return array{code: string, category: string, unit: string, kandungan: string, bentuk: string}
+     */
+    public function catalogDisplay(): array
+    {
+        $product = $this->product;
+        $meta = $product?->catalogMeta() ?? [];
+
+        $code = trim((string) ($this->product_code ?: $product?->code ?: ''));
+        $category = trim((string) ($product?->category?->name ?? ''));
+        $unit = trim((string) ($this->unit_name ?: $product?->unit?->name ?: ''));
+        $kandungan = trim((string) ($meta['kandungan'] ?? ''));
+        $bentuk = trim((string) ($meta['bentuk_sediaan'] ?? ''));
+
+        return [
+            'code' => $code !== '' ? $code : '—',
+            'category' => $category !== '' ? $category : '—',
+            'unit' => $unit !== '' ? $unit : '—',
+            'kandungan' => $kandungan !== '' ? $kandungan : '—',
+            'bentuk' => $bentuk !== '' ? $bentuk : '—',
+        ];
+    }
 }

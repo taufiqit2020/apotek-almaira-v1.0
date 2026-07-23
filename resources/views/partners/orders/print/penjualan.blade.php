@@ -78,25 +78,29 @@
 <table class="data-table">
     <thead>
         <tr>
-            <th class="text-center" style="width:32px">No</th>
+            <th class="text-center" style="width:28px">No</th>
+            <th style="width:72px">Kode</th>
             <th>Produk</th>
-            <th class="text-center" style="width:56px">Tipe</th>
-            <th class="text-center" style="width:48px">Qty</th>
-            <th class="text-right" style="width:90px">Harga</th>
-            <th class="text-right" style="width:100px">Subtotal</th>
+            <th style="width:78px">Kategori</th>
+            <th class="text-center" style="width:48px">Satuan</th>
+            <th class="text-center" style="width:44px">Qty</th>
+            <th class="text-right" style="width:78px">Harga</th>
+            <th class="text-right" style="width:88px">Subtotal</th>
         </tr>
     </thead>
     <tbody>
         @foreach($order->items as $i => $item)
+        @php $meta = $item->catalogDisplay(); @endphp
         <tr>
             <td class="text-center">{{ $i + 1 }}</td>
+            <td class="font-mono text-xs">{{ $meta['code'] }}</td>
             <td>
                 <span class="font-bold">{{ $item->product_name }}</span>
-                @if($item->product_code)
-                <br><span class="font-mono text-xs" style="color:#94a3b8">{{ $item->product_code }}</span>
-                @endif
+                <br><span class="text-xs" style="color:#64748b">Kandungan: {{ $meta['kandungan'] }}</span>
+                <br><span class="text-xs" style="color:#64748b">Bentuk: {{ $meta['bentuk'] }} · {{ $item->price_type_label }}</span>
             </td>
-            <td class="text-center capitalize">{{ $item->price_type ?? '—' }}</td>
+            <td>{{ $meta['category'] }}</td>
+            <td class="text-center">{{ $meta['unit'] }}</td>
             <td class="text-center font-bold">{{ $item->quantity }}</td>
             <td class="text-right font-mono">{{ number_format($item->unit_price, 0, ',', '.') }}</td>
             <td class="text-right font-mono font-bold">{{ number_format($item->subtotal, 0, ',', '.') }}</td>

@@ -234,16 +234,21 @@
                     <span class="text-[11px] font-semibold text-gray-400">{{ $itemCount }} produk · {{ $qtyTotal }} qty</span>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full min-w-[640px] text-sm">
+                    <table class="w-full min-w-[980px] text-sm">
                         <thead>
                             <tr class="bg-slate-50 border-b border-gray-100">
-                                <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500 w-8">#</th>
-                                <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Produk</th>
-                                <th class="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Tipe</th>
-                                <th class="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-gray-500">Qty PO</th>
-                                <th class="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-gray-500">Stok</th>
-                                <th class="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-gray-500">Harga</th>
-                                <th class="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-gray-500">Subtotal</th>
+                                <th class="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500 w-8">#</th>
+                                <th class="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Kode</th>
+                                <th class="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Produk</th>
+                                <th class="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Kategori</th>
+                                <th class="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Satuan</th>
+                                <th class="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Kandungan</th>
+                                <th class="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Bentuk Sediaan</th>
+                                <th class="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500">Tipe</th>
+                                <th class="px-3 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-gray-500">Qty PO</th>
+                                <th class="px-3 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-gray-500">Stok</th>
+                                <th class="px-3 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-gray-500">Harga</th>
+                                <th class="px-3 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-gray-500">Subtotal</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-50">
@@ -251,20 +256,25 @@
                             @php
                                 $stock = $item->product?->stock;
                                 $overStock = $stock !== null && $item->quantity > $stock;
+                                $meta = $item->catalogDisplay();
                             @endphp
                             <tr class="hover:bg-slate-50/80 {{ $overStock ? 'bg-red-50/50' : '' }}">
-                                <td class="px-4 py-3 text-xs text-gray-400 font-semibold">{{ $i + 1 }}</td>
-                                <td class="px-4 py-3 min-w-[180px]">
+                                <td class="px-3 py-3 text-xs text-gray-400 font-semibold">{{ $i + 1 }}</td>
+                                <td class="px-3 py-3 font-mono text-[11px] text-gray-600 whitespace-nowrap">{{ $meta['code'] }}</td>
+                                <td class="px-3 py-3 min-w-[160px]">
                                     <p class="font-semibold text-gray-800 leading-snug">{{ $item->product_name }}</p>
-                                    <p class="text-[11px] text-gray-400 mt-0.5">{{ $item->product_code }} · {{ $item->unit_name }}</p>
                                 </td>
-                                <td class="px-4 py-3">
+                                <td class="px-3 py-3 text-xs text-gray-600">{{ $meta['category'] }}</td>
+                                <td class="px-3 py-3 text-xs text-gray-700 font-semibold whitespace-nowrap">{{ $meta['unit'] }}</td>
+                                <td class="px-3 py-3 text-xs text-gray-600 max-w-[140px]">{{ $meta['kandungan'] }}</td>
+                                <td class="px-3 py-3 text-xs text-gray-600 whitespace-nowrap">{{ $meta['bentuk'] }}</td>
+                                <td class="px-3 py-3">
                                     <span class="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold {{ $item->price_type === 'grosir' ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700' }}">
                                         {{ $item->price_type_label }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-right font-bold text-gray-800">{{ $item->quantity }}</td>
-                                <td class="px-4 py-3 text-right">
+                                <td class="px-3 py-3 text-right font-bold text-gray-800">{{ $item->quantity }}</td>
+                                <td class="px-3 py-3 text-right">
                                     @if($stock !== null)
                                     <span class="font-semibold {{ $overStock ? 'text-red-600' : 'text-gray-700' }}">{{ $stock }}</span>
                                     @if($overStock)
@@ -274,37 +284,37 @@
                                     <span class="text-gray-400 text-xs">—</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-right text-gray-600 whitespace-nowrap">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
-                                <td class="px-4 py-3 text-right font-bold text-gray-800 whitespace-nowrap">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
+                                <td class="px-3 py-3 text-right text-gray-600 whitespace-nowrap">Rp {{ number_format($item->unit_price, 0, ',', '.') }}</td>
+                                <td class="px-3 py-3 text-right font-bold text-gray-800 whitespace-nowrap">Rp {{ number_format($item->subtotal, 0, ',', '.') }}</td>
                             </tr>
                             @endforeach
                         </tbody>
                         <tfoot>
                             @php $orderTotals = $order->totalsBreakdown(); @endphp
                             <tr class="border-t border-gray-100">
-                                <td colspan="6" class="px-4 py-2 text-right text-xs text-gray-500">Subtotal</td>
-                                <td class="px-4 py-2 text-right text-sm font-semibold text-gray-700 whitespace-nowrap">Rp {{ number_format($orderTotals['subtotal'], 0, ',', '.') }}</td>
+                                <td colspan="11" class="px-3 py-2 text-right text-xs text-gray-500">Subtotal</td>
+                                <td class="px-3 py-2 text-right text-sm font-semibold text-gray-700 whitespace-nowrap">Rp {{ number_format($orderTotals['subtotal'], 0, ',', '.') }}</td>
                             </tr>
                             @if($orderTotals['discount_amount'] > 0)
                             <tr>
-                                <td colspan="6" class="px-4 py-1 text-right text-xs text-gray-500">Disc</td>
-                                <td class="px-4 py-1 text-right text-sm font-semibold text-red-600 whitespace-nowrap">-Rp {{ number_format($orderTotals['discount_amount'], 0, ',', '.') }}</td>
+                                <td colspan="11" class="px-3 py-1 text-right text-xs text-gray-500">Disc</td>
+                                <td class="px-3 py-1 text-right text-sm font-semibold text-red-600 whitespace-nowrap">-Rp {{ number_format($orderTotals['discount_amount'], 0, ',', '.') }}</td>
                             </tr>
                             @endif
                             @if($orderTotals['ppn_enabled'])
                             <tr>
-                                <td colspan="6" class="px-4 py-1 text-right text-xs text-gray-500">
+                                <td colspan="11" class="px-3 py-1 text-right text-xs text-gray-500">
                                     PPN {{ rtrim(rtrim(number_format($orderTotals['ppn_percent'], 2, ',', '.'), '0'), ',') }}%
                                     @if($orderTotals['ppn_bearer_label'])
                                     <span class="block text-[10px] text-gray-400">{{ $orderTotals['ppn_bearer_label'] }}</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-1 text-right text-sm font-semibold text-gray-700 whitespace-nowrap">Rp {{ number_format($orderTotals['ppn_amount'], 0, ',', '.') }}</td>
+                                <td class="px-3 py-1 text-right text-sm font-semibold text-gray-700 whitespace-nowrap">Rp {{ number_format($orderTotals['ppn_amount'], 0, ',', '.') }}</td>
                             </tr>
                             @endif
                             <tr class="bg-emerald-50/60 border-t border-emerald-100">
-                                <td colspan="6" class="px-4 py-3.5 text-right text-sm font-bold text-gray-600 uppercase tracking-wide">Total PO</td>
-                                <td class="px-4 py-3.5 text-right text-lg font-extrabold text-emerald-700 whitespace-nowrap">Rp {{ number_format($orderTotals['grand_total'], 0, ',', '.') }}</td>
+                                <td colspan="11" class="px-3 py-3.5 text-right text-sm font-bold text-gray-600 uppercase tracking-wide">Total PO</td>
+                                <td class="px-3 py-3.5 text-right text-lg font-extrabold text-emerald-700 whitespace-nowrap">Rp {{ number_format($orderTotals['grand_total'], 0, ',', '.') }}</td>
                             </tr>
                         </tfoot>
                     </table>

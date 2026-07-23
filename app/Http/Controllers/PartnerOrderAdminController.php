@@ -42,7 +42,7 @@ class PartnerOrderAdminController extends Controller
 
     public function show(PartnerOrder $partnerOrder)
     {
-        $partnerOrder->load(['partner', 'user', 'items.product', 'confirmer']);
+        $partnerOrder->load(['partner', 'user', 'items.product.category', 'items.product.unit', 'confirmer']);
 
         return view('partners.orders.show', [
             'order'       => $partnerOrder,
@@ -244,7 +244,7 @@ class PartnerOrderAdminController extends Controller
             $printer = 'a4';
         }
 
-        $partnerOrder->load(['partner', 'user', 'items.product', 'confirmer', 'settler']);
+        $partnerOrder->load(['partner', 'user', 'items.product.category', 'items.product.unit', 'confirmer', 'settler']);
 
         $viewMap = [
             'penjualan' => [

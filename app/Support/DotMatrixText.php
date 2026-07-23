@@ -152,6 +152,25 @@ final class DotMatrixText
     }
 
     /**
+     * Dua field sejajar dalam 1 baris (kiri | kanan), titik dua tetap rapi di tiap kolom.
+     */
+    public static function fieldPair(
+        string $labelA,
+        string $valueA,
+        string $labelB,
+        string $valueB,
+        int $labelWidth = 9,
+        int $totalWidth = self::WIDTH
+    ): string {
+        $half = (int) floor($totalWidth / 2);
+        $rightW = $totalWidth - $half;
+        $left = self::pad(self::field($labelA, $valueA, $labelWidth, $half), $half, 'left');
+        $right = self::field($labelB, $valueB, $labelWidth, $rightW);
+
+        return $left.$right;
+    }
+
+    /**
      * Field dengan nilai panjang (alamat) — baris lanjutan menjorok rapi.
      *
      * @return list<string>

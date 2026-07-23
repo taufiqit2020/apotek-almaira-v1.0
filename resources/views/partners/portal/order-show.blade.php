@@ -66,15 +66,22 @@
                 </div>
                 <div class="divide-y divide-slate-100 max-h-[28rem] overflow-y-auto">
                     @foreach($order->items as $item)
+                    @php $meta = $item->catalogDisplay(); @endphp
                     <div class="px-5 py-3.5 flex items-start justify-between gap-3 hover:bg-slate-50/60">
                         <div class="min-w-0 flex-1">
                             <p class="font-bold text-slate-800 text-sm leading-snug">{{ $item->product_name }}</p>
-                            <div class="flex flex-wrap items-center gap-1.5 mt-1">
+                            <p class="text-[11px] text-slate-500 mt-1 font-mono">{{ $meta['code'] }} · {{ $meta['category'] }} · {{ $meta['unit'] }}</p>
+                            <p class="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                                Kandungan: {{ $meta['kandungan'] }}
+                                <span class="text-slate-300 mx-1">·</span>
+                                Bentuk: {{ $meta['bentuk'] }}
+                            </p>
+                            <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
                                 <span class="inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold {{ $item->price_type === 'grosir' ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700' }}">
                                     {{ $item->price_type_label }}
                                 </span>
                                 <span class="text-[11px] text-slate-500">
-                                    {{ $item->quantity }} {{ $item->unit_name ?? 'pcs' }} × Rp {{ number_format($item->unit_price, 0, ',', '.') }}
+                                    {{ $item->quantity }} {{ $meta['unit'] }} × Rp {{ number_format($item->unit_price, 0, ',', '.') }}
                                 </span>
                             </div>
                         </div>

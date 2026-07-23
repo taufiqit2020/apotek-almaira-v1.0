@@ -73,17 +73,28 @@
     $lines[] = '';
 
     foreach ($order->items as $i => $item) {
+        $meta = $item->catalogDisplay();
         $lines[] = $dm::row([
             [(string) ($i + 1), 3, 'left'],
             [' ', 1, 'left'],
-            [(string) ($item->product_code ?? '-'), 10, 'left'],
+            [(string) $meta['code'], 10, 'left'],
             [' ', 1, 'left'],
             [(string) $item->product_name, 32, 'left'],
             [' ', 1, 'left'],
-            [(string) ($item->unit_name ?? '-'), 9, 'left'],
+            [(string) $meta['unit'], 9, 'left'],
             [' ', 1, 'left'],
             [(string) $item->quantity, 5, 'right'],
         ]);
+        $lines[] = $dm::pad(
+            '    Kat: '.$meta['category'].' | Kand: '.$meta['kandungan'],
+            $W,
+            'left'
+        );
+        $lines[] = $dm::pad(
+            '    Bentuk: '.$meta['bentuk'],
+            $W,
+            'left'
+        );
     }
 
     $lines[] = '';

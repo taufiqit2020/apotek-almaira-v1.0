@@ -53,8 +53,11 @@
         <span class="c-amt">Total</span>
     </div>
     @foreach($order->items as $item)
+    @php $meta = $item->catalogDisplay(); @endphp
     <div class="item-block">
         <div class="item-name">{{ $item->product_name }}</div>
+        <div class="xs" style="color:#555;margin:1px 0 2px;">{{ $meta['code'] }} · {{ $meta['category'] }} · {{ $meta['unit'] }}</div>
+        <div class="xs" style="color:#666;margin:0 0 3px;">{{ $meta['kandungan'] }} · {{ $meta['bentuk'] }}</div>
         <div class="item-row">
             <span class="c-harga">@ Rp {{ number_format($item->unit_price, 0, ',', '.') }}</span>
             <span class="c-qty">{{ $item->quantity }}</span>

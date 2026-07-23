@@ -42,26 +42,33 @@
     <thead>
         <tr>
             <th class="text-center" style="width:36px">No</th>
-            <th>Kode</th>
+            <th style="width:72px">Kode</th>
             <th>Nama Produk</th>
-            <th class="text-center" style="width:70px">Satuan</th>
-            <th class="text-center" style="width:60px">Qty</th>
+            <th style="width:78px">Kategori</th>
+            <th class="text-center" style="width:56px">Satuan</th>
+            <th style="width:110px">Kandungan</th>
+            <th style="width:90px">Bentuk Sediaan</th>
+            <th class="text-center" style="width:52px">Qty</th>
         </tr>
     </thead>
     <tbody>
         @foreach($order->items as $i => $item)
+        @php $meta = $item->catalogDisplay(); @endphp
         <tr>
             <td class="text-center">{{ $i + 1 }}</td>
-            <td class="font-mono text-xs">{{ $item->product_code ?? '—' }}</td>
+            <td class="font-mono text-xs">{{ $meta['code'] }}</td>
             <td>{{ $item->product_name }}</td>
-            <td class="text-center">{{ $item->unit_name ?? '—' }}</td>
+            <td>{{ $meta['category'] }}</td>
+            <td class="text-center">{{ $meta['unit'] }}</td>
+            <td>{{ $meta['kandungan'] }}</td>
+            <td>{{ $meta['bentuk'] }}</td>
             <td class="text-center font-bold">{{ $item->quantity }}</td>
         </tr>
         @endforeach
     </tbody>
     <tfoot>
         <tr>
-            <td colspan="4" class="text-right font-bold" style="border-top:2px solid #e2e8f0;padding-top:8px;">Total Qty</td>
+            <td colspan="7" class="text-right font-bold" style="border-top:2px solid #e2e8f0;padding-top:8px;">Total Qty</td>
             <td class="text-center font-bold" style="border-top:2px solid #e2e8f0;padding-top:8px;">{{ $qtyTotal }}</td>
         </tr>
     </tfoot>

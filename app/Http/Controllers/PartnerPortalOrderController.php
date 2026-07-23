@@ -38,7 +38,7 @@ class PartnerPortalOrderController extends Controller
     private function findOwnOrder(Partner $partner, PartnerOrder $order): PartnerOrder
     {
         abort_unless($order->partner_id === $partner->id, 404);
-        return $order->load(['items', 'partner']);
+        return $order->load(['items.product.category', 'items.product.unit', 'partner']);
     }
 
     public function index(Request $request)

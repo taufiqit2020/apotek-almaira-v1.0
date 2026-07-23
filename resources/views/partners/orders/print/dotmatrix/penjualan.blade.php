@@ -49,14 +49,30 @@
     $lines[] = $dm::pad('FAKTUR PENJUALAN - '.$payLabel, $W, 'center');
     $lines[] = '';
 
-    $lines[] = $dm::field('No. PO', (string) $order->order_no, $L, $W);
-    $lines[] = $dm::field('Tanggal', $order->created_at?->timezone('Asia/Makassar')->format('d/m/Y H:i') ?? '—', $L, $W);
-    $lines[] = $dm::field('Kepada', (string) ($order->partner?->name ?? '—'), $L, $W);
-    $lines[] = $dm::field('Metode', (string) $order->payment_method_label, $L, $W);
-    $lines[] = $dm::field('Status', $isPaid ? 'LUNAS' : strtoupper((string) $order->payment_status_label), $L, $W);
-    if ($isInvoice && $order->due_date) {
-        $lines[] = $dm::field('Tempo', $order->due_date->format('d/m/Y'), $L, $W);
-    }
+    $lines[] = $dm::fieldPair(
+        'No. PO',
+        (string) $order->order_no,
+        'Tanggal',
+        $order->created_at?->timezone('Asia/Makassar')->format('d/m/Y H:i') ?? '—',
+        $L,
+        $W
+    );
+    $lines[] = $dm::fieldPair(
+        'Kepada',
+        (string) ($order->partner?->name ?? '—'),
+        'Metode',
+        (string) $order->payment_method_label,
+        $L,
+        $W
+    );
+    $lines[] = $dm::fieldPair(
+        'Status',
+        $isPaid ? 'LUNAS' : strtoupper((string) $order->payment_status_label),
+        'Tempo',
+        ($isInvoice && $order->due_date) ? $order->due_date->format('d/m/Y') : '—',
+        $L,
+        $W
+    );
     // Keterangan sejajar titik dua dengan field di atas
     if ($order->payment_method === 'transfer' && ! $isInvoice) {
         foreach ($dm::fieldWrap('Ket', $bankName.' a/n '.$bankHolder.' Rek '.$bankAccount, $L, $W) as $row) {
@@ -73,13 +89,15 @@
     }
     $lines[] = '';
 
-    // NO(3)+1+NAMA(30)+1+QTY(5)+1+HARGA(10)+1+SUBTOTAL(11) = 63 ≈ WIDTH 64
+    // NO(3)+1+KODE(8)+1+NAMA(22)+1+QTY(4)+1+HARGA(10)+1+SUBTOTAL(11) = 63
     $lines[] = $dm::row([
         ['NO', 3, 'left'],
         [' ', 1, 'left'],
-        ['NAMA BARANG', 30, 'left'],
+        ['KODE', 8, 'left'],
         [' ', 1, 'left'],
-        ['QTY', 5, 'right'],
+        ['NAMA BARANG', 22, 'left'],
+        [' ', 1, 'left'],
+        ['QTY', 4, 'right'],
         [' ', 1, 'left'],
         ['HARGA', 10, 'right'],
         [' ', 1, 'left'],
@@ -88,17 +106,30 @@
     $lines[] = '';
 
     foreach ($order->items as $i => $item) {
+        $meta = $item->catalogDisplay();
         $lines[] = $dm::row([
             [(string) ($i + 1), 3, 'left'],
             [' ', 1, 'left'],
-            [(string) $item->product_name, 30, 'left'],
+            [(string) $meta['code'], 8, 'left'],
             [' ', 1, 'left'],
-            [(string) $item->quantity, 5, 'right'],
+            [(string) $item->product_name, 22, 'left'],
+            [' ', 1, 'left'],
+            [(string) $item->quantity, 4, 'right'],
             [' ', 1, 'left'],
             [$fmt($item->unit_price), 10, 'right'],
             [' ', 1, 'left'],
             [$fmt($item->subtotal), 11, 'right'],
         ]);
+        $lines[] = $dm::pad(
+            '    Kat: '.$meta['category'].' | Sat: '.$meta['unit'],
+            $W,
+            'left'
+        );
+        $lines[] = $dm::pad(
+            '    Kand: '.$meta['kandungan'].' | Bentuk: '.$meta['bentuk'],
+            $W,
+            'left'
+        );
     }
 
     $lines[] = '';
@@ -107,9 +138,11 @@
         return $dm::row([
             ['', 3, 'left'],
             [' ', 1, 'left'],
-            ['', 30, 'left'],
+            ['', 8, 'left'],
             [' ', 1, 'left'],
-            ['', 5, 'left'],
+            ['', 22, 'left'],
+            [' ', 1, 'left'],
+            ['', 4, 'left'],
             [' ', 1, 'left'],
             [$label, 10, 'right'],
             [' ', 1, 'left'],
