@@ -138,8 +138,8 @@
                 <div class="min-w-0">
                     <p class="text-sm font-extrabold text-emerald-950 tracking-tight">Sesuaikan Harga Massal</p>
                     <p class="text-xs text-emerald-800/65 mt-0.5 leading-relaxed">
-                        Naikkan/turunkan <strong>harga jual &amp; grosir</strong> sekaligus. Harga beli &amp; HET tetap.
-                        Jika jual melebihi HET, harga jual <strong>tetap dipakai</strong> dan ditandai Melebihi HET.
+                        <strong>Harga %</strong> = naik/turun harga jual. <strong>Markup Grosir</strong> (1–30% dari Pengaturan) menentukan harga grosir = jual − %.
+                        Centang produk → pilih markup → <strong>Sync Grosir</strong>.
                     </p>
                 </div>
             </div>
@@ -186,23 +186,35 @@
                         <input type="number" step="0.1" min="-90" max="500"
                                wire:model="bulkPricePercent"
                                class="w-14 bg-transparent text-slate-900 text-sm font-extrabold tabular-nums text-center focus:outline-none"
-                               title="Persentase (+ naik / − turun)">
+                               title="Naik/turun harga jual (%)">
                         <span class="text-slate-700 text-xs font-extrabold">%</span>
                     </div>
                     <button type="button"
                             wire:click="bulkAdjustPrices"
-                            wire:confirm="Sesuaikan harga jual & grosir {{ count($selected) }} produk sebesar {{ $bulkPricePercent }}%? Harga beli dan HET tidak berubah. Jika melebihi HET, harga jual tetap dipakai."
+                            wire:confirm="Sesuaikan harga jual {{ count($selected) }} produk sebesar {{ $bulkPricePercent }}%? Grosir dihitung ulang dari markup yang dipilih (atau markup produk)."
                             class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold bg-amber-400 hover:bg-amber-300 text-slate-900 shadow-md shadow-amber-500/20 transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         Sesuaikan Harga
                     </button>
+
+                    <div class="flex items-center gap-1.5 bg-white rounded-xl px-2.5 py-1.5 border-2 border-sky-300 shadow-sm">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-sky-700">Markup Grosir</span>
+                        <select wire:model.live="bulkWholesaleMarkup"
+                                class="min-w-[4.5rem] bg-transparent text-slate-900 text-sm font-extrabold focus:outline-none cursor-pointer"
+                                title="Pilihan dari Pengaturan → HET Markup Grosir">
+                            <option value="">Produk</option>
+                            @foreach(($wholesaleMarkupOptions ?? range(1, 30)) as $pct)
+                                <option value="{{ $pct }}">{{ $pct }}%</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <button type="button"
                             wire:click="syncWholesalePrices"
-                            wire:confirm="Hitung ulang harga grosir produk terpilih dari harga jual memakai markup grosir produk (atau default di Pengaturan)? Harga jual & HET tidak diubah. Markup 0% dilewati."
+                            wire:confirm="Terapkan markup grosir {{ $bulkWholesaleMarkup !== '' ? $bulkWholesaleMarkup.'%' : 'produk/pengaturan' }} ke {{ count($selected) }} produk? Harga jual & HET tidak diubah. Grosir = jual − markup%."
                             wire:loading.attr="disabled"
                             wire:target="syncWholesalePrices"
                             class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-extrabold bg-sky-500 hover:bg-sky-400 text-white shadow-md shadow-sky-500/25 border border-sky-400 transition-colors disabled:opacity-60"
-                            title="Hitung ulang harga grosir = jual − markup % (ikuti pengaturan, tanpa paksa 5%)">
+                            title="Grosir = jual − markup % (mengikuti pilihan Markup Grosir)">
                         <svg wire:loading.remove wire:target="syncWholesalePrices" class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         <svg wire:loading wire:target="syncWholesalePrices" class="w-3.5 h-3.5 shrink-0 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                         Sync Grosir

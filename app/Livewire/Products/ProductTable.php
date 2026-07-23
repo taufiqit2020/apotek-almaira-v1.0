@@ -30,6 +30,21 @@ class ProductTable extends Component
     /** Persen penyesuaian harga massal (boleh negatif untuk menurunkan). */
     public string $bulkPricePercent = '10';
 
+    /**
+     * Markup grosir massal (%).
+     * Jika diisi: Sync Grosir menerapkan nilai ini ke semua produk terpilih.
+     * Jika kosong: pakai wholesale_markup masing-masing produk.
+     */
+    public string $bulkWholesaleMarkup = '';
+
+    public function mount(): void
+    {
+        $default = (int) \App\Models\Setting::wholesaleMarkupDefault();
+        if ($default > 0) {
+            $this->bulkWholesaleMarkup = (string) $default;
+        }
+    }
+
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -135,7 +150,7 @@ class ProductTable extends Component
 
     /**
      * Naik/turun harga jual + grosir untuk produk terpilih.
-     * Harga beli, HET, dan markup tidak diubah. Rasio grosir relatif tetap (× faktor yang sama).
+     * Jika Markup Grosir massal dipilih, grosir dihitung ulang = jual − markup%.
      */
     public function bulkAdjustPrices(): void
     {
@@ -156,14 +171,17 @@ class ProductTable extends Component
         $updated = 0;
         $skipped = 0;
         $exceedHet = 0;
+        $chosenMarkup = (int) $this->bulkWholesaleMarkup;
 
         Product::whereIn('id', $this->selected)
             ->orderBy('id')
-            ->chunkById(200, function ($products) use ($factor, &$updated, &$skipped, &$exceedHet) {
+            ->chunkById(200, function ($products) use ($factor, $chosenMarkup, &$updated, &$skipped, &$exceedHet) {
                 foreach ($products as $product) {
                     $sell = (float) $product->sell_price;
                     $wholesale = (float) $product->wholesale_price;
-                    $wsMarkup = (int) ($product->wholesale_markup ?? 0);
+                    $wsMarkup = $chosenMarkup > 0
+                        ? $chosenMarkup
+                        : (int) ($product->wholesale_markup ?? 0);
 
                     if ($sell <= 0 && $wholesale <= 0) {
                         $skipped++;
@@ -187,16 +205,24 @@ class ProductTable extends Component
                         $exceedHet++;
                     }
 
-                    $product->update([
+                    $payload = [
                         'sell_price' => $normalized['sell_price'],
                         'wholesale_price' => $normalized['wholesale_price'],
-                    ]);
+                    ];
+                    if ($chosenMarkup > 0) {
+                        $payload['wholesale_markup'] = $chosenMarkup;
+                    }
+
+                    $product->update($payload);
                     $updated++;
                 }
             });
 
         $sign = $percent > 0 ? '+'.$percent : (string) $percent;
         $msg = "Harga {$updated} produk disesuaikan {$sign}% (jual & grosir).";
+        if ($chosenMarkup > 0) {
+            $msg .= " Markup grosir diset {$chosenMarkup}%.";
+        }
         if ($skipped > 0) {
             $msg .= " {$skipped} dilewati (harga 0).";
         }
@@ -208,18 +234,26 @@ class ProductTable extends Component
             'Produk',
             "Bulk harga {$sign}% pada {$updated} produk",
             null,
-            ['percent' => $percent, 'updated' => $updated, 'exceed_het' => $exceedHet, 'ids_count' => count($this->selected)]
+            ['percent' => $percent, 'wholesale_markup' => $chosenMarkup, 'updated' => $updated, 'exceed_het' => $exceedHet, 'ids_count' => count($this->selected)]
         );
 
         $this->dispatch('toast', type: 'success', message: $msg);
         $this->clearSelection();
     }
 
-    /** Hitung ulang harga grosir dari harga jual memakai markup produk / pengaturan (tanpa fallback 5%). */
+    /** Terapkan markup grosir pilihan ke harga jual → harga grosir (konsisten). */
     public function syncWholesalePrices(): void
     {
         if (empty($this->selected)) {
             $this->dispatch('toast', type: 'warning', message: 'Centang produk terlebih dahulu.');
+
+            return;
+        }
+
+        $chosenMarkup = (int) $this->bulkWholesaleMarkup;
+        $allowed = \App\Models\Setting::wholesaleMarkupOptions();
+        if ($chosenMarkup > 0 && ! in_array($chosenMarkup, $allowed, true)) {
+            $this->dispatch('toast', type: 'error', message: 'Markup grosir tidak ada di opsi Pengaturan (1–30%).');
 
             return;
         }
@@ -230,7 +264,7 @@ class ProductTable extends Component
 
         Product::whereIn('id', $this->selected)
             ->orderBy('id')
-            ->chunkById(200, function ($products) use (&$synced, &$skipped, $fallbackMarkup) {
+            ->chunkById(200, function ($products) use (&$synced, &$skipped, $chosenMarkup, $fallbackMarkup) {
                 foreach ($products as $product) {
                     $sell = (float) $product->sell_price;
                     if ($sell <= 0) {
@@ -238,12 +272,16 @@ class ProductTable extends Component
                         continue;
                     }
 
-                    $markup = (int) ($product->wholesale_markup ?? 0);
-                    if ($markup <= 0) {
-                        $markup = $fallbackMarkup;
+                    // Prioritas: pilihan massal → markup produk → default pengaturan
+                    if ($chosenMarkup > 0) {
+                        $markup = $chosenMarkup;
+                    } else {
+                        $markup = (int) ($product->wholesale_markup ?? 0);
+                        if ($markup <= 0) {
+                            $markup = $fallbackMarkup;
+                        }
                     }
 
-                    // 0% = manual: jangan paksa markup default 5%
                     if ($markup <= 0) {
                         $skipped++;
                         continue;
@@ -268,20 +306,28 @@ class ProductTable extends Component
             'Produk',
             "Sync grosir pada {$synced} produk",
             null,
-            ['synced' => $synced, 'skipped' => $skipped, 'ids_count' => count($this->selected), 'fallback_markup' => $fallbackMarkup]
+            [
+                'synced' => $synced,
+                'skipped' => $skipped,
+                'ids_count' => count($this->selected),
+                'chosen_markup' => $chosenMarkup,
+                'fallback_markup' => $fallbackMarkup,
+            ]
         );
 
-        $message = $synced > 0
-            ? "{$synced} produk: harga grosir diselaraskan dari aturan markup."
-            : 'Tidak ada produk yang bisa di-sync. Pastikan markup grosir produk atau default di Pengaturan > 0%.';
-
-        if ($synced > 0 && $skipped > 0) {
-            $message .= " ({$skipped} dilewati — markup 0%/manual.)";
+        if ($synced > 0) {
+            $label = $chosenMarkup > 0 ? "{$chosenMarkup}%" : 'markup produk/pengaturan';
+            $message = "{$synced} produk: harga grosir = jual − {$label}.";
+            if ($skipped > 0) {
+                $message .= " {$skipped} dilewati.";
+            }
+        } else {
+            $message = 'Tidak ada produk yang di-sync. Pilih Markup Grosir (1–30%) di bar aksi, lalu klik Sync Grosir lagi.';
         }
 
         $this->dispatch(
             'toast',
-            type: $synced > 0 ? 'success' : 'info',
+            type: $synced > 0 ? 'success' : 'warning',
             message: $message
         );
         $this->clearSelection();
@@ -336,6 +382,7 @@ class ProductTable extends Component
         $lowStockCount = Product::active()->lowStock()->count();
         $catalogCount = Product::active()->inCatalog()->count();
         $exceedHetCount = Product::active()->exceedsHet()->count();
+        $wholesaleMarkupOptions = \App\Models\Setting::wholesaleMarkupOptions();
 
         $currentIds = $products->pluck('id')->toArray();
         $isAllOnPageSelected = $this->isAllOnPageSelected($currentIds);
@@ -347,6 +394,7 @@ class ProductTable extends Component
             'catalogCount',
             'exceedHetCount',
             'isAllOnPageSelected',
+            'wholesaleMarkupOptions',
         ));
     }
 }
