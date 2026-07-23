@@ -14,7 +14,11 @@ git fetch origin main
 git reset --hard origin/main
 
 echo "==> Composer install (proc_open override)"
-$PHP_BIN -d disable_functions= "$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction
+$PHP_BIN -d disable_functions= "$COMPOSER_BIN" install --no-dev --optimize-autoloader --no-interaction --no-scripts
+$PHP_BIN -d disable_functions= "$COMPOSER_BIN" dump-autoload -o --no-interaction
+rm -f bootstrap/cache/packages.php bootstrap/cache/services.php bootstrap/cache/config.php
+rm -f bootstrap/cache/routes-v7.php bootstrap/cache/routes.php
+$PHP_BIN artisan package:discover --ansi || true
 
 echo "==> Ensure storage link"
 if [ ! -L public/storage ]; then
