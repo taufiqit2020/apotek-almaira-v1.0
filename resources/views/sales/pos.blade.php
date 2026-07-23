@@ -1375,48 +1375,39 @@ window.posManager = () => ({
                         <div class="flex flex-col flex-1 min-w-0 pr-3">
                             <h4 class="font-bold text-slate-800 text-[13.5px] leading-snug line-clamp-2 group-hover:text-emerald-700 transition-colors" x-text="product.name"></h4>
 
-                            {{-- Indikasi: 1 baris, tinggi tetap agar grid seragam --}}
-                            <div class="mt-1.5 h-[22px]" x-show="product.indikasi" x-cloak>
-                                <div class="flex items-center gap-1.5 max-w-full h-full rounded-md bg-teal-50/70 px-1.5 ring-1 ring-inset ring-teal-100/60"
-                                     :title="'Indikasi / Fungsi: ' + product.indikasi">
-                                    <span class="shrink-0 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-teal-500/15 text-teal-600">
-                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
-                                        </svg>
-                                    </span>
-                                    <p class="min-w-0 flex-1 text-[10.5px] leading-none text-teal-800/85 truncate">
-                                        <span class="font-semibold text-teal-700/70">Fungsi</span>
-                                        <span class="text-teal-600/40 mx-0.5">·</span>
-                                        <span x-text="product.indikasi"></span>
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="mt-1.5 h-[22px]" x-show="!product.indikasi" aria-hidden="true"></div>
+                            {{-- Fungsi: tanpa kotak, teks lembut 1 baris --}}
+                            <p class="mt-1.5 text-[11px] leading-snug text-slate-500 truncate"
+                               x-show="product.indikasi" x-cloak
+                               :title="'Indikasi / Fungsi: ' + product.indikasi">
+                                <span class="font-semibold text-teal-600/90">Fungsi</span>
+                                <span class="text-slate-300 mx-1">·</span>
+                                <span class="text-slate-600/90" x-text="product.indikasi"></span>
+                            </p>
+                        </div>
 
-                            <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                        {{-- Harga + Stok + SKU --}}
+                        <div class="flex flex-col items-end shrink-0 pt-0.5 min-w-[7.5rem] text-right">
+                            <span class="font-black text-emerald-600 text-[15px] tracking-tight leading-none" x-text="formatRupiah(product.sell_price)"></span>
+                            <span class="text-[10px] text-slate-400 font-medium mt-1 leading-none" x-show="product.wholesale_price && product.wholesale_price < product.sell_price">
+                                Grosir <span class="text-slate-500" x-text="formatRupiah(product.wholesale_price)"></span>
+                            </span>
+
+                            <div class="mt-2.5 flex flex-col items-end gap-1">
                                 <span
-                                    class="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
+                                    class="text-[10px] font-semibold px-2 py-0.5 rounded-md"
                                     :class="product.stock <= 0
-                                        ? 'bg-red-50 text-red-600 border-red-100'
+                                        ? 'bg-red-50 text-red-600'
                                         : (product.stock <= product.stock_min
-                                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                            : 'bg-emerald-50 text-emerald-700 border-emerald-100')"
+                                            ? 'bg-amber-50 text-amber-700'
+                                            : 'bg-emerald-50 text-emerald-700')"
                                     x-text="product.stock <= 0
                                         ? 'Habis'
                                         : (product.stock <= product.stock_min
-                                            ? 'Stok: ' + product.stock + ' ' + (product.unit || '') + ' (Menipis)'
-                                            : 'Stok: ' + product.stock + ' ' + (product.unit || ''))"
+                                            ? 'Stok ' + product.stock + ' ' + (product.unit || '') + ' · Menipis'
+                                            : 'Stok ' + product.stock + ' ' + (product.unit || ''))"
                                 ></span>
-                                <span class="text-[10px] text-slate-400 font-medium" x-text="'SKU: ' + (product.code || '-')"></span>
+                                <span class="text-[10px] text-slate-400 font-medium tracking-wide" x-text="product.code || '-'"></span>
                             </div>
-                        </div>
-
-                        {{-- Price --}}
-                        <div class="flex flex-col items-end shrink-0 pt-0.5">
-                            <span class="font-black text-emerald-600 text-[15px] tracking-tight" x-text="formatRupiah(product.sell_price)"></span>
-                            <span class="text-[10px] text-slate-400 font-medium mt-0.5" x-show="product.wholesale_price && product.wholesale_price < product.sell_price">
-                                Grosir: <span x-text="formatRupiah(product.wholesale_price)"></span>
-                            </span>
                         </div>
                     </div>
                 </template>
