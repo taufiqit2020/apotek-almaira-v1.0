@@ -86,7 +86,12 @@
         right: 0;
         left: 0;
         z-index: 40;
+        min-height: var(--app-footer-h);
         transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    /* Konten tidak tertutup footer fixed */
+    .app-main > main:not(.pos-main) {
+        padding-bottom: calc(var(--app-footer-h) + 28px) !important;
     }
     @media (min-width: 1024px) {
         .app-main {
