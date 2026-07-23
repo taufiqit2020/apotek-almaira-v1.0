@@ -225,7 +225,10 @@ class ProductTable extends Component
         }
 
         $synced = 0;
-        $defaultMarkup = 5;
+        $defaultMarkup = \App\Models\Setting::wholesaleMarkupDefault();
+        if ($defaultMarkup <= 0) {
+            $defaultMarkup = 5;
+        }
 
         Product::whereIn('id', $this->selected)
             ->orderBy('id')

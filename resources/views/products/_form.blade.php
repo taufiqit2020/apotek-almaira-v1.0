@@ -10,6 +10,12 @@
         'page' => request('page', request('return_page')),
     ], fn ($v) => $v !== null && $v !== '');
     $indexUrl = route('products.index', $listQuery);
+    $wholesaleMarkupOptions = $wholesaleMarkupOptions ?? \App\Models\Setting::wholesaleMarkupOptions();
+    $wholesaleMarkupDefault = $wholesaleMarkupDefault ?? \App\Models\Setting::wholesaleMarkupDefault();
+    $currentWholesaleMarkup = (int) old(
+        'wholesale_markup',
+        optional($product)->wholesale_markup ?? ($isEdit ? (optional($product)->het_markup ?? 0) : $wholesaleMarkupDefault)
+    );
 @endphp
 
 <script>
@@ -19,7 +25,7 @@
             sellPrice: {{ old('sell_price', round(optional($product)->sell_price ?? 0)) }},
             wholesalePrice: {{ old('wholesale_price', round(optional($product)->wholesale_price ?? 0)) }},
             sellMarkup: {{ old('het_markup', optional($product)->het_markup ?? 0) }},
-            wholesaleMarkup: {{ old('wholesale_markup', optional($product)->wholesale_markup ?? optional($product)->het_markup ?? 0) }},
+            wholesaleMarkup: {{ $currentWholesaleMarkup }},
             hetPrice: {{ old('het_price', round(optional($product)->het_price ?? 0)) }},
 
             init() {
@@ -773,14 +779,14 @@
                         <label class="form-label font-bold">HET Markup Grosir (%)</label>
                         <select name="wholesale_markup" x-model.number="wholesaleMarkup" class="form-input rounded-xl font-medium text-gray-700">
                             <option value="0">0% (Manual)</option>
-                            <option value="5">5%</option>
-                            <option value="10">10%</option>
-                            <option value="15">15%</option>
-                            <option value="20">20%</option>
-                            <option value="25">25%</option>
-                            <option value="30">30%</option>
+                            @foreach($wholesaleMarkupOptions as $pct)
+                                <option value="{{ $pct }}">{{ $pct }}%</option>
+                            @endforeach
+                            @if($currentWholesaleMarkup > 0 && ! in_array($currentWholesaleMarkup, $wholesaleMarkupOptions, true))
+                                <option value="{{ $currentWholesaleMarkup }}">{{ $currentWholesaleMarkup }}% (tersimpan)</option>
+                            @endif
                         </select>
-                        <p class="text-[11px] text-slate-400 mt-1.5">Otomatis isi <strong>harga grosir</strong> = harga jual − %</p>
+                        <p class="text-[11px] text-slate-400 mt-1.5">Otomatis isi <strong>harga grosir</strong> = harga jual − % · opsi dari Pengaturan</p>
                         @error('wholesale_markup')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
 

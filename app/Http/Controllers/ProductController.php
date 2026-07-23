@@ -16,7 +16,9 @@ class ProductController extends Controller {
         $categories = Category::active()->orderBy('name')->get();
         $suppliers = Supplier::active()->orderBy('name')->get();
         $units = Unit::orderBy('name')->get();
-        return view('products.create', compact('categories','suppliers','units'));
+        $wholesaleMarkupOptions = \App\Models\Setting::wholesaleMarkupOptions();
+        $wholesaleMarkupDefault = \App\Models\Setting::wholesaleMarkupDefault();
+        return view('products.create', compact('categories','suppliers','units','wholesaleMarkupOptions','wholesaleMarkupDefault'));
     }
     public function store(Request $request) {
         $v = $request->validate([
@@ -37,8 +39,8 @@ class ProductController extends Controller {
             'sell_price' => 'required|numeric|min:0',
             'wholesale_price' => 'nullable|numeric|min:0',
             'het_price' => 'nullable|numeric|min:0',
-            'het_markup' => 'nullable|integer|in:0,5,10,15,20,25,30',
-            'wholesale_markup' => 'nullable|integer|in:0,5,10,15,20,25,30',
+            'het_markup' => 'nullable|integer|min:0|max:30',
+            'wholesale_markup' => 'nullable|integer|min:0|max:30',
             'stock' => 'required|integer|min:0',
             'stock_min' => 'required|integer|min:0',
             'expired_date' => 'nullable|date',
@@ -83,7 +85,9 @@ class ProductController extends Controller {
         $suppliers = Supplier::active()->orderBy('name')->get();
         $units = Unit::orderBy('name')->get();
         $listQuery = $this->productsIndexParams($request);
-        return view('products.edit', compact('product','categories','suppliers','units','listQuery'));
+        $wholesaleMarkupOptions = \App\Models\Setting::wholesaleMarkupOptions();
+        $wholesaleMarkupDefault = \App\Models\Setting::wholesaleMarkupDefault();
+        return view('products.edit', compact('product','categories','suppliers','units','listQuery','wholesaleMarkupOptions','wholesaleMarkupDefault'));
     }
     public function update(Request $request, Product $product) {
         $v = $request->validate([
@@ -104,8 +108,8 @@ class ProductController extends Controller {
             'sell_price' => 'required|numeric|min:0',
             'wholesale_price' => 'nullable|numeric|min:0',
             'het_price' => 'nullable|numeric|min:0',
-            'het_markup' => 'nullable|integer|in:0,5,10,15,20,25,30',
-            'wholesale_markup' => 'nullable|integer|in:0,5,10,15,20,25,30',
+            'het_markup' => 'nullable|integer|min:0|max:30',
+            'wholesale_markup' => 'nullable|integer|min:0|max:30',
             'stock_min' => 'required|integer|min:0',
             'expired_date' => 'nullable|date',
             'is_active' => 'boolean',
@@ -200,7 +204,9 @@ class ProductController extends Controller {
         $suppliers = Supplier::active()->orderBy('name')->get();
         $units = Unit::orderBy('name')->get();
         $listQuery = $this->productsIndexParams($request);
-        return view('products.show', compact('product','categories','suppliers','units','listQuery'));
+        $wholesaleMarkupOptions = \App\Models\Setting::wholesaleMarkupOptions();
+        $wholesaleMarkupDefault = \App\Models\Setting::wholesaleMarkupDefault();
+        return view('products.show', compact('product','categories','suppliers','units','listQuery','wholesaleMarkupOptions','wholesaleMarkupDefault'));
     }
 
     /**

@@ -54,6 +54,9 @@ class SettingsController extends Controller {
             $discountRules = $defaultRules;
         }
 
+        $wholesaleMarkupOptions = Setting::wholesaleMarkupOptions();
+        $wholesaleMarkupDefault = Setting::wholesaleMarkupDefault();
+
         $crmPointMultiplier = Setting::get('crm_point_multiplier', '1000');
         $crmPointValue = Setting::get('crm_point_value', '1');
 
@@ -75,7 +78,8 @@ class SettingsController extends Controller {
             'ppnActive', 'ppnPercent', 'ppnBearer',
             'printerConnection', 'printerIp', 'printerPort',
             'printerFooter1', 'printerFooter2', 'printerFooter3',
-            'discountRules', 'crmPointMultiplier', 'crmPointValue',
+            'discountRules', 'wholesaleMarkupOptions', 'wholesaleMarkupDefault',
+            'crmPointMultiplier', 'crmPointValue',
             'notifAlertWa', 'notifWaNumber', 'notifAlertEmail', 'notifEmailAddress',
             'notifAlertStock', 'notifAlertBackup'
         ));
@@ -127,6 +131,8 @@ class SettingsController extends Controller {
             'rules.*.min_qty' => 'required|integer|min:1',
             'rules.*.max_qty' => 'required|integer|min:1|gte:rules.*.min_qty',
             'rules.*.percents' => 'required|string',
+            'product_wholesale_markup_options' => 'nullable|string|max:200',
+            'product_wholesale_markup_default' => 'nullable|integer|min:0|max:30',
             
             // Tab 4 Printer
             'printer_connection' => 'required|in:USB,LAN,Serial',
@@ -188,6 +194,13 @@ class SettingsController extends Controller {
             ];
         }
         Setting::set('pos_discount_rules', json_encode($rules));
+
+        $wholesaleOpts = Setting::parseMarkupPercents((string) ($request->product_wholesale_markup_options ?? ''));
+        Setting::set('product_wholesale_markup_options', implode(',', $wholesaleOpts));
+        Setting::set(
+            'product_wholesale_markup_default',
+            (string) (int) ($request->product_wholesale_markup_default ?? 5)
+        );
 
         // Save Tab 4
         Setting::set('printer_connection', $request->printer_connection);
