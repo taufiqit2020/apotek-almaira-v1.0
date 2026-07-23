@@ -3,6 +3,13 @@
     $isEdit = (bool) $product;
     $formId = 'product-form';
     $action = $isEdit ? route('products.update', $product) : route('products.store');
+    $listQuery = $listQuery ?? array_filter([
+        'q' => request('q', request('return_q')),
+        'cat' => request('cat', request('return_cat')),
+        'status' => request('status', request('return_status')),
+        'page' => request('page', request('return_page')),
+    ], fn ($v) => $v !== null && $v !== '');
+    $indexUrl = route('products.index', $listQuery);
 @endphp
 
 <script>
@@ -177,12 +184,12 @@
             </div>
             <div class="flex items-center gap-2 shrink-0">
                 @if($isEdit)
-                <a href="{{ route('products.show', $product) }}"
+                <a href="{{ route('products.show', array_merge(['product' => $product], $listQuery)) }}"
                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 border border-white/25 text-white text-sm font-bold hover:bg-white/25 transition-colors whitespace-nowrap">
                     Detail
                 </a>
                 @endif
-                <a href="{{ route('products.index') }}"
+                <a href="{{ $indexUrl }}"
                    class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-emerald-700 text-sm font-bold shadow-md hover:bg-emerald-50 transition-colors whitespace-nowrap">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     Daftar Produk
@@ -206,6 +213,9 @@
     <form id="{{ $formId }}" method="POST" action="{{ $action }}" enctype="multipart/form-data" class="space-y-5">
         @csrf
         @if($isEdit) @method('PUT') @endif
+        @foreach($listQuery as $key => $value)
+            <input type="hidden" name="return_{{ $key }}" value="{{ $value }}">
+        @endforeach
 
         {{-- Informasi Dasar --}}
         <section class="card overflow-hidden bg-white border border-gray-100 rounded-2xl shadow-sm">
@@ -523,7 +533,7 @@
                     {{ $isEdit ? 'Simpan untuk memperbarui master produk · jual & grosir selaras dengan penyesuaian %.' : 'Produk baru akan langsung aktif di inventori.' }}
                 </p>
                 <div class="flex items-center justify-end gap-2.5 w-full sm:w-auto">
-                    <a href="{{ route('products.index') }}"
+                    <a href="{{ $indexUrl }}"
                        class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-700 text-sm font-bold hover:bg-gray-50 transition-colors flex-1 sm:flex-none">
                         Batal
                     </a>

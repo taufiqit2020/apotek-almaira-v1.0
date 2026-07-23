@@ -4,12 +4,16 @@
 
 @section('breadcrumb')
 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
-<a href="{{ route('products.index') }}" class="hover:text-primary-600 transition-colors">Master Produk</a>
+<a href="{{ route('products.index', $listQuery ?? []) }}" class="hover:text-primary-600 transition-colors">Master Produk</a>
 <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/></svg>
 <span class="text-gray-600 font-medium">Detail</span>
 @endsection
 
 @section('content')
+@php
+    $listQuery = $listQuery ?? [];
+    $indexUrl = route('products.index', $listQuery);
+@endphp
 <div class="animate-in max-w-6xl mx-auto">
     {{-- Hero --}}
     <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-700/15 mb-5">
@@ -31,12 +35,11 @@
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-                <a href="{{ route('products.index') }}"
-                   x-on:click.prevent="window.history.length > 1 ? window.history.back() : window.location.assign('{{ route('products.index') }}')"
+                <a href="{{ $indexUrl }}"
                    class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-white/15 border border-white/25 text-white text-sm font-bold hover:bg-white/25 transition-colors">
                     Kembali
                 </a>
-                <a href="{{ route('products.edit', $product) }}" wire:navigate
+                <a href="{{ route('products.edit', array_merge(['product' => $product], $listQuery)) }}" wire:navigate
                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white text-emerald-700 text-sm font-extrabold shadow-md hover:bg-emerald-50 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     Edit Produk

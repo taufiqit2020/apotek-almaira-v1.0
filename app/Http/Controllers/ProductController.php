@@ -73,14 +73,15 @@ class ProductController extends Controller {
 
         $p = Product::create($v);
         ActivityLogService::created('Produk', $p->name, $p->toArray());
-        return redirect()->route('products.index')->with('toast_success', "Produk {$p->name} berhasil ditambahkan!");
+        return $this->redirectToProductsIndex($request, "Produk {$p->name} berhasil ditambahkan!");
     }
-    public function edit(Product $product) {
+    public function edit(Request $request, Product $product) {
         $product->loadMissing('category');
         $categories = Category::active()->orderBy('name')->get();
         $suppliers = Supplier::active()->orderBy('name')->get();
         $units = Unit::orderBy('name')->get();
-        return view('products.edit', compact('product','categories','suppliers','units'));
+        $listQuery = $this->productsIndexParams($request);
+        return view('products.edit', compact('product','categories','suppliers','units','listQuery'));
     }
     public function update(Request $request, Product $product) {
         $v = $request->validate([
@@ -163,9 +164,9 @@ class ProductController extends Controller {
         $oldData = $product->toArray();
         $product->update($v);
         ActivityLogService::updated('Produk', $product->name, $oldData, $product->toArray());
-        return redirect()->route('products.index')->with('toast_success', "Produk {$product->name} berhasil diperbarui!");
+        return $this->redirectToProductsIndex($request, "Produk {$product->name} berhasil diperbarui!");
     }
-    public function destroy(Product $product) {
+    public function destroy(Request $request, Product $product) {
         $name = $product->name;
         $oldData = $product->toArray();
 
@@ -181,7 +182,7 @@ class ProductController extends Controller {
 
             $product->delete();
             ActivityLogService::deleted('Produk', $name, $oldData);
-            return redirect()->route('products.index')->with('toast_success', "Produk {$name} berhasil dihapus!");
+            return $this->redirectToProductsIndex($request, "Produk {$name} berhasil dihapus!");
         } catch (\Throwable $e) {
             return back()->with('toast_error', "Gagal menghapus produk {$name}. Produk mungkin masih terkait data transaksi.");
         }
@@ -189,12 +190,13 @@ class ProductController extends Controller {
     /**
      * Show product detail page.
      */
-    public function show(Product $product)
+    public function show(Request $request, Product $product)
     {
         $categories = Category::active()->orderBy('name')->get();
         $suppliers = Supplier::active()->orderBy('name')->get();
         $units = Unit::orderBy('name')->get();
-        return view('products.show', compact('product','categories','suppliers','units'));
+        $listQuery = $this->productsIndexParams($request);
+        return view('products.show', compact('product','categories','suppliers','units','listQuery'));
     }
 
     /**
@@ -476,5 +478,31 @@ class ProductController extends Controller {
             'logs' => $result['logs'],
             'filename' => $file->getClientOriginalName(),
         ])->with('toast_success', "Import selesai! {$result['success_count']} produk berhasil, {$result['failed_count']} gagal.");
+    }
+
+    /**
+     * Pertahankan filter/pencarian Master Produk (q, cat, status, page).
+     *
+     * @return array<string, string|int>
+     */
+    private function productsIndexParams(Request $request): array
+    {
+        $params = [];
+        foreach (['q', 'cat', 'status', 'page'] as $key) {
+            $value = $request->input("return_{$key}", $request->query($key));
+            if ($value === null || $value === '') {
+                continue;
+            }
+            $params[$key] = $key === 'page' ? (int) $value : (string) $value;
+        }
+
+        return $params;
+    }
+
+    private function redirectToProductsIndex(Request $request, string $message)
+    {
+        return redirect()
+            ->route('products.index', $this->productsIndexParams($request))
+            ->with('toast_success', $message);
     }
 }
