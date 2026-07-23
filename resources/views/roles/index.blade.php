@@ -153,7 +153,7 @@
                                     @csrf @method('PATCH')
                                 </form>
                                 <button type="button"
-                                    @click="confirm('toggle-role-{{ $role->id }}', '{{ $role->is_active ? 'Nonaktifkan' : 'Aktifkan' }} Role', 'Yakin ingin {{ $role->is_active ? 'menonaktifkan' : 'mengaktifkan' }} role ini?')"
+                                    @click="$root.confirm('toggle-role-{{ $role->id }}', '{{ $role->is_active ? 'Nonaktifkan' : 'Aktifkan' }} Role', 'Yakin ingin {{ $role->is_active ? 'menonaktifkan' : 'mengaktifkan' }} role ini?')"
                                     class="btn btn-icon btn-sm {{ $role->is_active ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-green-50 text-green-600 hover:bg-green-100' }}"
                                     title="{{ $role->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
                                     @if($role->is_active)
@@ -169,7 +169,7 @@
                                     @csrf @method('DELETE')
                                 </form>
                                 <button type="button"
-                                    @click="confirm('del-role-{{ $role->id }}', 'Hapus Role', 'Hapus role {{ addslashes($role->name) }}? Pastikan tidak ada user terkait.')"
+                                    @click="$root.confirm('del-role-{{ $role->id }}', 'Hapus Role', 'Hapus role {{ addslashes($role->name) }}? Pastikan tidak ada user terkait.')"
                                     class="btn btn-icon btn-sm bg-red-50 text-red-500 hover:bg-red-100"
                                     title="Hapus">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
