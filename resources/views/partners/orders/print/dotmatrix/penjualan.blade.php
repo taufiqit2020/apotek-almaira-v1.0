@@ -32,11 +32,16 @@
     }
     $addrLine = trim(preg_replace('/\s+/u', ' ', str_replace(["\r\n", "\n", "\r"], ' ', (string) $address)) ?? '');
     $W = $dm::WIDTH;
-    $L = 9;
+    $L = 8;
     $fmt = static fn ($n) => number_format((float) $n, 0, ',', '.');
 
+    $statusText = $isPaid ? 'LUNAS' : strtoupper((string) $order->payment_status_label);
+    $tempoText = ($isInvoice && $order->due_date) ? $order->due_date->format('d/m/Y') : '—';
+    $tanggalText = $order->created_at?->timezone('Asia/Makassar')->format('d/m/Y H:i') ?? '—';
+
     $lines = [];
-    // Kop: alamat/tagline panjang dibungkus, tidak dipotong
+
+    // ── Kop ──
     $lines[] = $dm::pad($kopName, $W, 'center');
     foreach ($dm::wrap($kopTag, $W, 'center') as $row) {
         $lines[] = $row;
@@ -45,41 +50,38 @@
         $lines[] = $row;
     }
     $lines[] = $dm::pad('Telp/WA: '.$phone, $W, 'center');
-    $lines[] = '';
+    $lines[] = $dm::rule($W, '=');
     $lines[] = $dm::pad('FAKTUR PENJUALAN - '.$payLabel, $W, 'center');
-    $lines[] = '';
+    $lines[] = $dm::rule($W, '=');
 
+    // ── Meta: nilai panjang full-width; pasangan pendek 2 kolom ──
+    foreach ($dm::fieldWrap('No. PO', (string) $order->order_no, $L, $W) as $row) {
+        $lines[] = $row;
+    }
     $lines[] = $dm::fieldPair(
-        'No. PO',
-        (string) $order->order_no,
         'Tanggal',
-        $order->created_at?->timezone('Asia/Makassar')->format('d/m/Y H:i') ?? '—',
-        $L,
-        $W
-    );
-    $lines[] = $dm::fieldPair(
-        'Kepada',
-        (string) ($order->partner?->name ?? '—'),
+        $tanggalText,
         'Metode',
         (string) $order->payment_method_label,
         $L,
-        $W
+        $W,
+        34
     );
+    foreach ($dm::fieldWrap('Kepada', (string) ($order->partner?->name ?? '—'), $L, $W) as $row) {
+        $lines[] = $row;
+    }
     $lines[] = $dm::fieldPair(
         'Status',
-        $isPaid ? 'LUNAS' : strtoupper((string) $order->payment_status_label),
+        $statusText,
         'Tempo',
-        ($isInvoice && $order->due_date) ? $order->due_date->format('d/m/Y') : '—',
+        $tempoText,
         $L,
-        $W
+        $W,
+        34
     );
-    // Keterangan sejajar titik dua dengan field di atas
+
     if ($order->payment_method === 'transfer' && ! $isInvoice) {
-        foreach ($dm::fieldWrap('Ket', $bankName.' a/n '.$bankHolder.' Rek '.$bankAccount, $L, $W) as $row) {
-            $lines[] = $row;
-        }
-    } elseif ($isInvoice) {
-        foreach ($dm::fieldWrap('Ket', 'Invoice tempo jatuh tempo '.($order->due_date?->format('d/m/Y') ?? '—'), $L, $W) as $row) {
+        foreach ($dm::fieldWrap('Ket', $bankName.' a/n '.$bankHolder.' · Rek '.$bankAccount, $L, $W) as $row) {
             $lines[] = $row;
         }
     } elseif ($order->payment_method === 'cod') {
@@ -87,66 +89,77 @@
             $lines[] = $row;
         }
     }
-    $lines[] = '';
+    $lines[] = $dm::rule($W, '-');
 
-    // NO(3)+1+KODE(8)+1+NAMA(22)+1+QTY(4)+1+HARGA(10)+1+SUBTOTAL(11) = 63
+    // ── Header tabel ──
+    // NO(3)+1+KODE(9)+1+NAMA(24)+1+QTY(4)+1+HARGA(9)+1+SUBTOTAL(10) = 64
     $lines[] = $dm::row([
         ['NO', 3, 'left'],
         [' ', 1, 'left'],
-        ['KODE', 8, 'left'],
+        ['KODE', 9, 'left'],
         [' ', 1, 'left'],
-        ['NAMA BARANG', 22, 'left'],
+        ['NAMA BARANG', 24, 'left'],
         [' ', 1, 'left'],
         ['QTY', 4, 'right'],
         [' ', 1, 'left'],
-        ['HARGA', 10, 'right'],
+        ['HARGA', 9, 'right'],
         [' ', 1, 'left'],
-        ['SUBTOTAL', 11, 'right'],
+        ['SUBTOTAL', 10, 'right'],
     ]);
-    $lines[] = '';
+    $lines[] = $dm::rule($W, '-');
 
     foreach ($order->items as $i => $item) {
         $meta = $item->catalogDisplay();
         $lines[] = $dm::row([
             [(string) ($i + 1), 3, 'left'],
             [' ', 1, 'left'],
-            [(string) $meta['code'], 8, 'left'],
+            [(string) $meta['code'], 9, 'left'],
             [' ', 1, 'left'],
-            [(string) $item->product_name, 22, 'left'],
+            [(string) $item->product_name, 24, 'left'],
             [' ', 1, 'left'],
             [(string) $item->quantity, 4, 'right'],
             [' ', 1, 'left'],
-            [$fmt($item->unit_price), 10, 'right'],
+            [$fmt($item->unit_price), 9, 'right'],
             [' ', 1, 'left'],
-            [$fmt($item->subtotal), 11, 'right'],
+            [$fmt($item->subtotal), 10, 'right'],
         ]);
-        $lines[] = $dm::pad(
-            '    Kat: '.$meta['category'].' | Sat: '.$meta['unit'],
-            $W,
-            'left'
-        );
-        $lines[] = $dm::pad(
-            '    Kand: '.$meta['kandungan'].' | Bentuk: '.$meta['bentuk'],
-            $W,
-            'left'
-        );
+
+        // Detail produk — 2 kolom jika muat, wrap jika panjang
+        foreach ($dm::fieldPairWrap(
+            'Kategori',
+            (string) $meta['category'],
+            'Satuan',
+            (string) $meta['unit'],
+            9,
+            $W - 4,
+            36
+        ) as $row) {
+            $lines[] = '    '.rtrim($row);
+        }
+        foreach ($dm::fieldWrap('Kandungan', (string) $meta['kandungan'], 9, $W - 4) as $row) {
+            $lines[] = '    '.rtrim($row);
+        }
+        foreach ($dm::fieldWrap('Bentuk', (string) $meta['bentuk'], 9, $W - 4) as $row) {
+            $lines[] = '    '.rtrim($row);
+        }
+        $lines[] = '';
     }
 
-    $lines[] = '';
-    // Label + nominal sejajar kolom HARGA / SUBTOTAL di header
+    $lines[] = $dm::rule($W, '-');
+
     $moneyRow = static function (string $label, string $amount) use ($dm): string {
         return $dm::row([
             ['', 3, 'left'],
             [' ', 1, 'left'],
-            ['', 8, 'left'],
+            ['', 9, 'left'],
             [' ', 1, 'left'],
-            ['', 22, 'left'],
+            ['', 24, 'left'],
             [' ', 1, 'left'],
             ['', 4, 'left'],
             [' ', 1, 'left'],
-            [$label, 10, 'right'],
+            [$label, 9, 'right'],
             [' ', 1, 'left'],
-            [$amount, 11, 'right'],
+            [$amount, 10, 'right'],
         ]);
     };
     $lines[] = $moneyRow('Subtotal', 'Rp '.$fmt($totals['subtotal']));
@@ -155,7 +168,9 @@
         $ppnLabel = 'PPN '.rtrim(rtrim(number_format($totals['ppn_percent'], 2, ',', '.'), '0'), ',');
         $lines[] = $moneyRow($ppnLabel, 'Rp '.$fmt($totals['ppn_amount']));
     }
+    $lines[] = $dm::rule($W, '=');
     $lines[] = $moneyRow('TOTAL', 'Rp '.$fmt($totals['grand_total']));
+    $lines[] = $dm::rule($W, '=');
     $lines[] = '';
 
     $sigLeftName = null;
@@ -163,7 +178,6 @@
     $sigLeftPt = 15.0;
     $sigRightPt = 15.0;
     if ($showSignature) {
-        $lines[] = '';
         $sigLeftName = \App\Models\Salary::formatPersonName($order->partner?->name ?? '....................');
         $sigRightName = $directorName;
         $halfChars = (int) floor($W / 2);

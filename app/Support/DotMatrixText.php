@@ -153,6 +153,7 @@ final class DotMatrixText
 
     /**
      * Dua field sejajar dalam 1 baris (kiri | kanan), titik dua tetap rapi di tiap kolom.
+     * $leftWidth opsional untuk kolom kiri lebih lebar (nilai panjang).
      */
     public static function fieldPair(
         string $labelA,
@@ -160,14 +161,70 @@ final class DotMatrixText
         string $labelB,
         string $valueB,
         int $labelWidth = 9,
-        int $totalWidth = self::WIDTH
+        int $totalWidth = self::WIDTH,
+        ?int $leftWidth = null
     ): string {
-        $half = (int) floor($totalWidth / 2);
+        $half = $leftWidth ?? (int) floor($totalWidth / 2);
+        $half = max(18, min($half, $totalWidth - 18));
         $rightW = $totalWidth - $half;
         $left = self::pad(self::field($labelA, $valueA, $labelWidth, $half), $half, 'left');
         $right = self::field($labelB, $valueB, $labelWidth, $rightW);
 
         return $left.$right;
+    }
+
+    /**
+     * Field pair yang membungkus nilai kiri jika terlalu panjang (tidak dipotong kasar).
+     *
+     * @return list<string>
+     */
+    public static function fieldPairWrap(
+        string $labelA,
+        string $valueA,
+        string $labelB,
+        string $valueB,
+        int $labelWidth = 9,
+        int $totalWidth = self::WIDTH,
+        ?int $leftWidth = null
+    ): array {
+        $half = $leftWidth ?? (int) floor($totalWidth / 2);
+        $half = max(18, min($half, $totalWidth - 18));
+        $rightW = $totalWidth - $half;
+
+        $leftRows = self::fieldWrap($labelA, $valueA, $labelWidth, $half);
+        $right = self::pad(self::field($labelB, $valueB, $labelWidth, $rightW), $rightW, 'left');
+        $blankRight = self::pad('', $rightW, 'left');
+
+        $out = [];
+        foreach ($leftRows as $i => $row) {
+            $out[] = self::pad($row, $half, 'left').($i === 0 ? $right : $blankRight);
+        }
+
+        return $out ?: [self::pad('', $half, 'left').$right];
+    }
+
+    /** Garis pemisah monospasi. */
+    public static function rule(int $width = self::WIDTH, string $char = '-'): string
+    {
+        return self::line($width, $char);
+    }
+
+    /**
+     * Baris detail item menjorok, dibungkus rapi.
+     *
+     * @return list<string>
+     */
+    public static function detailLines(string $text, int $indent = 4, int $totalWidth = self::WIDTH): array
+    {
+        $indentStr = str_repeat(' ', max(0, $indent));
+        $innerW = max(8, $totalWidth - $indent);
+        $rows = self::wrap($text, $innerW, 'left');
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = $indentStr.rtrim($row);
+        }
+
+        return $out ?: [$indentStr];
     }
 
     /**

@@ -31,10 +31,10 @@
     $shipAddr = trim((string) ($order->shipping_address ?? '—'));
 
     $W = $dm::WIDTH;
-    $L = 9; // lebar label agar titik dua sejajar
+    $L = 8;
     $lines = [];
 
-    // ── Kop (alamat/tagline panjang dibungkus, tidak dipotong) ──
+    // ── Kop ──
     $lines[] = $dm::pad($kopName, $W, 'center');
     foreach ($dm::wrap($kopTag, $W, 'center') as $row) {
         $lines[] = $row;
@@ -43,19 +43,30 @@
         $lines[] = $row;
     }
     $lines[] = $dm::pad('Telp/WA: '.$phone, $W, 'center');
-    $lines[] = '';
+    $lines[] = $dm::rule($W, '=');
     $lines[] = $dm::pad('SURAT JALAN', $W, 'center');
-    $lines[] = '';
+    $lines[] = $dm::rule($W, '=');
 
-    // ── Info (satu kolom, titik dua sejajar) ──
-    $lines[] = $dm::field('No. PO', (string) $order->order_no, $L, $W);
-    $lines[] = $dm::field('Tanggal', $docDate?->timezone('Asia/Makassar')->format('d/m/Y H:i') ?? '—', $L, $W);
-    $lines[] = $dm::field('Mitra', (string) ($order->partner?->name ?? '—'), $L, $W);
-    $lines[] = $dm::field('PIC', $picLine, $L, $W);
+    // ── Info ──
+    foreach ($dm::fieldWrap('No. PO', (string) $order->order_no, $L, $W) as $row) {
+        $lines[] = $row;
+    }
+    $lines[] = $dm::fieldPair(
+        'Tanggal',
+        $docDate?->timezone('Asia/Makassar')->format('d/m/Y H:i') ?? '—',
+        'PIC',
+        $picLine,
+        $L,
+        $W,
+        34
+    );
+    foreach ($dm::fieldWrap('Mitra', (string) ($order->partner?->name ?? '—'), $L, $W) as $row) {
+        $lines[] = $row;
+    }
     foreach ($dm::fieldWrap('Alamat', $shipAddr, $L, $W) as $row) {
         $lines[] = $row;
     }
-    $lines[] = '';
+    $lines[] = $dm::rule($W, '-');
 
     // ── Tabel barang ──
     // NO(3)+1+KODE(10)+1+NAMA(32)+1+SATUAN(9)+1+QTY(5) = 63 ≈ WIDTH 64
@@ -70,7 +81,7 @@
         [' ', 1, 'left'],
         ['QTY', 5, 'right'],
     ]);
-    $lines[] = '';
+    $lines[] = $dm::rule($W, '-');
 
     foreach ($order->items as $i => $item) {
         $meta = $item->catalogDisplay();
@@ -85,19 +96,19 @@
             [' ', 1, 'left'],
             [(string) $item->quantity, 5, 'right'],
         ]);
-        $lines[] = $dm::pad(
-            '    Kat: '.$meta['category'].' | Kand: '.$meta['kandungan'],
-            $W,
-            'left'
-        );
-        $lines[] = $dm::pad(
-            '    Bentuk: '.$meta['bentuk'],
-            $W,
-            'left'
-        );
+        foreach ($dm::fieldWrap('Kategori', (string) $meta['category'], 9, $W - 4) as $row) {
+            $lines[] = '    '.rtrim($row);
+        }
+        foreach ($dm::fieldWrap('Kandungan', (string) $meta['kandungan'], 9, $W - 4) as $row) {
+            $lines[] = '    '.rtrim($row);
+        }
+        foreach ($dm::fieldWrap('Bentuk', (string) $meta['bentuk'], 9, $W - 4) as $row) {
+            $lines[] = '    '.rtrim($row);
+        }
+        $lines[] = '';
     }
 
-    $lines[] = '';
+    $lines[] = $dm::rule($W, '-');
     // Sejajarkan angka TOTAL QTY dengan kolom QTY di header
     $lines[] = $dm::row([
         ['', 3, 'left'],
@@ -110,6 +121,7 @@
         [' ', 1, 'left'],
         [(string) $qtyTotal, 5, 'right'],
     ]);
+    $lines[] = $dm::rule($W, '=');
     $lines[] = '';
 
     if ($order->notes) {

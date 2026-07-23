@@ -43,12 +43,13 @@
         font-family: "Courier New", Courier, monospace !important;
         font-size: 15pt !important;
         font-weight: bold !important;
-        line-height: 1.22 !important;
+        line-height: 1.18 !important;
         letter-spacing: 0 !important;
         white-space: pre !important;
         overflow: visible;
         color: #000 !important;
         tab-size: 4;
+        max-width: 64ch;
     }
 
     /* Tanda tangan: nama 1 baris, font mengecil jika panjang */
