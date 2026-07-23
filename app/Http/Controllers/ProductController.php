@@ -38,6 +38,7 @@ class ProductController extends Controller {
             'wholesale_price' => 'nullable|numeric|min:0',
             'het_price' => 'nullable|numeric|min:0',
             'het_markup' => 'nullable|integer|in:0,5,10,15,20,25,30',
+            'wholesale_markup' => 'nullable|integer|in:0,5,10,15,20,25,30',
             'stock' => 'required|integer|min:0',
             'stock_min' => 'required|integer|min:0',
             'expired_date' => 'nullable|date',
@@ -49,6 +50,7 @@ class ProductController extends Controller {
         $v['wholesale_price'] = $v['wholesale_price'] ?? 0;
         $v['het_price'] = $v['het_price'] ?? 0;
         $v['het_markup'] = $v['het_markup'] ?? 0;
+        $v['wholesale_markup'] = $v['wholesale_markup'] ?? 0;
         $normalized = Product::normalizeSellAgainstHet(
             (float) $v['sell_price'],
             (float) $v['wholesale_price'],
@@ -103,6 +105,7 @@ class ProductController extends Controller {
             'wholesale_price' => 'nullable|numeric|min:0',
             'het_price' => 'nullable|numeric|min:0',
             'het_markup' => 'nullable|integer|in:0,5,10,15,20,25,30',
+            'wholesale_markup' => 'nullable|integer|in:0,5,10,15,20,25,30',
             'stock_min' => 'required|integer|min:0',
             'expired_date' => 'nullable|date',
             'is_active' => 'boolean',
@@ -115,6 +118,7 @@ class ProductController extends Controller {
         $v['wholesale_price'] = $v['wholesale_price'] ?? 0;
         $v['het_price'] = $v['het_price'] ?? 0;
         $v['het_markup'] = $v['het_markup'] ?? 0;
+        $v['wholesale_markup'] = $v['wholesale_markup'] ?? 0;
         $normalized = Product::normalizeSellAgainstHet(
             (float) $v['sell_price'],
             (float) $v['wholesale_price'],

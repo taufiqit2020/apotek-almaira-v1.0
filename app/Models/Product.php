@@ -13,7 +13,7 @@ class Product extends Model {
         'description','composition','manufacturer','drug_class','dosage_form','route',
         'requires_prescription',
         'purchase_price','sell_price','wholesale_price','het_price',
-        'stock','stock_min','expired_date','is_active','het_markup','images',
+        'stock','stock_min','expired_date','is_active','het_markup','wholesale_markup','images',
         'show_in_catalog','catalog_order',
     ];
     protected $casts = [
@@ -27,6 +27,7 @@ class Product extends Model {
         'het_price' => 'decimal:2',
         'expired_date' => 'date',
         'het_markup' => 'integer',
+        'wholesale_markup' => 'integer',
         'images' => 'array',
     ];
     protected $appends = ['image_url', 'has_image'];
@@ -41,8 +42,20 @@ class Product extends Model {
     public function scopeLowStock($q) { return $q->whereColumn('stock', '<=', 'stock_min'); }
     public function scopeInCatalog($q) { return $q->where('show_in_catalog', true); }
 
+    /** Harga jual otomatis dari beli + markup jual (%). */
+    public static function calcSellFromPurchase(float $purchase, int $markup): float
+    {
+        $purchase = max(0, round($purchase));
+        $markup = max(0, $markup);
+        if ($purchase <= 0 || $markup <= 0) {
+            return 0.0;
+        }
+
+        return (float) round($purchase * (1 + $markup / 100));
+    }
+
     /**
-     * Harga grosir otomatis dari jual + HET markup (%).
+     * Harga grosir otomatis dari jual + markup grosir (%).
      * Acuan bisnis: markup 30% pada jual 3.500 → turun 860 → grosir 2.640.
      * Proporsional untuk 5–30%.
      */

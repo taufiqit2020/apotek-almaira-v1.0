@@ -163,7 +163,7 @@ class ProductTable extends Component
                 foreach ($products as $product) {
                     $sell = (float) $product->sell_price;
                     $wholesale = (float) $product->wholesale_price;
-                    $markup = (int) ($product->het_markup ?? 0);
+                    $wsMarkup = (int) ($product->wholesale_markup ?? $product->het_markup ?? 0);
 
                     if ($sell <= 0 && $wholesale <= 0) {
                         $skipped++;
@@ -171,8 +171,8 @@ class ProductTable extends Component
                     }
 
                     $newSell = $sell > 0 ? (float) round($sell * $factor) : $sell;
-                    if ($markup > 0 && $newSell > 0) {
-                        $newWholesale = Product::calcWholesaleFromMarkup($newSell, $markup);
+                    if ($wsMarkup > 0 && $newSell > 0) {
+                        $newWholesale = Product::calcWholesaleFromMarkup($newSell, $wsMarkup);
                     } else {
                         $newWholesale = $wholesale > 0 ? (float) round($wholesale * $factor) : $wholesale;
                     }
@@ -235,7 +235,7 @@ class ProductTable extends Component
             ->chunkById(200, function ($products) use (&$synced) {
                 foreach ($products as $product) {
                     $sell = (float) $product->sell_price;
-                    $markup = (int) ($product->het_markup ?? 0);
+                    $markup = (int) ($product->wholesale_markup ?? $product->het_markup ?? 0);
                     if ($sell <= 0 || $markup <= 0) {
                         continue;
                     }

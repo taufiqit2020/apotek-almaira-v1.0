@@ -285,6 +285,7 @@ class ProductImportService
             'sellPrice' => 0.0,
             'wholesalePrice' => 0.0,
             'hetMarkup' => 0,
+            'wholesaleMarkup' => 0,
             'hetPrice' => 0.0,
             'stock' => 0,
             'stockMin' => 10,
@@ -391,6 +392,7 @@ class ProductImportService
         $mapped['sellPrice'] = $sellPrice;
         $mapped['wholesalePrice'] = $wholesalePrice;
         $mapped['hetMarkup'] = $hetMarkup;
+        $mapped['wholesaleMarkup'] = $hetMarkup;
         $mapped['hetPrice'] = $hetPrice;
         $mapped['stock'] = (int) self::parseNumber($rowData[9] ?? 0);
         $mapped['expiredDate'] = self::parseDate($rowData[19] ?? null);
@@ -441,6 +443,7 @@ class ProductImportService
             ? Product::calcWholesaleFromMarkup($sellPrice, (int) $hetMarkup)
             : $sellPrice;
         $mapped['hetMarkup'] = $hetMarkup;
+        $mapped['wholesaleMarkup'] = $hetMarkup;
         $mapped['hetPrice'] = $hetPrice;
         $mapped['stock'] = (int) self::parseNumber($rowData[10] ?? 0);
         $mapped['expiredDate'] = self::parseDate($rowData[25] ?? null);
@@ -490,6 +493,7 @@ class ProductImportService
         $mapped['sellPrice'] = $sellPrice;
         $mapped['wholesalePrice'] = $wholesalePrice;
         $mapped['hetMarkup'] = $hetMarkup;
+        $mapped['wholesaleMarkup'] = $hetMarkup;
         $mapped['hetPrice'] = $hetPrice;
         $mapped['stock'] = (int) self::parseNumber($rowData[8] ?? 0);
         $mapped['expiredDate'] = self::parseDate($rowData[23] ?? null);
@@ -528,7 +532,9 @@ class ProductImportService
         $mapped['purchasePrice'] = self::parseNumber($rowData[10] ?? 0);
         $mapped['sellPrice'] = $sellPrice;
         $mapped['wholesalePrice'] = $wholesalePrice;
-        $mapped['hetMarkup'] = (int) self::parseNumber($rowData[13] ?? 0);
+        $hetMarkup = (int) self::parseNumber($rowData[13] ?? 0);
+        $mapped['hetMarkup'] = $hetMarkup;
+        $mapped['wholesaleMarkup'] = $hetMarkup;
         $mapped['hetPrice'] = self::parseNumber($rowData[14] ?? 0);
         $mapped['stock'] = (int) self::parseNumber($rowData[15] ?? 0);
         $mapped['stockMin'] = $stockMin;
@@ -665,8 +671,12 @@ class ProductImportService
             // HET kosong di Excel = biarkan 0 (jangan diisi otomatis),
             // agar tanda "Melebihi HET" hanya dari data real.
             $markup = (int) ($mapped['hetMarkup'] ?? 0);
-            if ($markup > 0) {
+            $wholesaleMarkup = (int) ($mapped['wholesaleMarkup'] ?? $markup);
+            if ($wholesaleMarkup > 0) {
+                $wholesalePrice = Product::calcWholesaleFromMarkup($sellPrice, $wholesaleMarkup);
+            } elseif ($markup > 0) {
                 $wholesalePrice = Product::calcWholesaleFromMarkup($sellPrice, $markup);
+                $wholesaleMarkup = $markup;
             } elseif ($wholesalePrice <= 0.0) {
                 $wholesalePrice = $sellPrice;
             }
@@ -698,6 +708,7 @@ class ProductImportService
                     'sell_price' => $sellPrice,
                     'wholesale_price' => $wholesalePrice,
                     'het_markup' => max(0, min(30, $mapped['hetMarkup'])),
+                    'wholesale_markup' => max(0, min(30, $mapped['wholesaleMarkup'] ?? $mapped['hetMarkup'])),
                     'het_price' => $hetPrice,
                     'stock' => $mapped['stock'],
                     'stock_min' => $mapped['stockMin'],
