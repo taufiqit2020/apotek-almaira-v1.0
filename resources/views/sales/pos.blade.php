@@ -1346,7 +1346,7 @@ window.posManager = () => ({
                 <template x-for="product in paginatedProducts" :key="product.id">
                     <div
                         @click="if(product.stock > 0) addToCart(product)"
-                        class="rounded-2xl border transition-all flex items-start p-3.5 group relative overflow-hidden min-h-[108px]"
+                        class="rounded-2xl border transition-all flex items-start p-3 group relative overflow-hidden min-h-[96px]"
                         :class="product.stock <= 0
                             ? 'opacity-50 grayscale-[30%] cursor-not-allowed bg-slate-50 border-slate-200/80'
                             : (product.stock <= product.stock_min
@@ -1375,19 +1375,25 @@ window.posManager = () => ({
                         <div class="flex flex-col flex-1 min-w-0 pr-3">
                             <h4 class="font-bold text-slate-800 text-[13.5px] leading-snug line-clamp-2 group-hover:text-emerald-700 transition-colors" x-text="product.name"></h4>
 
-                            <div class="mt-1.5" x-show="product.indikasi" x-cloak>
-                                <div class="inline-flex items-start gap-1.5 max-w-full rounded-lg bg-teal-50/90 border border-teal-100/80 px-2 py-1">
-                                    <svg class="w-3 h-3 text-teal-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
-                                    </svg>
-                                    <div class="min-w-0">
-                                        <p class="text-[9px] font-bold uppercase tracking-wide text-teal-700/80 leading-none mb-0.5">Indikasi / Fungsi</p>
-                                        <p class="text-[11px] leading-snug text-teal-900/80 line-clamp-2" x-text="product.indikasi" :title="product.indikasi"></p>
-                                    </div>
+                            {{-- Indikasi: 1 baris, tinggi tetap agar grid seragam --}}
+                            <div class="mt-1.5 h-[22px]" x-show="product.indikasi" x-cloak>
+                                <div class="flex items-center gap-1.5 max-w-full h-full rounded-md bg-teal-50/70 px-1.5 ring-1 ring-inset ring-teal-100/60"
+                                     :title="'Indikasi / Fungsi: ' + product.indikasi">
+                                    <span class="shrink-0 inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-teal-500/15 text-teal-600">
+                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
+                                        </svg>
+                                    </span>
+                                    <p class="min-w-0 flex-1 text-[10.5px] leading-none text-teal-800/85 truncate">
+                                        <span class="font-semibold text-teal-700/70">Fungsi</span>
+                                        <span class="text-teal-600/40 mx-0.5">·</span>
+                                        <span x-text="product.indikasi"></span>
+                                    </p>
                                 </div>
                             </div>
+                            <div class="mt-1.5 h-[22px]" x-show="!product.indikasi" aria-hidden="true"></div>
 
-                            <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                            <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
                                 <span
                                     class="text-[10px] font-semibold px-2 py-0.5 rounded-full border"
                                     :class="product.stock <= 0
