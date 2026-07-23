@@ -109,8 +109,12 @@
                         <td class="text-gray-400 text-sm">{{ $users->firstItem() + $index }}</td>
                         <td>
                             <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center flex-shrink-0 shadow-sm">
-                                    <span class="text-white text-sm font-bold">{{ substr($user->name, 0, 1) }}</span>
+                                <div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden ring-2 ring-white">
+                                    @if($user->avatarUrl())
+                                        <img src="{{ $user->avatarUrl() }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
+                                    @else
+                                        <span class="text-white text-xs font-bold">{{ $user->initials() }}</span>
+                                    @endif
                                 </div>
                                 <div>
                                     <p class="font-bold text-gray-800">{{ $user->name }}</p>

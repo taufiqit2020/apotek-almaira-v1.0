@@ -62,10 +62,10 @@
                     aria-haspopup="true"
                     :aria-expanded="open.toString()">
                 <div class="topbar-avatar">
-                    @if(auth()->user()->avatar && file_exists(public_path(auth()->user()->avatar)))
-                        <img src="{{ asset(auth()->user()->avatar) }}" alt="Avatar" class="w-full h-full object-cover">
+                    @if(auth()->user()->avatarUrl())
+                        <img src="{{ auth()->user()->avatarUrl() }}" alt="Avatar" class="w-full h-full object-cover">
                     @else
-                        <span>{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>
+                        <span>{{ auth()->user()->initials() }}</span>
                     @endif
                 </div>
                 <div class="topbar-user-meta hidden md:block">
@@ -89,10 +89,10 @@
                  class="topbar-dropdown">
                 <div class="topbar-dropdown-head">
                     <div class="topbar-avatar topbar-avatar-lg">
-                        @if(auth()->user()->avatar && file_exists(public_path(auth()->user()->avatar)))
-                            <img src="{{ asset(auth()->user()->avatar) }}" alt="Avatar" class="w-full h-full object-cover">
+                        @if(auth()->user()->avatarUrl())
+                            <img src="{{ auth()->user()->avatarUrl() }}" alt="Avatar" class="w-full h-full object-cover">
                         @else
-                            <span>{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>
+                            <span>{{ auth()->user()->initials() }}</span>
                         @endif
                     </div>
                     <div class="min-w-0">

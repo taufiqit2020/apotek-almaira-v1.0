@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 class UserController extends Controller {
     public function index(Request $request) {
-        $query = User::with('role')->orderBy('name');
+        $query = User::with(['role', 'employee'])->orderBy('name');
         
         if ($request->search) {
             $query->where(function($q) use ($request) {

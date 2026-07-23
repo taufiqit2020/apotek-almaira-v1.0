@@ -35,10 +35,10 @@
     <div class="sidebar-user-wrap" :class="{ 'is-collapsed': collapsed }">
         <div class="sidebar-user" :class="{ 'is-collapsed': collapsed }">
             <div class="sidebar-user-avatar">
-                @if(auth()->user()->avatar && file_exists(public_path(auth()->user()->avatar)))
-                    <img src="{{ asset(auth()->user()->avatar) }}" alt="Avatar">
+                @if(auth()->user()->avatarUrl())
+                    <img src="{{ auth()->user()->avatarUrl() }}" alt="Avatar">
                 @else
-                    <span>{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>
+                    <span>{{ auth()->user()->initials() }}</span>
                 @endif
             </div>
             <div class="sidebar-user-meta sidebar-hide-collapsed">
