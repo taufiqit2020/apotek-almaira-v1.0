@@ -1,7 +1,7 @@
 <?php
 /**
- * Terapkan HET Markup Grosir 5% ke SEMUA produk aktif.
- * Harga grosir = HPP × 1.05 (tidak melebihi harga jual).
+ * Terapkan HET Markup Grosir 5% ke SEMUA produk.
+ * Harga grosir = Harga jual − 5% (bukan dari harga beli).
  *
  * Jalankan: php tools/apply_wholesale_markup_5.php
  */
@@ -18,28 +18,21 @@ $kernel->bootstrap();
 $markup = 5;
 $updated = 0;
 $skipped = 0;
-$clamped = 0;
 
-echo "=== TERAPKAN MARKUP GROSIR {$markup}% KE SEMUA PRODUK ===\n";
+echo "=== TERAPKAN MARKUP GROSIR {$markup}% DARI HARGA JUAL ===\n";
 echo 'DB: ' . config('database.default') . ' / ' . config('database.connections.' . config('database.default') . '.database') . "\n\n";
 
 Product::query()
     ->orderBy('id')
-    ->chunkById(200, function ($products) use ($markup, &$updated, &$skipped, &$clamped) {
+    ->chunkById(200, function ($products) use ($markup, &$updated, &$skipped) {
         foreach ($products as $product) {
-            $purchase = (float) ($product->purchase_price ?? 0);
             $sell = (float) ($product->sell_price ?? 0);
-
-            if ($purchase <= 0) {
+            if ($sell <= 0) {
                 $skipped++;
                 continue;
             }
 
-            $wholesale = Product::calcWholesaleFromPurchase($purchase, $markup, $sell);
-            if ($sell > 0 && $wholesale >= $sell) {
-                $clamped++;
-            }
-
+            $wholesale = Product::calcWholesaleFromSell($sell, $markup);
             $product->update([
                 'wholesale_markup' => $markup,
                 'wholesale_price' => $wholesale,
@@ -49,11 +42,10 @@ Product::query()
     });
 
 echo "Updated : {$updated}\n";
-echo "Skipped : {$skipped} (HPP 0)\n";
-echo "Clamped : {$clamped} (grosir ditutup ke jual karena melebihi)\n";
+echo "Skipped : {$skipped} (harga jual 0)\n";
 
 $sample = Product::orderBy('id')->limit(5)->get(['code', 'name', 'purchase_price', 'sell_price', 'wholesale_price', 'wholesale_markup']);
-echo "\nContoh:\n";
+echo "\nContoh (grosir = jual − {$markup}%):\n";
 foreach ($sample as $p) {
     echo sprintf(
         "- %s | beli %s | jual %s | grosir %s | markup %s%%\n",
@@ -67,9 +59,9 @@ foreach ($sample as $p) {
 
 ActivityLogService::updated(
     'Produk',
-    "Terapkan markup grosir {$markup}% ke {$updated} produk",
+    "Terapkan markup grosir {$markup}% dari harga jual ke {$updated} produk",
     null,
-    ['markup' => $markup, 'updated' => $updated, 'skipped' => $skipped]
+    ['markup' => $markup, 'updated' => $updated, 'skipped' => $skipped, 'base' => 'sell_price']
 );
 
 echo "\nDONE\n";

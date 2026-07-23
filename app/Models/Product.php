@@ -55,33 +55,38 @@ class Product extends Model {
     }
 
     /**
-     * Harga grosir otomatis dari beli + markup grosir (%).
-     * Contoh: beli 59.718 · markup 5% → grosir 62.704.
-     * Jika melebihi jual, ditutup ke harga jual.
+     * Harga grosir otomatis dari harga jual − markup grosir (%).
+     * Contoh: jual 71.662 · markup 5% → grosir 68.079.
      */
-    public static function calcWholesaleFromPurchase(float $purchase, int $markup, float $sellCap = 0): float
+    public static function calcWholesaleFromSell(float $sell, int $markup): float
     {
-        $purchase = max(0, (float) $purchase);
-        $markup = max(0, $markup);
-        if ($purchase <= 0 || $markup <= 0) {
+        $sell = max(0, round($sell));
+        $markup = max(0, min(99, $markup));
+        if ($sell <= 0 || $markup <= 0) {
             return 0.0;
         }
 
-        $wholesale = (float) round($purchase * (1 + $markup / 100));
-        if ($sellCap > 0 && $wholesale > $sellCap) {
-            $wholesale = $sellCap;
-        }
+        $wholesale = (float) round($sell * (1 - $markup / 100));
 
-        return max(0.0, $wholesale);
+        return (float) max(0, min($wholesale, $sell - 1));
     }
 
     /**
-     * @deprecated Gunakan calcWholesaleFromPurchase (grosir dari HPP + %).
-     * Tetap ada agar pemanggilan lama tidak error.
+     * @deprecated Gunakan calcWholesaleFromSell (grosir = jual − %).
      */
-    public static function calcWholesaleFromMarkup(float $sellOrPurchase, int $markup): float
+    public static function calcWholesaleFromPurchase(float $purchaseOrSell, int $markup, float $sellCap = 0): float
     {
-        return self::calcWholesaleFromPurchase($sellOrPurchase, $markup);
+        $sell = $sellCap > 0 ? $sellCap : $purchaseOrSell;
+
+        return self::calcWholesaleFromSell($sell, $markup);
+    }
+
+    /**
+     * @deprecated Gunakan calcWholesaleFromSell.
+     */
+    public static function calcWholesaleFromMarkup(float $sell, int $markup): float
+    {
+        return self::calcWholesaleFromSell($sell, $markup);
     }
 
     /**
