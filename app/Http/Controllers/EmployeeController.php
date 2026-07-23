@@ -165,7 +165,7 @@ class EmployeeController extends Controller
             'entityScopes' => Employee::entityScopes(),
             'jobPositions' => $jobPositions,
             'users' => User::with('role')
-                ->whereHas('role', fn ($q) => $q->whereIn('slug', ['super_admin', 'admin_keuangan', 'kasir']))
+                ->whereHas('role', fn ($q) => $q->whereIn('slug', ['super_admin', 'admin_keuangan', 'kasir', 'staff_operasional']))
                 ->orderBy('name')
                 ->get(),
             'linkedUserIds' => $linkedIds,

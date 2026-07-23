@@ -19,7 +19,12 @@ class User extends Authenticatable {
     public function hasRole(string $slug): bool { return $this->role?->slug === $slug; }
     public function isSuperAdmin(): bool { return $this->hasRole(Role::SUPER_ADMIN); }
     public function isAdminKeuangan(): bool { return $this->hasRole(Role::ADMIN_KEUANGAN); }
-    public function isKasir(): bool { return $this->hasRole(Role::KASIR); }
+    public function isKasir(): bool
+    {
+        // Staff operasional memakai akses lantai yang sama dengan kasir.
+        return $this->hasRole(Role::KASIR) || $this->hasRole(Role::STAFF_OPERASIONAL);
+    }
+    public function isStaffOperasional(): bool { return $this->hasRole(Role::STAFF_OPERASIONAL); }
     public function isMitra(): bool { return $this->hasRole(Role::MITRA); }
     public function isActive(): bool { return $this->is_active; }
     public function canAccessAdmin(): bool { return $this->isSuperAdmin() || $this->isAdminKeuangan(); }

@@ -124,7 +124,12 @@
                         <td class="text-gray-600 text-sm">{{ $user->email }}</td>
                         <td>
                             @php
-                            $roleColors = ['super_admin' => 'bg-rose-50 text-rose-700 border-rose-200', 'admin_keuangan' => 'bg-blue-50 text-blue-700 border-blue-200', 'kasir' => 'bg-green-50 text-green-700 border-green-200'];
+                            $roleColors = [
+                                'super_admin' => 'bg-rose-50 text-rose-700 border-rose-200',
+                                'admin_keuangan' => 'bg-blue-50 text-blue-700 border-blue-200',
+                                'kasir' => 'bg-green-50 text-green-700 border-green-200',
+                                'staff_operasional' => 'bg-amber-50 text-amber-700 border-amber-200',
+                            ];
                             $roleColor = $roleColors[$user->role?->slug] ?? 'bg-gray-50 text-gray-700 border-gray-200';
                             @endphp
                             <span class="badge {{ $roleColor }} border text-[11px] font-semibold">{{ $user->role?->name ?? 'No Role' }}</span>

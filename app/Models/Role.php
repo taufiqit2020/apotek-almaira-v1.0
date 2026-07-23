@@ -7,5 +7,6 @@ class Role extends Model {
     const SUPER_ADMIN = 'super_admin';
     const ADMIN_KEUANGAN = 'admin_keuangan';
     const KASIR = 'kasir';
+    const STAFF_OPERASIONAL = 'staff_operasional';
     const MITRA = 'mitra';
 }
