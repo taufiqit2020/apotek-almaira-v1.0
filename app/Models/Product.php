@@ -55,22 +55,33 @@ class Product extends Model {
     }
 
     /**
-     * Harga grosir otomatis dari jual + markup grosir (%).
-     * Acuan bisnis: markup 30% pada jual 3.500 → turun 860 → grosir 2.640.
-     * Proporsional untuk 5–30%.
+     * Harga grosir otomatis dari beli + markup grosir (%).
+     * Contoh: beli 59.718 · markup 5% → grosir 62.704.
+     * Jika melebihi jual, ditutup ke harga jual.
      */
-    public static function calcWholesaleFromMarkup(float $sell, int $markup): float
+    public static function calcWholesaleFromPurchase(float $purchase, int $markup, float $sellCap = 0): float
     {
-        $sell = max(0, round($sell));
+        $purchase = max(0, (float) $purchase);
         $markup = max(0, $markup);
-        if ($sell <= 0 || $markup <= 0) {
+        if ($purchase <= 0 || $markup <= 0) {
             return 0.0;
         }
 
-        $drop = (int) round($sell * $markup * 860 / (30 * 3500));
-        $wholesale = $sell - $drop;
+        $wholesale = (float) round($purchase * (1 + $markup / 100));
+        if ($sellCap > 0 && $wholesale > $sellCap) {
+            $wholesale = $sellCap;
+        }
 
-        return (float) max(0, min($wholesale, $sell - 1));
+        return max(0.0, $wholesale);
+    }
+
+    /**
+     * @deprecated Gunakan calcWholesaleFromPurchase (grosir dari HPP + %).
+     * Tetap ada agar pemanggilan lama tidak error.
+     */
+    public static function calcWholesaleFromMarkup(float $sellOrPurchase, int $markup): float
+    {
+        return self::calcWholesaleFromPurchase($sellOrPurchase, $markup);
     }
 
     /**

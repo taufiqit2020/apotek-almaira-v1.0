@@ -163,7 +163,8 @@ class ProductTable extends Component
                 foreach ($products as $product) {
                     $sell = (float) $product->sell_price;
                     $wholesale = (float) $product->wholesale_price;
-                    $wsMarkup = (int) ($product->wholesale_markup ?? $product->het_markup ?? 0);
+                    $wsMarkup = (int) ($product->wholesale_markup ?? 0);
+                    $purchase = (float) ($product->purchase_price ?? 0);
 
                     if ($sell <= 0 && $wholesale <= 0) {
                         $skipped++;
@@ -171,8 +172,8 @@ class ProductTable extends Component
                     }
 
                     $newSell = $sell > 0 ? (float) round($sell * $factor) : $sell;
-                    if ($wsMarkup > 0 && $newSell > 0) {
-                        $newWholesale = Product::calcWholesaleFromMarkup($newSell, $wsMarkup);
+                    if ($wsMarkup > 0 && $purchase > 0) {
+                        $newWholesale = Product::calcWholesaleFromPurchase($purchase, $wsMarkup, $newSell);
                     } else {
                         $newWholesale = $wholesale > 0 ? (float) round($wholesale * $factor) : $wholesale;
                     }
@@ -235,11 +236,12 @@ class ProductTable extends Component
             ->chunkById(200, function ($products) use (&$synced) {
                 foreach ($products as $product) {
                     $sell = (float) $product->sell_price;
-                    $markup = (int) ($product->wholesale_markup ?? $product->het_markup ?? 0);
-                    if ($sell <= 0 || $markup <= 0) {
+                    $purchase = (float) ($product->purchase_price ?? 0);
+                    $markup = (int) ($product->wholesale_markup ?? 0);
+                    if ($purchase <= 0 || $markup <= 0) {
                         continue;
                     }
-                    $wholesale = Product::calcWholesaleFromMarkup($sell, $markup);
+                    $wholesale = Product::calcWholesaleFromPurchase($purchase, $markup, $sell);
                     $normalized = Product::normalizeSellAgainstHet(
                         $sell,
                         $wholesale,

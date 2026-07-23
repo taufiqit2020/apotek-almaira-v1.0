@@ -37,16 +37,17 @@
             },
 
             /**
-             * Markup grosir: dari harga jual saat ini.
-             * Acuan: 30% pada jual 3500 → turun 860 → grosir 2640.
+             * Markup grosir: Harga grosir = Harga beli × (1 + %).
+             * Contoh: beli 59718 · 5% → 62704. Tidak boleh melebihi jual.
              */
-            calcWholesale(jual, markup) {
-                const j = Math.max(0, Math.round(Number(jual) || 0));
+            calcWholesale(beli, markup, jual) {
+                const b = Math.max(0, Number(beli) || 0);
                 const m = Math.max(0, Number(markup) || 0);
-                if (j <= 0) return 0;
-                if (m <= 0) return this.wholesalePrice || 0;
-                const drop = Math.round(j * m * 860 / (30 * 3500));
-                return Math.max(0, Math.min(j - drop, j - 1));
+                const j = Math.max(0, Math.round(Number(jual) || 0));
+                if (b <= 0 || m <= 0) return this.wholesalePrice || 0;
+                let grosir = Math.round(b * (1 + m / 100));
+                if (j > 0 && grosir > j) grosir = j;
+                return Math.max(0, grosir);
             },
 
             applySellMarkup() {
@@ -57,8 +58,8 @@
             },
 
             applyWholesaleMarkup() {
-                if (this.wholesaleMarkup > 0 && this.sellPrice > 0) {
-                    this.wholesalePrice = this.calcWholesale(this.sellPrice, this.wholesaleMarkup);
+                if (this.wholesaleMarkup > 0 && this.purchasePrice > 0) {
+                    this.wholesalePrice = this.calcWholesale(this.purchasePrice, this.wholesaleMarkup, this.sellPrice);
                 }
                 this.ensureWholesaleNotAboveSell();
             },
@@ -83,6 +84,11 @@
                 return Math.max(0, this.sellPrice - this.wholesalePrice);
             },
 
+            get wholesaleFromPurchaseGain() {
+                if (!this.purchasePrice || !this.wholesalePrice) return 0;
+                return Math.max(0, this.wholesalePrice - this.purchasePrice);
+            },
+
             ensureWholesaleNotAboveSell() {
                 if (this.sellPrice > 0 && this.wholesalePrice > this.sellPrice) {
                     this.wholesalePrice = this.sellPrice;
@@ -102,8 +108,8 @@
                 if (this.sellPrice > 0) {
                     this.sellPrice = Math.round(this.sellPrice * factor);
                 }
-                if (this.wholesaleMarkup > 0) {
-                    this.wholesalePrice = this.calcWholesale(this.sellPrice, this.wholesaleMarkup);
+                if (this.wholesaleMarkup > 0 && this.purchasePrice > 0) {
+                    this.wholesalePrice = this.calcWholesale(this.purchasePrice, this.wholesaleMarkup, this.sellPrice);
                 } else if (this.wholesalePrice > 0) {
                     this.wholesalePrice = Math.round(this.wholesalePrice * factor);
                 }
@@ -688,10 +694,11 @@
                     <div class="rounded-2xl border border-teal-200 bg-teal-50/70 p-3.5">
                         <p class="text-[10px] font-bold uppercase tracking-wider text-teal-600 mb-1">Harga Grosir</p>
                         <p class="text-lg font-extrabold text-teal-700 tabular-nums">Rp <span x-text="formatRupiah(wholesalePrice) || '0'"></span></p>
-                        <p class="text-[10px] text-teal-600/70 mt-1" x-show="wholesaleMarkup > 0 && wholesaleDrop > 0" x-cloak>
-                            Otomatis markup grosir <span x-text="wholesaleMarkup"></span>% · turun Rp <span x-text="formatRupiah(wholesaleDrop)"></span>
+                        <p class="text-[10px] text-teal-600/70 mt-1" x-show="wholesaleMarkup > 0" x-cloak>
+                            Otomatis markup grosir <span x-text="wholesaleMarkup"></span>% dari beli
+                            <span x-show="wholesaleFromPurchaseGain > 0"> · +Rp <span x-text="formatRupiah(wholesaleFromPurchaseGain)"></span></span>
                         </p>
-                        <p class="text-[10px] text-teal-600/70 mt-1" x-show="!(wholesaleMarkup > 0 && wholesaleDrop > 0)">Mitra/B2B · lebih rendah dari eceran</p>
+                        <p class="text-[10px] text-teal-600/70 mt-1" x-show="!(wholesaleMarkup > 0)">Mitra/B2B · lebih rendah dari eceran</p>
                     </div>
                 </div>
 
@@ -750,7 +757,8 @@
                                    class="form-input rounded-xl pl-9 font-semibold text-teal-800 border-teal-100 focus:ring-teal-400" placeholder="0">
                         </div>
                         <p x-show="wholesaleMarkup > 0" x-cloak class="text-[11px] text-teal-700/80 mt-1.5">
-                            Dari jual · markup grosir <span x-text="wholesaleMarkup"></span>% · selisih Rp <span x-text="formatRupiah(wholesaleDrop)"></span>
+                            Beli + <span x-text="wholesaleMarkup"></span>%
+                            <span x-show="wholesaleDrop > 0"> · di bawah jual Rp <span x-text="formatRupiah(wholesaleDrop)"></span></span>
                         </p>
                         @error('wholesale_price')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
@@ -781,7 +789,7 @@
                             <option value="25">25%</option>
                             <option value="30">30%</option>
                         </select>
-                        <p class="text-[11px] text-slate-400 mt-1.5">Otomatis isi <strong>harga grosir</strong> dari harga jual</p>
+                        <p class="text-[11px] text-slate-400 mt-1.5">Otomatis isi <strong>harga grosir</strong> = harga beli + %</p>
                         @error('wholesale_markup')<p class="form-error">{{ $message }}</p>@enderror
                     </div>
 

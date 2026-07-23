@@ -370,9 +370,9 @@ class ProductImportService
             $sellPrice = round($purchasePrice * (1 + ($hetMarkup / 100)));
         }
 
-        // Grosir otomatis dari markup (selaras form master produk).
-        $wholesalePrice = $sellPrice > 0
-            ? Product::calcWholesaleFromMarkup($sellPrice, (int) $hetMarkup)
+        // Grosir otomatis dari HPP + markup grosir (selaras form master produk).
+        $wholesalePrice = $purchasePrice > 0 && $hetMarkup > 0
+            ? Product::calcWholesaleFromPurchase($purchasePrice, (int) $hetMarkup, $sellPrice)
             : 0.0;
         if ($wholesalePrice <= 0 && $sellPrice > 0) {
             $wholesalePrice = (float) max(0, $sellPrice - 1);
@@ -439,8 +439,8 @@ class ProductImportService
         $mapped['unitName'] = isset($rowData[11]) ? trim((string) $rowData[11]) : null;
         $mapped['purchasePrice'] = $purchasePrice;
         $mapped['sellPrice'] = $sellPrice;
-        $mapped['wholesalePrice'] = ($sellPrice > 0 && $hetMarkup > 0)
-            ? Product::calcWholesaleFromMarkup($sellPrice, (int) $hetMarkup)
+        $mapped['wholesalePrice'] = ($purchasePrice > 0 && $hetMarkup > 0)
+            ? Product::calcWholesaleFromPurchase($purchasePrice, (int) $hetMarkup, $sellPrice)
             : $sellPrice;
         $mapped['hetMarkup'] = $hetMarkup;
         $mapped['wholesaleMarkup'] = $hetMarkup;
@@ -476,8 +476,8 @@ class ProductImportService
             $sellPrice = round($purchasePrice * (1 + ($hetMarkup / 100)));
         }
 
-        $wholesalePrice = $sellPrice > 0 && $hetMarkup > 0
-            ? Product::calcWholesaleFromMarkup($sellPrice, (int) $hetMarkup)
+        $wholesalePrice = $purchasePrice > 0 && $hetMarkup > 0
+            ? Product::calcWholesaleFromPurchase($purchasePrice, (int) $hetMarkup, $sellPrice)
             : $sellPrice;
 
         $mapped['name'] = isset($rowData[7]) ? trim((string) $rowData[7]) : null;
@@ -672,10 +672,10 @@ class ProductImportService
             // agar tanda "Melebihi HET" hanya dari data real.
             $markup = (int) ($mapped['hetMarkup'] ?? 0);
             $wholesaleMarkup = (int) ($mapped['wholesaleMarkup'] ?? $markup);
-            if ($wholesaleMarkup > 0) {
-                $wholesalePrice = Product::calcWholesaleFromMarkup($sellPrice, $wholesaleMarkup);
-            } elseif ($markup > 0) {
-                $wholesalePrice = Product::calcWholesaleFromMarkup($sellPrice, $markup);
+            if ($wholesaleMarkup > 0 && $purchasePrice > 0) {
+                $wholesalePrice = Product::calcWholesaleFromPurchase($purchasePrice, $wholesaleMarkup, $sellPrice);
+            } elseif ($markup > 0 && $purchasePrice > 0) {
+                $wholesalePrice = Product::calcWholesaleFromPurchase($purchasePrice, $markup, $sellPrice);
                 $wholesaleMarkup = $markup;
             } elseif ($wholesalePrice <= 0.0) {
                 $wholesalePrice = $sellPrice;
