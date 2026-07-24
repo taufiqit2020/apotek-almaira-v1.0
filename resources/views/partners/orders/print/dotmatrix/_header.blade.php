@@ -7,7 +7,7 @@
         $kopName = 'APOTEK ALMAIRA';
         $kopTagline = 'Pelayanan Kesehatan & Kefarmasian Terpercaya';
     }
-    $addrLine = trim((string) (Str::before($address, "\n") ?: $address));
+    $addrLine = \App\Support\DotMatrixText::compactAddress($address);
 @endphp
 <div class="header">
     <h1>{{ $kopName }}</h1>

@@ -2,7 +2,7 @@
 <style>
     @page {
         size: 250mm 285mm;
-        margin: 10mm 12mm 12mm 17mm;
+        margin: 6mm 10mm 6mm 2mm; /* Geser 2 cm ke kiri */
     }
 
     * {
@@ -32,27 +32,35 @@
         text-align: left;
         margin: 0;
         padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start; /* Geser template ke kiri */
     }
 
-    /* Kop header lebih kecil agar alamat & kontak 1 baris */
+    /* Kop: baris tepat 96 karakter, rata tengah di dalam box 96ch, tepi kiri-kanan sejajar dokumen */
     pre.dm-kop {
         display: block;
-        margin: 0 0 0.35em 0;
+        box-sizing: content-box;
+        width: 96ch;
+        max-width: 100%;
+        margin: 0 0 0.45em 0;
         padding: 0;
-        text-align: left;
+        text-align: center !important;
         font-family: "Courier New", Courier, monospace !important;
-        font-size: 9.5pt !important;
+        font-size: 11pt !important;
         font-weight: bold !important;
-        line-height: 1.12 !important;
+        line-height: 1.15 !important;
         letter-spacing: 0 !important;
         white-space: pre !important;
-        overflow: visible;
+        overflow: hidden;
         color: #000 !important;
-        max-width: 96ch;
     }
 
     pre.dm-pre {
         display: block;
+        box-sizing: content-box;
+        width: 96ch;
+        max-width: 100%;
         margin: 0;
         padding: 0;
         text-align: left;
@@ -65,33 +73,36 @@
         overflow: visible;
         color: #000 !important;
         tab-size: 4;
-        max-width: 96ch;
     }
 
     /* Ringkasan + footer sedikit lebih kecil */
     pre.dm-foot {
         display: block;
+        box-sizing: content-box;
+        width: 96ch;
+        max-width: 100%;
         margin: 0;
         padding: 0;
+        text-align: center !important;
         font-family: "Courier New", Courier, monospace !important;
-        font-size: 10pt !important;
+        font-size: 10.5pt !important;
         font-weight: bold !important;
         line-height: 1.15 !important;
         letter-spacing: 0 !important;
         white-space: pre !important;
         color: #000 !important;
-        max-width: 96ch;
     }
 
     /* Tanda tangan: jarak dari ringkasan + ruang paraf */
     .dm-sig {
         display: flex;
-        width: 100%;
-        max-width: 96ch;
+        box-sizing: content-box;
+        width: 96ch;
+        max-width: 100%;
         font-family: "Courier New", Courier, monospace;
         font-weight: bold;
         color: #000;
-        margin: 1.4em 0 1.2em 0; /* jarak dari Subtotal–TOTAL ke atas */
+        margin: 1.4em 0 1.2em 0;
         padding: 0;
     }
     .dm-sig + pre.dm-foot,
@@ -124,11 +135,11 @@
         .no-print { display: none !important; }
         html, body { width: 250mm; background: #fff !important; }
         .page-wrapper { margin: 0 !important; padding: 0 !important; }
-        .container { width: 100%; text-align: left; }
-        pre.dm-kop { font-size: 9.5pt !important; }
-        pre.dm-pre { page-break-inside: avoid; font-size: 11pt !important; }
-        pre.dm-foot { font-size: 10pt !important; }
-        .dm-sig { max-width: 96ch; }
+        .container { width: 100%; text-align: left; align-items: flex-start; margin: 0; }
+        pre.dm-kop { font-size: 11pt !important; width: 96ch; text-align: center !important; white-space: pre !important; margin: 0 0 0.45em 0; }
+        pre.dm-pre { page-break-inside: avoid; font-size: 11pt !important; width: 96ch; margin: 0; }
+        pre.dm-foot { font-size: 10.5pt !important; width: 96ch; text-align: center !important; margin: 0; }
+        .dm-sig { width: 96ch; margin-left: 0; margin-right: 0; }
         .dm-sig-space { height: 4.8em; }
     }
 

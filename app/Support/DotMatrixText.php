@@ -10,6 +10,67 @@ final class DotMatrixText
     /** Lebar grid karakter — font ~11pt agar alamat/kontak muat 1 baris di kertas 25 cm. */
     public const WIDTH = 96;
 
+    /** Lebar khusus blok kop (sama dengan WIDTH agar tepi kiri-kanan sejajar dokumen). */
+    public const KOP_WIDTH = 96;
+
+    /**
+     * Rapikan alamat untuk 1 baris cetak (hapus koma berlebih, singkat Provinsi).
+     */
+    public static function compactAddress(string $address): string
+    {
+        $a = trim(preg_replace('/\s+/u', ' ', str_replace(["\r\n", "\n", "\r"], ' ', $address)) ?? '');
+        $a = str_ireplace(
+            [
+                'Kalimantan Selatan',
+                'Kelurahan ',
+                'Kecamatan ',
+                ', Kel. ',
+                ', Kec. ',
+                ', Kota ',
+                ', Kab. ',
+                ' RT/RW ',
+                ', ',
+            ],
+            [
+                'Kalsel',
+                '',
+                '',
+                ', ',
+                ', ',
+                ', Kota ',
+                ', Kab. ',
+                ' RT ',
+                ', ',
+            ],
+            $a
+        );
+
+        $a = preg_replace('/,\s*,/', ',', $a) ?? $a;
+        $a = trim(preg_replace('/\s+/u', ' ', $a) ?? '');
+
+        if (mb_strlen($a, 'UTF-8') > 92) {
+            $a = str_ireplace(['Kota Banjarbaru', 'Banjarbaru Utara'], ['Banjarbaru', 'Banjarbaru Utara'], $a);
+            $a = trim(preg_replace('/\s+/u', ' ', $a) ?? '');
+        }
+
+        if (mb_strlen($a, 'UTF-8') > 92) {
+            $a = mb_substr($a, 0, 92, 'UTF-8');
+        }
+
+        return $a;
+    }
+
+    /** Satu baris, dipotong jika perlu, lalu rata tengah tepat $width karakter. */
+    public static function oneLineCentered(string $text, int $width): string
+    {
+        $text = trim(preg_replace('/\s+/u', ' ', $text) ?? '');
+        if (mb_strlen($text, 'UTF-8') > $width) {
+            $text = mb_substr($text, 0, max(1, $width - 1), 'UTF-8').'.';
+        }
+
+        return self::pad($text, $width, 'center');
+    }
+
     public static function pad(string $text, int $width, string $align = 'left'): string
     {
         $text = preg_replace('/\s+/u', ' ', trim($text)) ?? '';
@@ -254,7 +315,8 @@ final class DotMatrixText
     }
 
     /**
-     * Baris kop dokumen LX-310 (nama, tagline, alamat, kontak) — tanpa judul dokumen.
+     * Baris kop dokumen LX-310 (nama, tagline, alamat, kontak) — tiap baris tepat $width, rata tengah.
+     * Alamat & kontak dipaksa 1 baris.
      *
      * @return list<string>
      */
@@ -265,9 +327,9 @@ final class DotMatrixText
         string $phone,
         string $website,
         string $instagram,
-        int $width = self::WIDTH
+        int $width = self::KOP_WIDTH
     ): array {
-        $addrLine = trim(preg_replace('/\s+/u', ' ', str_replace(["\r\n", "\n", "\r"], ' ', $address)) ?? '');
+        $addrLine = self::compactAddress($address);
         $phoneDisp = preg_replace('/-/', ' ', $phone) ?: $phone;
         $webDisp = preg_replace('#^https?://#i', '', $website) ?: $website;
         $igDisp = trim($instagram);
@@ -276,19 +338,12 @@ final class DotMatrixText
         }
         $contact = 'Telp/WA : '.$phoneDisp.' Website : '.$webDisp.' instagram : '.$igDisp;
 
-        $lines = [];
-        $lines[] = self::pad($companyName, $width, 'center');
-        foreach (self::wrap($tagline, $width, 'center') as $row) {
-            $lines[] = $row;
-        }
-        foreach (self::wrap($addrLine, $width, 'center') as $row) {
-            $lines[] = $row;
-        }
-        foreach (self::wrap($contact, $width, 'center') as $row) {
-            $lines[] = $row;
-        }
-
-        return $lines;
+        return [
+            self::oneLineCentered($companyName, $width),
+            self::oneLineCentered($tagline, $width),
+            self::oneLineCentered($addrLine, $width),
+            self::oneLineCentered($contact, $width),
+        ];
     }
 
     /**

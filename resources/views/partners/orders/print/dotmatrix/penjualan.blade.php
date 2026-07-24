@@ -42,7 +42,7 @@
         ? (string) ($kopTagline ?? 'Distributor & Mitra Pengadaan Alat Kesehatan & Farmasi')
         : 'Pelayanan Kesehatan & Kefarmasian Terpercaya';
 
-    $kopText = implode("\n", $dm::kopHeaderLines(
+    $kopLines = $dm::kopHeaderLines(
         $kopName,
         $kopTag,
         (string) $address,
@@ -50,11 +50,13 @@
         (string) ($website ?? 'www.ptnurmadanifarma.com'),
         (string) ($instagram ?? '@apotekalmaira'),
         $W
-    ));
+    );
+    $kopLines[] = '';
+    $kopLines[] = $dm::oneLineCentered('FAKTUR PENJUALAN - '.$payLabel, $W);
+    $kopLines[] = '';
+    $kopText = implode("\n", $kopLines);
 
     $lines = [];
-    $lines[] = $dm::pad('FAKTUR PENJUALAN - '.$payLabel, $W, 'center');
-    $lines[] = '';
 
     $lines[] = $dm::fieldPair(
         'Kepada',
