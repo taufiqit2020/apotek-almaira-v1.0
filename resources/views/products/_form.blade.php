@@ -436,7 +436,7 @@
 
                 <div>
                     <label class="form-label font-bold">Kode Produk</label>
-                    <input type="text" name="code" value="{{ old('code', $product?->code) }}" class="form-input rounded-xl font-mono {{ $errors->has('code') ? 'error' : '' }}" placeholder="Contoh: OBT-001">
+                    <input type="text" name="code" id="productCodeInput" value="{{ old('code', $product?->code) }}" class="form-input rounded-xl font-mono {{ $errors->has('code') ? 'error' : '' }}" placeholder="Contoh: OBT-0001">
                     @error('code')<p class="form-error">{{ $message }}</p>@enderror
                 </div>
                 <div>
@@ -447,7 +447,7 @@
 
                 <div>
                     <label class="form-label font-bold">Kategori</label>
-                    <select name="category_id" class="form-input rounded-xl">
+                    <select name="category_id" id="categorySelect" class="form-input rounded-xl">
                         <option value="">— Pilih Kategori —</option>
                         @foreach($categories as $cat)
                         <option value="{{ $cat->id }}" {{ (string) old('category_id', $product?->category_id) === (string) $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
@@ -861,3 +861,55 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('categorySelect');
+    const codeInput = document.getElementById('productCodeInput');
+    if (!categorySelect || !codeInput) return;
+
+    const initialCategoryId = "{{ old('category_id', $product?->category_id ?? '') }}";
+    const initialCode = "{{ old('code', $product?->code ?? '') }}";
+    const productId = "{{ $isEdit ? $product->id : '' }}";
+
+    async function fetchNextCode(catId) {
+        if (!catId) return;
+        try {
+            const baseUrl = "{{ route('api.categories.next-code', ['category' => 'CAT_ID']) }}";
+            let urlStr = baseUrl.replace('CAT_ID', catId);
+            const url = new URL(urlStr, window.location.origin);
+            if (productId) {
+                url.searchParams.set('ignore_product_id', productId);
+            }
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.code) {
+                    codeInput.value = data.code;
+                }
+            }
+        } catch (e) {
+            console.error("Gagal mengambil kode produk otomatis:", e);
+        }
+    }
+
+    categorySelect.addEventListener('change', function() {
+        const selectedCat = this.value;
+        if (!selectedCat) {
+            if (!productId) codeInput.value = '';
+            return;
+        }
+
+        if (productId && selectedCat == initialCategoryId && initialCode) {
+            codeInput.value = initialCode;
+            return;
+        }
+
+        fetchNextCode(selectedCat);
+    });
+
+    if (!productId && categorySelect.value && !codeInput.value) {
+        fetchNextCode(categorySelect.value);
+    }
+});
+</script>

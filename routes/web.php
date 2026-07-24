@@ -100,6 +100,7 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
         Route::get('/products/export', [ProductController::class, 'export'])->name('products.export');
         Route::get('/products/import', [ProductController::class, 'importForm'])->name('products.import.form');
         Route::post('/products/import', [ProductController::class, 'import'])->name('products.import');
+        Route::get('/api/categories/{category}/next-code', [ProductController::class, 'getNextCode'])->name('api.categories.next-code');
         Route::patch('/products/{product}/toggle-catalog', [ProductController::class, 'toggleCatalog'])->name('products.toggle-catalog');
         Route::post('/products/bulk-catalog', [ProductController::class, 'bulkCatalog'])->name('products.bulk-catalog');
         Route::resource('products', ProductController::class);

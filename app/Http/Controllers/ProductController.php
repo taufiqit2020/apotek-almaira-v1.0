@@ -107,9 +107,23 @@ class ProductController extends Controller {
         ksort($imagePaths);
         $v['images'] = array_values($imagePaths);
 
+        if (empty($v['code']) && !empty($v['category_id'])) {
+            $v['code'] = Category::generateNextProductCode((int) $v['category_id']);
+        }
+
         $p = Product::create($v);
         ActivityLogService::created('Produk', $p->name, $p->toArray());
         return $this->redirectToProductsIndex($request, "Produk {$p->name} berhasil ditambahkan!");
+    }
+
+    public function getNextCode(Request $request, Category $category)
+    {
+        $ignoreProductId = $request->input('ignore_product_id');
+        $code = Category::generateNextProductCode($category->id, $ignoreProductId ? (int) $ignoreProductId : null);
+        return response()->json([
+            'success' => true,
+            'code'    => $code,
+        ]);
     }
     public function edit(Request $request, Product $product) {
         $product->loadMissing('category');
