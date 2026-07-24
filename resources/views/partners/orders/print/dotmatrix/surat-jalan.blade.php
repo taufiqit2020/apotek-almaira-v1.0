@@ -70,18 +70,19 @@
     );
     $lines[] = '';
 
+    // Tabel lebar 96 - Kolom rata tengah
     $lines[] = $dm::row([
-        ['NO', 2, 'left'],
+        ['NO', 2, 'center'],
         [' ', 1, 'left'],
-        ['KODE', 9, 'left'],
+        ['KODE', 9, 'center'],
         [' ', 1, 'left'],
-        ['NAMA BARANG', 42, 'left'],
+        ['NAMA BARANG', 42, 'center'],
         [' ', 1, 'left'],
-        ['SATUAN', 7, 'left'],
+        ['SATUAN', 7, 'center'],
         [' ', 1, 'left'],
-        ['QTY', 5, 'right'],
+        ['QTY', 5, 'center'],
         [' ', 1, 'left'],
-        ['BENTUK', 26, 'left'],
+        ['BENTUK', 26, 'center'],
     ]);
     $lines[] = '';
 
@@ -90,32 +91,32 @@
         $bentuk = $meta['bentuk'] === '—' ? '-' : $meta['bentuk'];
         $satuan = $meta['unit'] === '—' ? '-' : $meta['unit'];
         $lines[] = $dm::row([
-            [(string) ($i + 1), 2, 'left'],
+            [(string) ($i + 1), 2, 'center'],
             [' ', 1, 'left'],
-            [(string) $meta['code'], 9, 'left'],
+            [(string) $meta['code'], 9, 'center'],
             [' ', 1, 'left'],
-            [(string) $item->product_name, 42, 'left'],
+            [(string) $item->product_name, 42, 'center'],
             [' ', 1, 'left'],
-            [mb_strtoupper((string) $satuan, 'UTF-8'), 7, 'left'],
+            [mb_strtoupper((string) $satuan, 'UTF-8'), 7, 'center'],
             [' ', 1, 'left'],
-            [(string) $item->quantity, 5, 'right'],
+            [(string) $item->quantity, 5, 'center'],
             [' ', 1, 'left'],
-            [(string) $bentuk, 26, 'left'],
+            [(string) $bentuk, 26, 'center'],
         ]);
     }
 
     $lines[] = '';
     // TOTAL QTY sejajar kolom SATUAN + angka di kolom QTY
     $lines[] = $dm::row([
-        ['', 2, 'left'],
+        ['', 2, 'center'],
         [' ', 1, 'left'],
-        ['', 9, 'left'],
+        ['', 9, 'center'],
         [' ', 1, 'left'],
-        ['', 42, 'left'],
+        ['', 42, 'center'],
         [' ', 1, 'left'],
-        ['TOTAL QTY', 7, 'right'],
+        ['TOTAL QTY', 7, 'center'],
         [' ', 1, 'left'],
-        [(string) $qtyTotal, 5, 'right'],
+        [(string) $qtyTotal, 5, 'center'],
         [' ', 1, 'left'],
         ['('.$itemCount.' jenis)', 26, 'left'],
     ]);

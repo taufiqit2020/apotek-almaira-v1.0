@@ -82,23 +82,23 @@
     );
     $lines[] = '';
 
-    // Tabel lebar 96
+    // Tabel lebar 96 - Kolom rata tengah
     $lines[] = $dm::row([
-        ['NO', 2, 'left'],
+        ['NO', 2, 'center'],
         [' ', 1, 'left'],
-        ['KODE', 9, 'left'],
+        ['KODE', 9, 'center'],
         [' ', 1, 'left'],
-        ['NAMA BARANG', 30, 'left'],
+        ['NAMA BARANG', 30, 'center'],
         [' ', 1, 'left'],
-        ['SATUAN', 7, 'left'],
+        ['SATUAN', 7, 'center'],
         [' ', 1, 'left'],
-        ['QTY', 4, 'right'],
+        ['QTY', 4, 'center'],
         [' ', 1, 'left'],
-        ['BENTUK', 10, 'left'],
+        ['BENTUK', 10, 'center'],
         [' ', 1, 'left'],
-        ['HARGA', 12, 'right'],
+        ['HARGA', 12, 'center'],
         [' ', 1, 'left'],
-        ['SUBTOTAL', 14, 'right'],
+        ['SUBTOTAL', 14, 'center'],
     ]);
     $lines[] = '';
 
@@ -107,17 +107,17 @@
         $bentuk = $meta['bentuk'] === '—' ? '-' : $meta['bentuk'];
         $satuan = $meta['unit'] === '—' ? '-' : $meta['unit'];
         $lines[] = $dm::row([
-            [(string) ($i + 1), 2, 'left'],
+            [(string) ($i + 1), 2, 'center'],
             [' ', 1, 'left'],
-            [(string) $meta['code'], 9, 'left'],
+            [(string) $meta['code'], 9, 'center'],
             [' ', 1, 'left'],
-            [(string) $item->product_name, 30, 'left'],
+            [(string) $item->product_name, 30, 'center'],
             [' ', 1, 'left'],
-            [mb_strtoupper((string) $satuan, 'UTF-8'), 7, 'left'],
+            [mb_strtoupper((string) $satuan, 'UTF-8'), 7, 'center'],
             [' ', 1, 'left'],
-            [(string) $item->quantity, 4, 'right'],
+            [(string) $item->quantity, 4, 'center'],
             [' ', 1, 'left'],
-            [(string) $bentuk, 10, 'left'],
+            [(string) $bentuk, 10, 'center'],
             [' ', 1, 'left'],
             [$fmt($item->unit_price), 12, 'right'],
             [' ', 1, 'left'],
