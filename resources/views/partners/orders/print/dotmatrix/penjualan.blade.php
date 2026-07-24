@@ -125,15 +125,15 @@
 
     $lines[] = '';
 
-    $moneyItems = [
-        ['Subtotal', $fmt($totals['subtotal'])],
-        ['Diskon', $fmt($totals['discount_amount'] ?? 0)],
-    ];
+    // Ringkasan sejajar per baris (Subtotal / Diskon / PPN / TOTAL)
+    $lines[] = $dm::moneySummaryLine('Subtotal', $fmt($totals['subtotal']), 8, 10, 1, $W);
+    $lines[] = $dm::moneySummaryLine('Diskon', $fmt($totals['discount_amount'] ?? 0), 8, 10, 1, $W);
     if (($totals['ppn_amount'] ?? 0) > 0) {
-        $moneyItems[] = ['PPN', $fmt($totals['ppn_amount'])];
+        $lines[] = $dm::moneySummaryLine('PPN', $fmt($totals['ppn_amount']), 8, 10, 1, $W);
     }
-    $moneyItems[] = ['TOTAL', $fmt($totals['grand_total'])];
-    $lines[] = $dm::moneySummaryOneLine($moneyItems, $W);
+    $lines[] = $dm::moneySummaryLine('TOTAL', $fmt($totals['grand_total']), 8, 10, 1, $W);
+    $lines[] = '';
+    $lines[] = '';
     $lines[] = '';
 
     $sigLeftName = null;

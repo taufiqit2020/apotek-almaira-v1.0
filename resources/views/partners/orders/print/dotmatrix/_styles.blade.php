@@ -83,7 +83,7 @@
         max-width: 96ch;
     }
 
-    /* Tanda tangan: jarak cukup untuk paraf */
+    /* Tanda tangan: jarak dari ringkasan + ruang paraf */
     .dm-sig {
         display: flex;
         width: 100%;
@@ -91,7 +91,7 @@
         font-family: "Courier New", Courier, monospace;
         font-weight: bold;
         color: #000;
-        margin: 0.6em 0 1.2em 0;
+        margin: 1.4em 0 1.2em 0; /* jarak dari Subtotal–TOTAL ke atas */
         padding: 0;
     }
     .dm-sig + pre.dm-foot,
