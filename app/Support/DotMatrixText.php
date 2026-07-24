@@ -7,8 +7,8 @@ namespace App\Support;
  */
 final class DotMatrixText
 {
-    /** Lebar grid lebih sempit agar font 15pt muat di kertas 25 cm. */
-    public const WIDTH = 64;
+    /** Lebar grid karakter untuk kertas LX-310 ~25 cm (font 15pt). */
+    public const WIDTH = 72;
 
     public static function pad(string $text, int $width, string $align = 'left'): string
     {
@@ -207,6 +207,48 @@ final class DotMatrixText
     public static function rule(int $width = self::WIDTH, string $char = '-'): string
     {
         return self::line($width, $char);
+    }
+
+    /**
+     * Baris kop dokumen LX-310 (nama, tagline, alamat, kontak, judul).
+     *
+     * @return list<string>
+     */
+    public static function kopLines(
+        string $companyName,
+        string $tagline,
+        string $address,
+        string $phone,
+        string $website,
+        string $instagram,
+        string $docTitle,
+        int $width = self::WIDTH
+    ): array {
+        $addrLine = trim(preg_replace('/\s+/u', ' ', str_replace(["\r\n", "\n", "\r"], ' ', $address)) ?? '');
+        $phoneDisp = preg_replace('/-/', ' ', $phone) ?: $phone;
+        $webDisp = preg_replace('#^https?://#i', '', $website) ?: $website;
+        $igDisp = trim($instagram);
+        if ($igDisp !== '' && ! str_starts_with($igDisp, '@')) {
+            $igDisp = '@'.$igDisp;
+        }
+        $contact = 'Telp/WA : '.$phoneDisp.' Website : '.$webDisp.' instagram : '.$igDisp;
+
+        $lines = [];
+        $lines[] = self::pad($companyName, $width, 'center');
+        foreach (self::wrap($tagline, $width, 'center') as $row) {
+            $lines[] = $row;
+        }
+        foreach (self::wrap($addrLine, $width, 'center') as $row) {
+            $lines[] = $row;
+        }
+        foreach (self::wrap($contact, $width, 'center') as $row) {
+            $lines[] = $row;
+        }
+        $lines[] = '';
+        $lines[] = self::pad($docTitle, $width, 'center');
+        $lines[] = '';
+
+        return $lines;
     }
 
     /**

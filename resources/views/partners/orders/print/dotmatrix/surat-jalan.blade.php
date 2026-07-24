@@ -14,114 +14,78 @@
 
 @php
     $dm = \App\Support\DotMatrixText::class;
+    $W = $dm::WIDTH;
+    $L = 8;
 
     $docDate = $order->fulfilled_at ?? $order->confirmed_at ?? $order->created_at;
     $qtyTotal = (int) $order->items->sum('quantity');
     $itemCount = $order->items->count();
+    $picLine = trim((string) ($order->pic_name ?? '—')) ?: '—';
+    $shipAddr = trim((string) ($order->shipping_address ?? '—')) ?: '—';
+    $tanggalText = $docDate?->timezone('Asia/Makassar')->format('d/m/Y H:i') ?? '—';
 
-    if ($isPT) {
-        $kopName = 'PT. NUR MADANI FARMA';
-        $kopTag = 'Distributor & Mitra Pengadaan Alat Kesehatan & Farmasi';
-    } else {
-        $kopName = 'APOTEK ALMAIRA';
-        $kopTag = 'Pelayanan Kesehatan & Kefarmasian Terpercaya';
-    }
-    $addrLine = trim(preg_replace('/\s+/u', ' ', str_replace(["\r\n", "\n", "\r"], ' ', (string) $address)) ?? '');
-    $picLine = trim((string) ($order->pic_name ?? '—'));
-    $shipAddr = trim((string) ($order->shipping_address ?? '—'));
+    $kopName = $isPT ? 'PT NUR MADANI FARMA' : 'APOTEK ALMAIRA';
+    $kopTag = $isPT
+        ? (string) ($kopTagline ?? 'Distributor & Mitra Pengadaan Alat Kesehatan & Farmasi')
+        : 'Pelayanan Kesehatan & Kefarmasian Terpercaya';
 
-    $W = $dm::WIDTH;
-    $L = 8;
-    $lines = [];
-
-    // ── Kop ──
-    $lines[] = $dm::pad($kopName, $W, 'center');
-    foreach ($dm::wrap($kopTag, $W, 'center') as $row) {
-        $lines[] = $row;
-    }
-    foreach ($dm::wrap($addrLine, $W, 'center') as $row) {
-        $lines[] = $row;
-    }
-    $lines[] = $dm::pad('Telp/WA: '.$phone, $W, 'center');
-    $lines[] = $dm::rule($W, '=');
-    $lines[] = $dm::pad('SURAT JALAN', $W, 'center');
-    $lines[] = $dm::rule($W, '=');
-
-    // ── Info ──
-    foreach ($dm::fieldWrap('No. PO', (string) $order->order_no, $L, $W) as $row) {
-        $lines[] = $row;
-    }
-    $lines[] = $dm::fieldPair(
-        'Tanggal',
-        $docDate?->timezone('Asia/Makassar')->format('d/m/Y H:i') ?? '—',
-        'PIC',
-        $picLine,
-        $L,
-        $W,
-        34
+    $lines = $dm::kopLines(
+        $kopName,
+        $kopTag,
+        (string) $address,
+        (string) $phone,
+        (string) ($website ?? 'www.ptutamamadaniraya.com'),
+        (string) ($instagram ?? '@apotekalmaira'),
+        'SURAT JALAN',
+        $W
     );
-    foreach ($dm::fieldWrap('Mitra', (string) ($order->partner?->name ?? '—'), $L, $W) as $row) {
-        $lines[] = $row;
-    }
+
+    // Meta 2 kolom — selaras gaya Faktur
+    $leftW = 42;
+    $lines[] = $dm::fieldPair('Kepada', (string) ($order->partner?->name ?? '—'), 'TANGGAL', $tanggalText, $L, $W, $leftW);
+    $lines[] = $dm::fieldPair('No. PO', (string) $order->order_no, 'PIC', $picLine, $L, $W, $leftW);
     foreach ($dm::fieldWrap('Alamat', $shipAddr, $L, $W) as $row) {
         $lines[] = $row;
     }
-    $lines[] = $dm::rule($W, '-');
+    $lines[] = '';
 
-    // ── Tabel barang ──
-    // NO(3)+1+KODE(10)+1+NAMA(32)+1+SATUAN(9)+1+QTY(5) = 63 ≈ WIDTH 64
+    // NO KODE NAMA BARANG SATUAN QTY BENTUK
     $lines[] = $dm::row([
-        ['NO', 3, 'left'],
+        ['NO', 2, 'left'],
         [' ', 1, 'left'],
-        ['KODE', 10, 'left'],
+        ['KODE', 8, 'left'],
         [' ', 1, 'left'],
-        ['NAMA BARANG', 32, 'left'],
+        ['NAMA BARANG', 30, 'left'],
         [' ', 1, 'left'],
-        ['SATUAN', 9, 'left'],
+        ['SATUAN', 6, 'left'],
         [' ', 1, 'left'],
-        ['QTY', 5, 'right'],
+        ['QTY', 4, 'right'],
+        [' ', 1, 'left'],
+        ['BENTUK', 16, 'left'],
     ]);
-    $lines[] = $dm::rule($W, '-');
+    $lines[] = '';
 
     foreach ($order->items as $i => $item) {
         $meta = $item->catalogDisplay();
+        $bentuk = $meta['bentuk'] === '—' ? '-' : $meta['bentuk'];
+        $satuan = $meta['unit'] === '—' ? '-' : $meta['unit'];
         $lines[] = $dm::row([
-            [(string) ($i + 1), 3, 'left'],
+            [(string) ($i + 1), 2, 'left'],
             [' ', 1, 'left'],
-            [(string) $meta['code'], 10, 'left'],
+            [(string) $meta['code'], 8, 'left'],
             [' ', 1, 'left'],
-            [(string) $item->product_name, 32, 'left'],
+            [(string) $item->product_name, 30, 'left'],
             [' ', 1, 'left'],
-            [(string) $meta['unit'], 9, 'left'],
+            [mb_strtoupper((string) $satuan, 'UTF-8'), 6, 'left'],
             [' ', 1, 'left'],
-            [(string) $item->quantity, 5, 'right'],
+            [(string) $item->quantity, 4, 'right'],
+            [' ', 1, 'left'],
+            [(string) $bentuk, 16, 'left'],
         ]);
-        foreach ($dm::fieldWrap('Kategori', (string) $meta['category'], 9, $W - 4) as $row) {
-            $lines[] = '    '.rtrim($row);
-        }
-        foreach ($dm::fieldWrap('Kandungan', (string) $meta['kandungan'], 9, $W - 4) as $row) {
-            $lines[] = '    '.rtrim($row);
-        }
-        foreach ($dm::fieldWrap('Bentuk', (string) $meta['bentuk'], 9, $W - 4) as $row) {
-            $lines[] = '    '.rtrim($row);
-        }
-        $lines[] = '';
     }
 
-    $lines[] = $dm::rule($W, '-');
-    // Sejajarkan angka TOTAL QTY dengan kolom QTY di header
-    $lines[] = $dm::row([
-        ['', 3, 'left'],
-        [' ', 1, 'left'],
-        ['', 10, 'left'],
-        [' ', 1, 'left'],
-        [$itemCount.' jenis produk', 32, 'left'],
-        [' ', 1, 'left'],
-        ['TOTAL QTY', 9, 'right'],
-        [' ', 1, 'left'],
-        [(string) $qtyTotal, 5, 'right'],
-    ]);
-    $lines[] = $dm::rule($W, '=');
+    $lines[] = '';
+    $lines[] = $dm::pad($itemCount.' jenis produk · TOTAL QTY : '.$qtyTotal, $W, 'right');
     $lines[] = '';
 
     if ($order->notes) {
@@ -131,14 +95,15 @@
         $lines[] = '';
     }
 
-    // ── Tanda tangan: nama 1 baris, font mengecil jika panjang ──
-    $lines[] = '';
+    $pengirimName = \App\Models\Salary::formatPersonName(
+        \App\Models\Setting::get('pimpinan_name', 'Hj. Nor Maulida, S.H.')
+    );
     $penerimaName = \App\Models\Salary::formatPersonName(
-        $order->pic_name ?? $order->partner?->name ?? '....................'
+        $order->pic_name ?: ($order->partner?->name ?? '....................')
     );
     $halfChars = (int) floor($W / 2);
-    $pengirimPt = $dm::fitFontPt('( .................... )', $halfChars, 15.0, 8.0);
-    $penerimaPt = $dm::fitFontPt('( '.$penerimaName.' )', $halfChars, 15.0, 8.0);
+    $pengirimPt = $dm::fitFontPt($pengirimName, $halfChars, 15.0, 8.0);
+    $penerimaPt = $dm::fitFontPt($penerimaName, $halfChars, 15.0, 8.0);
 
     $footerLines = [];
     $footerLines[] = '';
@@ -153,14 +118,14 @@
 <pre class="dm-pre">{{ $document }}</pre>
 <div class="dm-sig">
     <div class="dm-sig-col">
-        <div class="dm-sig-label">Pengirim,</div>
+        <div class="dm-sig-label">Pengirim</div>
         <div class="dm-sig-space"></div>
-        <div class="dm-sig-name" style="font-size: {{ $pengirimPt }}pt">( .................... )</div>
+        <div class="dm-sig-name" style="font-size: {{ $pengirimPt }}pt">{{ $pengirimName }}</div>
     </div>
     <div class="dm-sig-col">
-        <div class="dm-sig-label">Penerima,</div>
+        <div class="dm-sig-label">Penerima</div>
         <div class="dm-sig-space"></div>
-        <div class="dm-sig-name" style="font-size: {{ $penerimaPt }}pt">( {{ $penerimaName }} )</div>
+        <div class="dm-sig-name" style="font-size: {{ $penerimaPt }}pt">{{ $penerimaName }}</div>
     </div>
 </div>
 <pre class="dm-pre">{{ $footer }}</pre>

@@ -304,11 +304,14 @@ class PartnerOrderAdminController extends Controller
             'entityLabel' => $isPT ? 'PT. NUR MADANI FARMA' : 'APOTEK ALMAIRA',
             'address'     => $isPT ? $ptAddress : $apotekAddress,
             'phone'       => $branding['apotek_phone'] ?? '0851-6665-7070',
+            'website'     => $branding['pt_website'] ?? 'www.ptutamamadaniraya.com',
+            'instagram'   => $branding['pt_ig'] ?? '@apotekalmaira',
             'headerName'  => $isPT
                 ? strtoupper($branding['pt_name'] ?? 'PT NUR MADANI FARMA')
                 : strtoupper($branding['apotek_name'] ?? 'APOTEK ALMAIRA'),
             'subName'     => $isPT ? 'APOTEK ALMAIRA' : 'PT NUR MADANI FARMA',
             'addressLine' => $isPT ? Str::before($ptAddress, "\n") : $apotekAddress,
+            'kopTagline'  => $branding['pt_tagline'] ?? 'Distributor & Mitra Pengadaan Alat Kesehatan & Farmasi',
         ];
     }
 
@@ -318,6 +321,7 @@ class PartnerOrderAdminController extends Controller
         $ptPhone = Setting::get('apotek_phone', '0851-6665-7070');
         $ptEmail = Setting::get('company_email', 'ptnurmadanifarma@gmail.com');
         $ptIg    = Setting::get('company_instagram', '@apotekalmaira');
+        $ptWeb   = Setting::get('company_website', 'www.ptutamamadaniraya.com');
 
         return [
             // Kop cetak LX-310/A4 — teks tetap agar jelas & konsisten (jangan pakai tagline landing).
@@ -335,6 +339,7 @@ class PartnerOrderAdminController extends Controller
             'apotek_phone'   => $ptPhone,
             'pt_email'       => $ptEmail,
             'pt_ig'          => $ptIg,
+            'pt_website'     => $ptWeb,
         ];
     }
 }

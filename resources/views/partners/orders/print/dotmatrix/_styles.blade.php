@@ -49,22 +49,22 @@
         overflow: visible;
         color: #000 !important;
         tab-size: 4;
-        max-width: 64ch;
+        max-width: 72ch;
     }
 
     /* Tanda tangan: nama 1 baris, font mengecil jika panjang */
     .dm-sig {
         display: flex;
         width: 100%;
-        max-width: 64ch;
+        max-width: 72ch;
         font-family: "Courier New", Courier, monospace;
         font-weight: bold;
         color: #000;
-        margin: 0 0 1.1em 0; /* jarak setelah nama sebelum catatan footer */
+        margin: 0.4em 0 1.1em 0;
         padding: 0;
     }
     .dm-sig + pre.dm-pre {
-        max-width: 64ch;
+        max-width: 72ch;
         margin-top: 0;
     }
     .dm-sig-col {
@@ -93,7 +93,7 @@
         .page-wrapper { margin: 0 !important; padding: 0 !important; }
         .container { width: 100%; text-align: left; }
         pre.dm-pre { page-break-inside: avoid; font-size: 15pt !important; }
-        .dm-sig { max-width: 64ch; }
+        .dm-sig { max-width: 72ch; }
     }
 
     .print-toolbar {
