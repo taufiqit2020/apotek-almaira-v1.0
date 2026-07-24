@@ -119,9 +119,9 @@
             [' ', 1, 'left'],
             [(string) $bentuk, 10, 'center'],
             [' ', 1, 'left'],
-            [$fmt($item->unit_price), 12, 'right'],
+            [$fmt($item->unit_price), 12, 'center'],
             [' ', 1, 'left'],
-            [$fmt($item->subtotal), 14, 'right'],
+            [$fmt($item->subtotal), 14, 'center'],
         ]);
     }
 
