@@ -239,6 +239,7 @@
 
                             {{-- Tipe Harga --}}
                             @php
+                                $isInvoiceOrder = \App\Services\InvoicePricingService::isInvoicePayment($partnerOrder->payment_method);
                                 $poPriceMode = $partnerOrder->items->first()?->price_type 
                                     ?? $partnerOrder->price_mode_snapshot 
                                     ?? 'eceran';
@@ -247,10 +248,16 @@
                                 <label class="block text-xs font-bold text-gray-600 mb-1.5">
                                     Tipe Harga <span class="text-red-500">*</span>
                                 </label>
-                                <select name="price_type" id="priceTypeSelect" class="form-input text-sm w-full" required>
-                                    <option value="eceran" {{ $poPriceMode === 'eceran' ? 'selected' : '' }}>Eceran</option>
-                                    <option value="grosir" {{ $poPriceMode === 'grosir' ? 'selected' : '' }}>Grosir</option>
-                                </select>
+                                @if($isInvoiceOrder)
+                                    <input type="text" class="form-input text-sm w-full bg-slate-100 text-slate-700 cursor-not-allowed font-bold" 
+                                           value="Invoice (Sesuai PO)" disabled>
+                                    <input type="hidden" name="price_type" value="invoice">
+                                @else
+                                    <select name="price_type" id="priceTypeSelect" class="form-input text-sm w-full" required>
+                                        <option value="eceran" {{ $poPriceMode === 'eceran' ? 'selected' : '' }}>Eceran</option>
+                                        <option value="grosir" {{ $poPriceMode === 'grosir' ? 'selected' : '' }}>Grosir</option>
+                                    </select>
+                                @endif
                             </div>
 
                             {{-- Preview Subtotal --}}
@@ -406,10 +413,9 @@ const selectedName = document.getElementById('selectedProductName');
 const unitPriceInp = document.getElementById('unitPriceInput');
 const qtyInp       = document.querySelector('input[name="quantity"]');
 const subtotalPrev = document.getElementById('subtotalPreview');
-const priceTypeEl  = document.querySelector('input[name="price_type"], select[name="price_type"]');
-
 function getPriceType() {
-    return priceTypeEl ? priceTypeEl.value : 'eceran';
+    const el = document.querySelector('input[name="price_type"], select[name="price_type"]');
+    return el ? el.value : 'eceran';
 }
 
 function formatRp(n) {
@@ -492,7 +498,7 @@ function selectProduct(id, name, eceranPrice, grosirPrice, invoicePrice) {
     updateSubtotal();
 }
 
-priceTypeEl?.addEventListener('change', function() {
+document.querySelector('select[name="price_type"]')?.addEventListener('change', function() {
     const id = productIdInp.value;
     if (!id) return;
     const p = allProducts.find(x => x.id == id);
