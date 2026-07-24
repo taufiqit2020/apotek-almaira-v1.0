@@ -23,11 +23,6 @@
         'invoice' => 'INVOICE TEMPO',
         default => 'COD / TUNAI',
     };
-    $metodeShort = match ($order->payment_method) {
-        'transfer' => 'Transfer',
-        'invoice' => 'Invoice',
-        default => 'COD',
-    };
     $statusText = $isPaid
         ? 'Lunas'
         : ($order->payment_status === \App\Models\PartnerOrder::PAYMENT_UNPAID
@@ -35,6 +30,7 @@
             : (string) $order->payment_status_label);
     $tempoText = ($isInvoice && $order->due_date) ? $order->due_date->format('d/m/Y') : '—';
     $tanggalText = $order->created_at?->timezone('Asia/Makassar')->format('d/m/Y H:i') ?? '—';
+    $alamatText = trim((string) ($order->shipping_address ?: $order->partner?->address ?: '—')) ?: '—';
 
     $directorName = \App\Models\Salary::formatPersonName(
         \App\Models\Setting::get('pimpinan_name', 'Hj. Nor Maulida, S.H.')
@@ -51,17 +47,38 @@
         $kopTag,
         (string) $address,
         (string) $phone,
-        (string) ($website ?? 'www.ptutamamadaniraya.com'),
+        (string) ($website ?? 'www.ptnurmadanifarma.com'),
         (string) ($instagram ?? '@apotekalmaira'),
         'FAKTUR PENJUALAN - '.$payLabel,
         $W
     );
 
-    // Meta 2 kolom: kiri Kepada/No.PO/Metode — kanan Tanggal/Tempo/Status
-    $leftW = 42;
-    $lines[] = $dm::fieldPair('Kepada', (string) ($order->partner?->name ?? '—'), 'TANGGAL', $tanggalText, $L, $W, $leftW);
-    $lines[] = $dm::fieldPair('No. PO', (string) $order->order_no, 'Tempo', $tempoText, $L, $W, $leftW);
-    $lines[] = $dm::fieldPair('Metode', $metodeShort, 'Status', $statusText, $L, $W, $leftW);
+    // Meta sesuai contoh:
+    // Kepada .............. No. PO
+    // Alamat  (wrap)
+    // TANGGAL .... Tempo .... Status
+    $lines[] = $dm::fieldPair(
+        'Kepada',
+        (string) ($order->partner?->name ?? '—'),
+        'No. PO',
+        (string) $order->order_no,
+        $L,
+        $W,
+        34
+    );
+    foreach ($dm::fieldWrap('Alamat', $alamatText, $L, $W) as $row) {
+        $lines[] = $row;
+    }
+    $lines[] = $dm::fieldTriple(
+        'TANGGAL',
+        $tanggalText,
+        'Tempo',
+        $tempoText,
+        'Status',
+        $statusText,
+        $L,
+        $W
+    );
     $lines[] = '';
 
     // NO KODE NAMA BARANG SATUAN QTY BENTUK HARGA SUBTOTAL = 72
@@ -70,9 +87,9 @@
         [' ', 1, 'left'],
         ['KODE', 8, 'left'],
         [' ', 1, 'left'],
-        ['NAMA BARANG', 20, 'left'],
+        ['NAMA BARANG', 19, 'left'],
         [' ', 1, 'left'],
-        ['SATUAN', 5, 'left'],
+        ['SATUAN', 6, 'left'],
         [' ', 1, 'left'],
         ['QTY', 3, 'right'],
         [' ', 1, 'left'],
@@ -93,9 +110,9 @@
             [' ', 1, 'left'],
             [(string) $meta['code'], 8, 'left'],
             [' ', 1, 'left'],
-            [(string) $item->product_name, 20, 'left'],
+            [(string) $item->product_name, 19, 'left'],
             [' ', 1, 'left'],
-            [mb_strtoupper((string) $satuan, 'UTF-8'), 5, 'left'],
+            [mb_strtoupper((string) $satuan, 'UTF-8'), 6, 'left'],
             [' ', 1, 'left'],
             [(string) $item->quantity, 3, 'right'],
             [' ', 1, 'left'],
@@ -109,13 +126,13 @@
 
     $lines[] = '';
 
-    // Ringkasan: label, ':', Rp, dan angka sejajar (lihat contoh referensi)
-    $lines[] = $dm::moneySummaryLine('Subtotal', $fmt($totals['subtotal']), 8, 12, 8, $W);
-    $lines[] = $dm::moneySummaryLine('Diskon', $fmt($totals['discount_amount'] ?? 0), 8, 12, 8, $W);
+    // Ringkasan sejajar (titik dua + Rp + angka)
+    $lines[] = $dm::moneySummaryLine('Subtotal', $fmt($totals['subtotal']), 8, 10, 1, $W);
+    $lines[] = $dm::moneySummaryLine('Diskon', $fmt($totals['discount_amount'] ?? 0), 8, 10, 1, $W);
     if (($totals['ppn_amount'] ?? 0) > 0) {
-        $lines[] = $dm::moneySummaryLine('PPN', $fmt($totals['ppn_amount']), 8, 12, 8, $W);
+        $lines[] = $dm::moneySummaryLine('PPN', $fmt($totals['ppn_amount']), 8, 10, 1, $W);
     }
-    $lines[] = $dm::moneySummaryLine('TOTAL', $fmt($totals['grand_total']), 8, 12, 8, $W);
+    $lines[] = $dm::moneySummaryLine('TOTAL', $fmt($totals['grand_total']), 8, 10, 1, $W);
     $lines[] = '';
 
     $sigLeftName = null;

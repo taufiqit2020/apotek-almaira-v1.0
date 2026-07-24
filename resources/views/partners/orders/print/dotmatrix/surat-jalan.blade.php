@@ -21,8 +21,9 @@
     $qtyTotal = (int) $order->items->sum('quantity');
     $itemCount = $order->items->count();
     $picLine = trim((string) ($order->pic_name ?? '—')) ?: '—';
-    $shipAddr = trim((string) ($order->shipping_address ?? '—')) ?: '—';
+    $shipAddr = trim((string) ($order->shipping_address ?: $order->partner?->address ?: '—')) ?: '—';
     $tanggalText = $docDate?->timezone('Asia/Makassar')->format('d/m/Y H:i') ?? '—';
+    $statusText = (string) ($order->status_label ?? $order->status ?? '—');
 
     $kopName = $isPT ? 'PT NUR MADANI FARMA' : 'APOTEK ALMAIRA';
     $kopTag = $isPT
@@ -34,19 +35,35 @@
         $kopTag,
         (string) $address,
         (string) $phone,
-        (string) ($website ?? 'www.ptutamamadaniraya.com'),
+        (string) ($website ?? 'www.ptnurmadanifarma.com'),
         (string) ($instagram ?? '@apotekalmaira'),
         'SURAT JALAN',
         $W
     );
 
-    // Meta 2 kolom — selaras gaya Faktur
-    $leftW = 42;
-    $lines[] = $dm::fieldPair('Kepada', (string) ($order->partner?->name ?? '—'), 'TANGGAL', $tanggalText, $L, $W, $leftW);
-    $lines[] = $dm::fieldPair('No. PO', (string) $order->order_no, 'PIC', $picLine, $L, $W, $leftW);
+    // Meta selaras Faktur
+    $lines[] = $dm::fieldPair(
+        'Kepada',
+        (string) ($order->partner?->name ?? '—'),
+        'No. PO',
+        (string) $order->order_no,
+        $L,
+        $W,
+        34
+    );
     foreach ($dm::fieldWrap('Alamat', $shipAddr, $L, $W) as $row) {
         $lines[] = $row;
     }
+    $lines[] = $dm::fieldTriple(
+        'TANGGAL',
+        $tanggalText,
+        'PIC',
+        $picLine,
+        'Status',
+        $statusText,
+        $L,
+        $W
+    );
     $lines[] = '';
 
     // NO KODE NAMA BARANG SATUAN QTY BENTUK
@@ -85,7 +102,8 @@
     }
 
     $lines[] = '';
-    $lines[] = $dm::pad($itemCount.' jenis produk · TOTAL QTY : '.$qtyTotal, $W, 'right');
+    $summaryQty = 'TOTAL QTY : '.$qtyTotal.'  ('.$itemCount.' jenis)';
+    $lines[] = $dm::padRaw($summaryQty, $W, 'right');
     $lines[] = '';
 
     if ($order->notes) {

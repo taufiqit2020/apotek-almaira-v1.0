@@ -32,6 +32,25 @@ final class DotMatrixText
         };
     }
 
+    /** Pad tanpa trim/collapse spasi (aman untuk blok alignment). */
+    public static function padRaw(string $text, int $width, string $align = 'left'): string
+    {
+        $len = mb_strlen($text, 'UTF-8');
+        if ($len > $width) {
+            return mb_substr($text, 0, $width, 'UTF-8');
+        }
+        $pad = $width - $len;
+        if ($pad <= 0) {
+            return $text;
+        }
+
+        return match ($align) {
+            'right' => str_repeat(' ', $pad).$text,
+            'center' => str_repeat(' ', intdiv($pad, 2)).$text.str_repeat(' ', $pad - intdiv($pad, 2)),
+            default => $text.str_repeat(' ', $pad),
+        };
+    }
+
     public static function line(int $width = self::WIDTH, string $char = '-'): string
     {
         return str_repeat($char, $width);
@@ -167,10 +186,34 @@ final class DotMatrixText
         $half = $leftWidth ?? (int) floor($totalWidth / 2);
         $half = max(18, min($half, $totalWidth - 18));
         $rightW = $totalWidth - $half;
-        $left = self::pad(self::field($labelA, $valueA, $labelWidth, $half), $half, 'left');
-        $right = self::field($labelB, $valueB, $labelWidth, $rightW);
+        $left = self::padRaw(self::field($labelA, $valueA, $labelWidth, $half), $half, 'left');
+        $right = self::padRaw(self::field($labelB, $valueB, $labelWidth, $rightW), $rightW, 'left');
 
         return $left.$right;
+    }
+
+    /**
+     * Tiga field sejajar dalam 1 baris (mis. TANGGAL | Tempo | Status).
+     */
+    public static function fieldTriple(
+        string $labelA,
+        string $valueA,
+        string $labelB,
+        string $valueB,
+        string $labelC,
+        string $valueC,
+        int $labelWidth = 8,
+        int $totalWidth = self::WIDTH
+    ): string {
+        $w1 = (int) floor($totalWidth / 3);
+        $w2 = (int) floor($totalWidth / 3);
+        $w3 = $totalWidth - $w1 - $w2;
+
+        $a = self::padRaw(self::field($labelA, $valueA, $labelWidth, $w1), $w1, 'left');
+        $b = self::padRaw(self::field($labelB, $valueB, $labelWidth, $w2), $w2, 'left');
+        $c = self::padRaw(self::field($labelC, $valueC, $labelWidth, $w3), $w3, 'left');
+
+        return $a.$b.$c;
     }
 
     /**

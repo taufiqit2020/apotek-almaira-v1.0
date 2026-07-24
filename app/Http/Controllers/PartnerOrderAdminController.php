@@ -321,7 +321,7 @@ class PartnerOrderAdminController extends Controller
         $ptPhone = Setting::get('apotek_phone', '0851-6665-7070');
         $ptEmail = Setting::get('company_email', 'ptnurmadanifarma@gmail.com');
         $ptIg    = Setting::get('company_instagram', '@apotekalmaira');
-        $ptWeb   = Setting::get('company_website', 'www.ptutamamadaniraya.com');
+        $ptWeb   = Setting::get('company_website', 'www.ptnurmadanifarma.com');
 
         return [
             // Kop cetak LX-310/A4 — teks tetap agar jelas & konsisten (jangan pakai tagline landing).
