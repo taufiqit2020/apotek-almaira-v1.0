@@ -102,24 +102,37 @@
     ]);
     $lines[] = '';
 
-    $fmtSubtotalCol = static fn ($val) => $dm::pad($fmt($val), 10, 'right').'   ';
-    $fmtSummaryRow = static function (string $label, string $amountStr) use ($dm, $fmtSubtotalCol) {
-        $labelStr = $dm::pad($label, 8, 'left').' :';
+    // Format item row HARGA dan SUBTOTAL rata kanan presisi
+    $fmtMoney = static fn ($val) => $dm::padRaw($fmt($val), 10, 'right');
 
-        return $dm::row([
-            ['', 57, 'left'],
-            [$labelStr, 11, 'left'],
-            ['', 11, 'left'],
-            ['Rp', 2, 'right'],
-            [' ', 1, 'left'],
-            [$fmtSubtotalCol($amountStr), 14, 'left'],
-        ]);
+    // Ringkasan sesuai gambar referensi.
+    // Layout kolom tabel: 2+1+9+1+30+1+7+1+4+1+10+1+12+1+14 = 95... total 96 (ada 1 trailing)
+    // HARGA mulai pos 67, lebar 12. SUBTOTAL mulai pos 80+1(sp)+1=82? 
+    // Recalc: 2+1=3, +9+1=13, +30+1=44, +7+1=52, +4+1=57, +10+1=68, +12+1=81, SUBTOTAL start=82, width=14
+    // Angka di SUBTOTAL: padRaw(amount, 10, right).'    ' → 10 chars rata kanan lalu 4 spasi = 14 chars
+    // Posisi digit paling kanan angka = 82+10-1 = 91 (0-indexed)
+    // Untuk summary: "Rp " (3 chars) + angka (10 chars) = 13 chars, mulai di pos 82-3=79
+    // Sebelumnya label: pilih mulai pos 44 (setelah NO+sp+KODE+sp+NAMA+sp = 44 chars)
+    // Layout: [44 spasi][label 8ch][ :][gap 24ch][Rp ][angka 10 chars rata kanan][5 trailing]
+    // 44 + 8 + 2 + 24 + 3 + 10 + 5 = 96 ✓
+    $fmtSummaryRow = static function (string $label, $val) use ($dm, $fmt) {
+        $labelPart = $dm::padRaw(str_pad($label, 8).' :', 10, 'left'); // 10 chars
+        $amtPart   = $dm::padRaw($fmt($val), 10, 'right');             // 10 chars rata kanan
+        // 44 + 10(label) + 24(gap) + 3(Rp ) + 10(amount) + 5(trail) = 96
+        return str_repeat(' ', 44)
+            .$labelPart
+            .str_repeat(' ', 24)
+            .'Rp '
+            .$amtPart
+            .str_repeat(' ', 5);
     };
 
     foreach ($order->items as $i => $item) {
         $meta = $item->catalogDisplay();
         $bentuk = $meta['bentuk'] === '—' ? '-' : $meta['bentuk'];
         $satuan = $meta['unit'] === '—' ? '-' : $meta['unit'];
+        $hargaStr = $dm::padRaw($fmt($item->unit_price), 9, 'right').'   '; // 12 chars
+        $subtotStr = $dm::padRaw($fmt($item->subtotal), 10, 'right').'    '; // 14 chars
         $lines[] = $dm::row([
             [(string) ($i + 1), 2, 'center'],
             [' ', 1, 'left'],
@@ -133,15 +146,15 @@
             [' ', 1, 'left'],
             [(string) $bentuk, 10, 'center'],
             [' ', 1, 'left'],
-            [$dm::pad($fmt($item->unit_price), 9, 'right').'   ', 12, 'left'],
+            [$hargaStr, 12, 'left'],
             [' ', 1, 'left'],
-            [$fmtSubtotalCol($item->subtotal), 14, 'left'],
+            [$subtotStr, 14, 'left'],
         ]);
     }
 
     $lines[] = '';
 
-    // Ringkasan 100% presisi sesuai sampel gambar referensi
+    // Ringkasan sesuai gambar referensi: label rata kiri, Rp + angka rata kanan sejajar SUBTOTAL
     $lines[] = $fmtSummaryRow('Subtotal', $totals['subtotal']);
     $lines[] = $fmtSummaryRow('Diskon', $totals['discount_amount'] ?? 0);
     if (($totals['ppn_amount'] ?? 0) > 0) {
