@@ -479,4 +479,52 @@ final class DotMatrixText
 
         return $lines ?: [$prefix];
     }
+
+    /**
+     * Konversi angka bulat ke teks Indonesia (terbilang).
+     * Contoh: 157343 → "Seratus Lima Puluh Tujuh Ribu Tiga Ratus Empat Puluh Tiga"
+     */
+    public static function terbilang(int $n): string
+    {
+        if ($n === 0) {
+            return 'Nol';
+        }
+        if ($n < 0) {
+            return 'Minus '.self::terbilang(-$n);
+        }
+
+        $satuan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan',
+            'Sepuluh', 'Sebelas', 'Dua Belas', 'Tiga Belas', 'Empat Belas', 'Lima Belas',
+            'Enam Belas', 'Tujuh Belas', 'Delapan Belas', 'Sembilan Belas'];
+
+        $result = '';
+
+        if ($n >= 1_000_000_000) {
+            $result .= self::terbilang((int) ($n / 1_000_000_000)).' Miliar ';
+            $n %= 1_000_000_000;
+        }
+        if ($n >= 1_000_000) {
+            $result .= self::terbilang((int) ($n / 1_000_000)).' Juta ';
+            $n %= 1_000_000;
+        }
+        if ($n >= 1_000) {
+            $prefix = (int) ($n / 1_000) === 1 ? 'Seribu' : self::terbilang((int) ($n / 1_000)).' Ribu';
+            $result .= $prefix.' ';
+            $n %= 1_000;
+        }
+        if ($n >= 100) {
+            $prefix = (int) ($n / 100) === 1 ? 'Seratus' : $satuan[(int) ($n / 100)].' Ratus';
+            $result .= $prefix.' ';
+            $n %= 100;
+        }
+        if ($n >= 20) {
+            $result .= $satuan[(int) ($n / 10)].' Puluh ';
+            $n %= 10;
+        }
+        if ($n > 0) {
+            $result .= $satuan[$n].' ';
+        }
+
+        return trim($result);
+    }
 }

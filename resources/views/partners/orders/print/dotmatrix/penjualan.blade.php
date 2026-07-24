@@ -102,19 +102,7 @@
     ]);
     $lines[] = '';
 
-    // Format item row HARGA dan SUBTOTAL rata kanan presisi
-    $fmtMoney = static fn ($val) => $dm::padRaw($fmt($val), 10, 'right');
-
-    // Ringkasan sesuai gambar referensi.
-    // Layout kolom tabel: 2+1+9+1+30+1+7+1+4+1+10+1+12+1+14 = 95... total 96 (ada 1 trailing)
-    // HARGA mulai pos 67, lebar 12. SUBTOTAL mulai pos 80+1(sp)+1=82? 
-    // Recalc: 2+1=3, +9+1=13, +30+1=44, +7+1=52, +4+1=57, +10+1=68, +12+1=81, SUBTOTAL start=82, width=14
-    // Angka di SUBTOTAL: padRaw(amount, 10, right).'    ' → 10 chars rata kanan lalu 4 spasi = 14 chars
-    // Posisi digit paling kanan angka = 82+10-1 = 91 (0-indexed)
-    // Untuk summary: "Rp " (3 chars) + angka (10 chars) = 13 chars, mulai di pos 82-3=79
-    // Sebelumnya label: pilih mulai pos 44 (setelah NO+sp+KODE+sp+NAMA+sp = 44 chars)
-    // Layout: [44 spasi][label 8ch][ :][gap 24ch][Rp ][angka 10 chars rata kanan][5 trailing]
-    // 44 + 8 + 2 + 24 + 3 + 10 + 5 = 96 ✓
+    // Format ringkasan: label rata kiri, Rp + angka rata kanan presisi (padRaw agar spasi tidak di-trim)
     $fmtSummaryRow = static function (string $label, $val) use ($dm, $fmt) {
         $labelPart = $dm::padRaw(str_pad($label, 8).' :', 10, 'left'); // 10 chars
         $amtPart   = $dm::padRaw($fmt($val), 10, 'right');             // 10 chars rata kanan
@@ -131,8 +119,6 @@
         $meta = $item->catalogDisplay();
         $bentuk = $meta['bentuk'] === '—' ? '-' : $meta['bentuk'];
         $satuan = $meta['unit'] === '—' ? '-' : $meta['unit'];
-        $hargaStr = $dm::padRaw($fmt($item->unit_price), 9, 'right').'   '; // 12 chars
-        $subtotStr = $dm::padRaw($fmt($item->subtotal), 10, 'right').'    '; // 14 chars
         $lines[] = $dm::row([
             [(string) ($i + 1), 2, 'center'],
             [' ', 1, 'left'],
@@ -146,9 +132,9 @@
             [' ', 1, 'left'],
             [(string) $bentuk, 10, 'center'],
             [' ', 1, 'left'],
-            [$hargaStr, 12, 'left'],
+            [$fmt($item->unit_price), 12, 'center'],
             [' ', 1, 'left'],
-            [$subtotStr, 14, 'left'],
+            [$fmt($item->subtotal), 14, 'center'],
         ]);
     }
 
@@ -161,7 +147,13 @@
         $lines[] = $fmtSummaryRow('PPN', $totals['ppn_amount']);
     }
     $lines[] = $fmtSummaryRow('TOTAL', $totals['grand_total']);
+
+    // Terbilang di bawah TOTAL
+    $grandTotal = (int) round((float) ($totals['grand_total'] ?? 0));
+    $terbilangStr = $dm::terbilang($grandTotal);
+    $terbilangLine = $dm::pad('Terbilang : '.$terbilangStr.' Rupiah', $W, 'left');
     $lines[] = '';
+    $lines[] = $terbilangLine;
     $lines[] = '';
     $lines[] = '';
 
