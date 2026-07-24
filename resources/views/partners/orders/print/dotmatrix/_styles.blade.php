@@ -2,7 +2,7 @@
 <style>
     @page {
         size: 250mm 285mm;
-        margin: 6mm 10mm 6mm 7mm; /* Geser 0,5 cm ke kanan dari marjin sebelumnya */
+        margin: 6mm 10mm 6mm 2mm; /* Geser 0,5 cm ke kiri */
     }
 
     * {
@@ -31,7 +31,7 @@
         width: 100%;
         text-align: left;
         margin: 0;
-        padding: 0 0 0 5mm; /* Geser seluruh template ke kanan 0,5 cm */
+        padding: 0; /* Geser seluruh template ke kiri 0,5 cm */
         display: flex;
         flex-direction: column;
         align-items: flex-start;
@@ -135,7 +135,7 @@
         .no-print { display: none !important; }
         html, body { width: 250mm; background: #fff !important; }
         .page-wrapper { margin: 0 !important; padding: 0 !important; }
-        .container { width: 100%; text-align: left; align-items: flex-start; margin: 0; padding: 0 0 0 5mm; }
+        .container { width: 100%; text-align: left; align-items: flex-start; margin: 0; padding: 0; }
         pre.dm-kop { font-size: 10.5pt !important; width: 96ch; text-align: center !important; white-space: pre !important; margin: 0 0 0.4em 0; }
         pre.dm-pre { page-break-inside: avoid; font-size: 10.5pt !important; width: 96ch; margin: 0; }
         pre.dm-foot { font-size: 10.5pt !important; width: 96ch; text-align: center !important; margin: 0; }
