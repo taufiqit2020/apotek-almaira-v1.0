@@ -22,7 +22,7 @@
 
     body {
         font-family: "Courier New", Courier, monospace;
-        font-size: 11pt;
+        font-size: 9.5pt;
         font-weight: bold;
         line-height: 1.15;
     }
@@ -43,11 +43,11 @@
         box-sizing: content-box;
         width: 96ch;
         max-width: 100%;
-        margin: 0 0 0.45em 0;
+        margin: 0 0 0.4em 0;
         padding: 0;
         text-align: center !important;
         font-family: "Courier New", Courier, monospace !important;
-        font-size: 11pt !important;
+        font-size: 9.5pt !important;
         font-weight: bold !important;
         line-height: 1.15 !important;
         letter-spacing: 0 !important;
@@ -65,7 +65,7 @@
         padding: 0;
         text-align: left;
         font-family: "Courier New", Courier, monospace !important;
-        font-size: 11pt !important;
+        font-size: 9.5pt !important;
         font-weight: bold !important;
         line-height: 1.15 !important;
         letter-spacing: 0 !important;
@@ -75,7 +75,7 @@
         tab-size: 4;
     }
 
-    /* Ringkasan + footer sedikit lebih kecil */
+    /* Ringkasan + footer */
     pre.dm-foot {
         display: block;
         box-sizing: content-box;
@@ -85,7 +85,7 @@
         padding: 0;
         text-align: center !important;
         font-family: "Courier New", Courier, monospace !important;
-        font-size: 10.5pt !important;
+        font-size: 9.5pt !important;
         font-weight: bold !important;
         line-height: 1.15 !important;
         letter-spacing: 0 !important;
@@ -116,15 +116,15 @@
         padding: 0 4px;
     }
     .dm-sig-label {
-        font-size: 11pt;
+        font-size: 9.5pt;
         line-height: 1.2;
         white-space: nowrap;
     }
     .dm-sig-space {
-        height: 4.8em; /* jarak untuk tanda tangan */
+        height: 4.5em; /* jarak untuk tanda tangan */
     }
     .dm-sig-name {
-        font-size: 10.5pt;
+        font-size: 9.5pt;
         font-weight: bold;
         line-height: 1.15;
         white-space: nowrap;
@@ -136,11 +136,11 @@
         html, body { width: 250mm; background: #fff !important; }
         .page-wrapper { margin: 0 !important; padding: 0 !important; }
         .container { width: 100%; text-align: left; align-items: flex-start; margin: 0; }
-        pre.dm-kop { font-size: 11pt !important; width: 96ch; text-align: center !important; white-space: pre !important; margin: 0 0 0.45em 0; }
-        pre.dm-pre { page-break-inside: avoid; font-size: 11pt !important; width: 96ch; margin: 0; }
-        pre.dm-foot { font-size: 10.5pt !important; width: 96ch; text-align: center !important; margin: 0; }
+        pre.dm-kop { font-size: 9.5pt !important; width: 96ch; text-align: center !important; white-space: pre !important; margin: 0 0 0.4em 0; }
+        pre.dm-pre { page-break-inside: avoid; font-size: 9.5pt !important; width: 96ch; margin: 0; }
+        pre.dm-foot { font-size: 9.5pt !important; width: 96ch; text-align: center !important; margin: 0; }
         .dm-sig { width: 96ch; margin-left: 0; margin-right: 0; }
-        .dm-sig-space { height: 4.8em; }
+        .dm-sig-space { height: 4.5em; }
     }
 
     .print-toolbar {

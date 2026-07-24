@@ -174,6 +174,13 @@ class Salary extends Model
             '/\bM\.?\s*Kes\.*/iu' => 'M.Kes.',
             '/\bM\.?\s*M\.*/iu' => 'M.M.',
             '/\bH\.(?=\s)/u' => 'H.',
+            '/\bRsu\b/u' => 'RSU',
+            '/\bRsud\b/u' => 'RSUD',
+            '/\bRs\b/u' => 'RS',
+            '/\bPt\b/u' => 'PT',
+            '/\bCv\b/u' => 'CV',
+            '/\bUd\b/u' => 'UD',
+            '/\bFktp\b/u' => 'FKTP',
         ];
 
         foreach ($patterns as $pattern => $replacement) {
