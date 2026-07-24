@@ -900,11 +900,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        if (productId && selectedCat == initialCategoryId && initialCode) {
-            codeInput.value = initialCode;
-            return;
-        }
-
         fetchNextCode(selectedCat);
     });
 
