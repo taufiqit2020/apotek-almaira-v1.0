@@ -127,13 +127,29 @@
 
     $lines[] = '';
 
-    // Ringkasan sejajar per baris (Subtotal / Diskon / PPN / TOTAL)
-    $lines[] = $dm::moneySummaryLine('Subtotal', $fmt($totals['subtotal']), 8, 10, 1, $W);
-    $lines[] = $dm::moneySummaryLine('Diskon', $fmt($totals['discount_amount'] ?? 0), 8, 10, 1, $W);
+    // Ringkasan sejajar rapi langsung di bawah nominal SUBTOTAL tabel item
+    $lines[] = $dm::row([
+        ['Subtotal  : Rp', 81, 'right'],
+        [$fmt($totals['subtotal']), 14, 'center'],
+        [' ', 1, 'left'],
+    ]);
+    $lines[] = $dm::row([
+        ['Diskon    : Rp', 81, 'right'],
+        [$fmt($totals['discount_amount'] ?? 0), 14, 'center'],
+        [' ', 1, 'left'],
+    ]);
     if (($totals['ppn_amount'] ?? 0) > 0) {
-        $lines[] = $dm::moneySummaryLine('PPN', $fmt($totals['ppn_amount']), 8, 10, 1, $W);
+        $lines[] = $dm::row([
+            ['PPN       : Rp', 81, 'right'],
+            [$fmt($totals['ppn_amount']), 14, 'center'],
+            [' ', 1, 'left'],
+        ]);
     }
-    $lines[] = $dm::moneySummaryLine('TOTAL', $fmt($totals['grand_total']), 8, 10, 1, $W);
+    $lines[] = $dm::row([
+        ['TOTAL     : Rp', 81, 'right'],
+        [$fmt($totals['grand_total']), 14, 'center'],
+        [' ', 1, 'left'],
+    ]);
     $lines[] = '';
     $lines[] = '';
     $lines[] = '';
