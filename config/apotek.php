@@ -25,7 +25,7 @@ return [
     // Security
     'login_max_attempts'     => env('LOGIN_MAX_ATTEMPTS', 5),
     'login_lockout_minutes'  => env('LOGIN_LOCKOUT_MINUTES', 15),
-    'session_timeout_minutes'=> env('SESSION_TIMEOUT_MINUTES', 30),
+    'session_timeout_minutes'=> env('SESSION_TIMEOUT_MINUTES', 0),
 
     // HET Markup options (%)
     'het_options' => [5, 10, 15, 20, 25, 30],

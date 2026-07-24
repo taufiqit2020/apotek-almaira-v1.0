@@ -53,6 +53,7 @@ Route::get('/logout', [LoginController::class, 'logout'])->middleware('auth');
 
 // Authenticated routes
 Route::middleware(['auth', 'session.timeout'])->group(function () {
+    Route::get('/ping', fn () => response()->json(['status' => 'ok']));
     Route::get('/mitra/akun', [PartnerPortalController::class, 'account'])->name('mitra.account');
     Route::post('/mitra/logout', [PartnerPortalController::class, 'logout'])->name('mitra.logout');
 

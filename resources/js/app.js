@@ -381,25 +381,9 @@ window.formatRupiah = (angka) => {
     return 'Rp ' + num.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 };
 
-// ── Session Timeout Warning ───────────────────────────────────
-let inactivityTimer;
-const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-const WARNING_BEFORE  = 5 * 60 * 1000;  // warn 5 min before
-
-function resetInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(() => {
-        if (confirm('Sesi Anda akan berakhir dalam 5 menit karena tidak aktif. Klik OK untuk tetap login.')) {
-            // Ping server to keep session alive
-            fetch('/ping').catch(() => {});
-            resetInactivityTimer();
-        }
-    }, SESSION_TIMEOUT - WARNING_BEFORE);
-}
-
+// ── Session Keep-Alive (Auto-logout disabled: user stays logged in) ───
 if (document.body?.dataset?.authenticated === 'true') {
-    ['mousemove', 'keypress', 'click', 'scroll', 'touchstart'].forEach(e => {
-        document.addEventListener(e, resetInactivityTimer, { passive: true });
-    });
-    resetInactivityTimer();
+    setInterval(() => {
+        fetch('/ping').catch(() => {});
+    }, 10 * 60 * 1000);
 }
