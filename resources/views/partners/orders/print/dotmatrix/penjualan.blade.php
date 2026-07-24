@@ -102,6 +102,8 @@
     ]);
     $lines[] = '';
 
+    $fmtSubtotalCol = static fn ($val) => $dm::pad($fmt($val), 10, 'right').'    ';
+
     foreach ($order->items as $i => $item) {
         $meta = $item->catalogDisplay();
         $bentuk = $meta['bentuk'] === '—' ? '-' : $meta['bentuk'];
@@ -119,35 +121,35 @@
             [' ', 1, 'left'],
             [(string) $bentuk, 10, 'center'],
             [' ', 1, 'left'],
-            [$fmt($item->unit_price), 12, 'center'],
+            [$dm::pad($fmt($item->unit_price), 9, 'right').'   ', 12, 'left'],
             [' ', 1, 'left'],
-            [$fmt($item->subtotal), 14, 'center'],
+            [$fmtSubtotalCol($item->subtotal), 14, 'left'],
         ]);
     }
 
     $lines[] = '';
 
-    // Ringkasan sejajar rapi langsung di bawah nominal SUBTOTAL tabel item
+    // Ringkasan sejajar rapi: digit rata kanan tegak lurus di bawah nominal SUBTOTAL item
     $lines[] = $dm::row([
         ['Subtotal  : Rp', 81, 'right'],
-        [$fmt($totals['subtotal']), 14, 'center'],
+        [$fmtSubtotalCol($totals['subtotal']), 14, 'left'],
         [' ', 1, 'left'],
     ]);
     $lines[] = $dm::row([
         ['Diskon    : Rp', 81, 'right'],
-        [$fmt($totals['discount_amount'] ?? 0), 14, 'center'],
+        [$fmtSubtotalCol($totals['discount_amount'] ?? 0), 14, 'left'],
         [' ', 1, 'left'],
     ]);
     if (($totals['ppn_amount'] ?? 0) > 0) {
         $lines[] = $dm::row([
             ['PPN       : Rp', 81, 'right'],
-            [$fmt($totals['ppn_amount']), 14, 'center'],
+            [$fmtSubtotalCol($totals['ppn_amount']), 14, 'left'],
             [' ', 1, 'left'],
         ]);
     }
     $lines[] = $dm::row([
         ['TOTAL     : Rp', 81, 'right'],
-        [$fmt($totals['grand_total']), 14, 'center'],
+        [$fmtSubtotalCol($totals['grand_total']), 14, 'left'],
         [' ', 1, 'left'],
     ]);
     $lines[] = '';
