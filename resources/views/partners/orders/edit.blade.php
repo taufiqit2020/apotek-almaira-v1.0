@@ -373,16 +373,21 @@
 @endsection
 
 @push('scripts')
+@php
+    $mappedProducts = $products->map(function($p) {
+        return [
+            'id'    => $p->id,
+            'name'  => $p->name,
+            'code'  => $p->code ?? '',
+            'unit'  => $p->unit?->name ?? '',
+            'eceran'=> (float)($p->sell_price ?? 0),
+            'grosir'=> (float)($p->wholesale_price ?? $p->sell_price ?? 0),
+        ];
+    })->values()->all();
+@endphp
 <script>
 // Data produk untuk pencarian
-const allProducts = @json($products->map(fn($p) => [
-    'id'    => $p->id,
-    'name'  => $p->name,
-    'code'  => $p->code ?? '',
-    'unit'  => $p->unit?->name ?? '',
-    'eceran'=> (float)($p->sell_price ?? 0),
-    'grosir'=> (float)($p->wholesale_price ?? $p->sell_price ?? 0),
-]));
+const allProducts = @json($mappedProducts);
 
 const searchInput  = document.getElementById('productSearch');
 const dropdown     = document.getElementById('productDropdown');
