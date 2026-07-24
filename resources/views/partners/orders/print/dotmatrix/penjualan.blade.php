@@ -102,7 +102,19 @@
     ]);
     $lines[] = '';
 
-    $fmtSubtotalCol = static fn ($val) => $dm::pad($fmt($val), 10, 'right').'    ';
+    $fmtSubtotalCol = static fn ($val) => $dm::pad($fmt($val), 10, 'right').'   ';
+    $fmtSummaryRow = static function (string $label, string $amountStr) use ($dm, $fmtSubtotalCol) {
+        $labelStr = $dm::pad($label, 8, 'left').' :';
+
+        return $dm::row([
+            ['', 57, 'left'],
+            [$labelStr, 11, 'left'],
+            ['', 11, 'left'],
+            ['Rp', 2, 'right'],
+            [' ', 1, 'left'],
+            [$fmtSubtotalCol($amountStr), 14, 'left'],
+        ]);
+    };
 
     foreach ($order->items as $i => $item) {
         $meta = $item->catalogDisplay();
@@ -129,29 +141,13 @@
 
     $lines[] = '';
 
-    // Ringkasan sejajar rapi: digit rata kanan tegak lurus di bawah nominal SUBTOTAL item
-    $lines[] = $dm::row([
-        ['Subtotal  : Rp', 81, 'right'],
-        [$fmtSubtotalCol($totals['subtotal']), 14, 'left'],
-        [' ', 1, 'left'],
-    ]);
-    $lines[] = $dm::row([
-        ['Diskon    : Rp', 81, 'right'],
-        [$fmtSubtotalCol($totals['discount_amount'] ?? 0), 14, 'left'],
-        [' ', 1, 'left'],
-    ]);
+    // Ringkasan 100% presisi sesuai sampel gambar referensi
+    $lines[] = $fmtSummaryRow('Subtotal', $totals['subtotal']);
+    $lines[] = $fmtSummaryRow('Diskon', $totals['discount_amount'] ?? 0);
     if (($totals['ppn_amount'] ?? 0) > 0) {
-        $lines[] = $dm::row([
-            ['PPN       : Rp', 81, 'right'],
-            [$fmtSubtotalCol($totals['ppn_amount']), 14, 'left'],
-            [' ', 1, 'left'],
-        ]);
+        $lines[] = $fmtSummaryRow('PPN', $totals['ppn_amount']);
     }
-    $lines[] = $dm::row([
-        ['TOTAL     : Rp', 81, 'right'],
-        [$fmtSubtotalCol($totals['grand_total']), 14, 'left'],
-        [' ', 1, 'left'],
-    ]);
+    $lines[] = $fmtSummaryRow('TOTAL', $totals['grand_total']);
     $lines[] = '';
     $lines[] = '';
     $lines[] = '';
