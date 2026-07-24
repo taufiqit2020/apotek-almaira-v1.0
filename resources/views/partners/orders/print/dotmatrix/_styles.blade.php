@@ -2,7 +2,7 @@
 <style>
     @page {
         size: 250mm 285mm;
-        margin: 6mm 10mm 6mm 2mm; /* Geser 2 cm ke kiri */
+        margin: 6mm 10mm 6mm 10mm;
     }
 
     * {
@@ -34,7 +34,7 @@
         padding: 0;
         display: flex;
         flex-direction: column;
-        align-items: flex-start; /* Geser template ke kiri */
+        align-items: center; /* Rata tengah posisi blok dokumen */
     }
 
     /* Kop: baris tepat 96 karakter, rata tengah di dalam box 96ch, tepi kiri-kanan sejajar dokumen */
@@ -43,7 +43,7 @@
         box-sizing: content-box;
         width: 96ch;
         max-width: 100%;
-        margin: 0 0 0.4em 0;
+        margin: 0 auto 0.4em auto;
         padding: 0;
         text-align: center !important;
         font-family: "Courier New", Courier, monospace !important;
@@ -61,7 +61,7 @@
         box-sizing: content-box;
         width: 96ch;
         max-width: 100%;
-        margin: 0;
+        margin: 0 auto;
         padding: 0;
         text-align: left;
         font-family: "Courier New", Courier, monospace !important;
@@ -81,7 +81,7 @@
         box-sizing: content-box;
         width: 96ch;
         max-width: 100%;
-        margin: 0;
+        margin: 0 auto;
         padding: 0;
         text-align: center !important;
         font-family: "Courier New", Courier, monospace !important;
@@ -102,7 +102,7 @@
         font-family: "Courier New", Courier, monospace;
         font-weight: bold;
         color: #000;
-        margin: 1.4em 0 1.2em 0;
+        margin: 1.4em auto 1.2em auto;
         padding: 0;
     }
     .dm-sig + pre.dm-foot,
@@ -135,11 +135,11 @@
         .no-print { display: none !important; }
         html, body { width: 250mm; background: #fff !important; }
         .page-wrapper { margin: 0 !important; padding: 0 !important; }
-        .container { width: 100%; text-align: left; align-items: flex-start; margin: 0; }
-        pre.dm-kop { font-size: 9.5pt !important; width: 96ch; text-align: center !important; white-space: pre !important; margin: 0 0 0.4em 0; }
-        pre.dm-pre { page-break-inside: avoid; font-size: 9.5pt !important; width: 96ch; margin: 0; }
-        pre.dm-foot { font-size: 9.5pt !important; width: 96ch; text-align: center !important; margin: 0; }
-        .dm-sig { width: 96ch; margin-left: 0; margin-right: 0; }
+        .container { width: 100%; text-align: left; align-items: center; margin: 0; }
+        pre.dm-kop { font-size: 9.5pt !important; width: 96ch; text-align: center !important; white-space: pre !important; margin: 0 auto 0.4em auto; }
+        pre.dm-pre { page-break-inside: avoid; font-size: 9.5pt !important; width: 96ch; margin: 0 auto; }
+        pre.dm-foot { font-size: 9.5pt !important; width: 96ch; text-align: center !important; margin: 0 auto; }
+        .dm-sig { width: 96ch; margin-left: auto; margin-right: auto; }
         .dm-sig-space { height: 4.5em; }
     }
 
