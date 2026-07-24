@@ -144,6 +144,12 @@ Route::middleware(['auth', 'session.timeout'])->group(function () {
         Route::post('/partner-orders/{partnerOrder}/fulfill', [PartnerOrderAdminController::class, 'fulfill'])->name('partner-orders.fulfill');
         Route::post('/partner-orders/{partnerOrder}/cancel', [PartnerOrderAdminController::class, 'cancel'])->name('partner-orders.cancel');
         Route::post('/partner-orders/{partnerOrder}/notes', [PartnerOrderAdminController::class, 'updateNotes'])->name('partner-orders.notes');
+        // Fitur Edit & Hapus — khusus Kepala IT
+        Route::get('/partner-orders/{partnerOrder}/edit', [PartnerOrderAdminController::class, 'edit'])->name('partner-orders.edit');
+        Route::put('/partner-orders/{partnerOrder}', [PartnerOrderAdminController::class, 'update'])->name('partner-orders.update');
+        Route::delete('/partner-orders/{partnerOrder}', [PartnerOrderAdminController::class, 'destroy'])->name('partner-orders.destroy');
+        Route::post('/partner-orders/{partnerOrder}/items', [PartnerOrderAdminController::class, 'addItem'])->name('partner-orders.items.add');
+        Route::delete('/partner-orders/{partnerOrder}/items/{item}', [PartnerOrderAdminController::class, 'removeItem'])->name('partner-orders.items.remove');
 
         Route::patch('/employees/{employee}/toggle-status', [EmployeeController::class, 'toggleStatus'])->name('employees.toggle-status');
         Route::resource('employees', EmployeeController::class);

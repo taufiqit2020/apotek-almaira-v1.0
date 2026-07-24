@@ -214,6 +214,138 @@ class PartnerOrderAdminController extends Controller
         return back()->with('toast_success', 'PO dibatalkan.');
     }
 
+    /** Guard: akses hanya Kepala IT — selain itu tampilkan halaman unauthorized cantik. */
+    private function requireKepalaIt(): void
+    {
+        if (! Auth::user()?->isKepalaIt()) {
+            abort(403, 'akses_kepala_it');
+        }
+    }
+
+    /** Halaman edit PO (Kepala IT only). */
+    public function edit(PartnerOrder $partnerOrder)
+    {
+        $this->requireKepalaIt();
+
+        $partnerOrder->load(['partner', 'user', 'items.product.category', 'items.product.unit']);
+
+        $products = Product::with(['category', 'unit'])
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('partners.orders.edit', compact('partnerOrder', 'products'));
+    }
+
+    /** Update header PO: catatan admin, due date, catatan internal (Kepala IT only). */
+    public function update(Request $request, PartnerOrder $partnerOrder)
+    {
+        $this->requireKepalaIt();
+
+        $data = $request->validate([
+            'admin_notes' => 'nullable|string|max:2000',
+            'due_date'    => 'nullable|date',
+            'notes'       => 'nullable|string|max:2000',
+        ]);
+
+        $partnerOrder->update(array_filter($data, fn ($v) => $v !== null));
+
+        ActivityLogService::log('UPDATE', 'PO Mitra', "PO {$partnerOrder->order_no} diedit oleh Kepala IT");
+
+        return redirect()->route('partner-orders.edit', $partnerOrder)
+            ->with('toast_success', 'Data PO berhasil diperbarui.');
+    }
+
+    /** Hapus PO sepenuhnya (Kepala IT only). */
+    public function destroy(PartnerOrder $partnerOrder)
+    {
+        $this->requireKepalaIt();
+
+        $orderNo = $partnerOrder->order_no;
+        $partnerOrder->items()->delete();
+        $partnerOrder->delete();
+
+        ActivityLogService::log('DELETE', 'PO Mitra', "PO {$orderNo} dihapus permanen oleh Kepala IT");
+
+        return redirect()->route('partner-orders.index')
+            ->with('toast_success', "PO {$orderNo} berhasil dihapus permanen.");
+    }
+
+    /** Tambah item baru ke PO (Kepala IT only). */
+    public function addItem(Request $request, PartnerOrder $partnerOrder)
+    {
+        $this->requireKepalaIt();
+
+        $data = $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity'   => 'required|integer|min:1',
+            'unit_price' => 'required|numeric|min:0',
+            'price_type' => 'required|in:eceran,grosir',
+        ]);
+
+        $product  = Product::with(['unit'])->findOrFail($data['product_id']);
+        $subtotal = $data['quantity'] * $data['unit_price'];
+
+        $partnerOrder->items()->create([
+            'product_id'   => $product->id,
+            'product_name' => $product->name,
+            'product_code' => $product->code ?? '',
+            'unit_name'    => $product->unit?->name ?? '',
+            'price_type'   => $data['price_type'],
+            'unit_price'   => $data['unit_price'],
+            'quantity'     => $data['quantity'],
+            'subtotal'     => $subtotal,
+        ]);
+
+        // Recalculate totals
+        $this->recalcOrderTotals($partnerOrder);
+
+        ActivityLogService::log('UPDATE', 'PO Mitra', "Item '{$product->name}' ditambahkan ke PO {$partnerOrder->order_no}");
+
+        return redirect()->route('partner-orders.edit', $partnerOrder)
+            ->with('toast_success', "Item \"{$product->name}\" berhasil ditambahkan.");
+    }
+
+    /** Hapus item dari PO (Kepala IT only). */
+    public function removeItem(PartnerOrder $partnerOrder, \App\Models\PartnerOrderItem $item)
+    {
+        $this->requireKepalaIt();
+
+        if ($item->partner_order_id !== $partnerOrder->id) {
+            return back()->with('toast_error', 'Item tidak ditemukan di PO ini.');
+        }
+
+        $name = $item->product_name;
+        $item->delete();
+
+        $this->recalcOrderTotals($partnerOrder);
+
+        ActivityLogService::log('UPDATE', 'PO Mitra', "Item '{$name}' dihapus dari PO {$partnerOrder->order_no}");
+
+        return redirect()->route('partner-orders.edit', $partnerOrder)
+            ->with('toast_success', "Item \"{$name}\" berhasil dihapus.");
+    }
+
+    /** Hitung ulang subtotal & total PO setelah perubahan item. */
+    private function recalcOrderTotals(PartnerOrder $partnerOrder): void
+    {
+        $partnerOrder->refresh();
+        $items    = $partnerOrder->items;
+        $subtotal = $items->sum('subtotal');
+
+        $ppnEnabled = (bool) $partnerOrder->ppn_enabled;
+        $ppnPct     = (float) ($partnerOrder->ppn_percent ?? 11);
+        $ppnAmt     = $ppnEnabled ? round($subtotal * $ppnPct / 100, 2) : 0;
+        $discAmt    = (float) ($partnerOrder->discount_amount ?? 0);
+        $total      = $subtotal - $discAmt + $ppnAmt;
+
+        $partnerOrder->update([
+            'subtotal'   => $subtotal,
+            'ppn_amount' => $ppnAmt,
+            'total'      => $total,
+        ]);
+    }
+
     public function updateNotes(Request $request, PartnerOrder $partnerOrder)
     {
         $request->validate(['admin_notes' => 'nullable|string|max:2000']);

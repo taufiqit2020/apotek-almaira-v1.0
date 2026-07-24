@@ -230,11 +230,20 @@
             {{-- Tabel Item --}}
             <div class="card bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
                 <div class="px-5 py-3 border-b border-gray-100 bg-slate-50/80 flex flex-wrap items-center justify-between gap-2">
-                    <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500">Daftar Item PO</h3>
-                    <span class="text-[11px] font-semibold text-gray-400">{{ $itemCount }} produk · {{ $qtyTotal }} qty</span>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500">Daftar Item PO</h3>
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700">{{ $itemCount }} produk &middot; {{ $qtyTotal }} qty</span>
+                    </div>
+                    @if(Auth::user()->isKepalaIt())
+                    <a wire:navigate href="{{ route('partner-orders.edit', $order) }}"
+                       class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-[11px] font-bold hover:bg-emerald-700 transition-colors shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        Edit Item PO
+                    </a>
+                    @endif
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full min-w-[980px] text-sm">
+                <div class="overflow-x-auto -mx-0">
+                    <table class="w-full min-w-[860px] text-sm">
                         <thead>
                             <tr class="bg-slate-50 border-b border-gray-100">
                                 <th class="px-3 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-gray-500 w-8">#</th>
@@ -403,6 +412,30 @@
                         <input type="text" name="cancel_reason" class="form-input text-sm" placeholder="Alasan batal *" required>
                         <button type="submit" class="btn btn-danger w-full btn-sm" style="background:#dc2626;color:#fff;">Batalkan PO</button>
                     </form>
+                    @endif
+
+                    {{-- Aksi Kepala IT: Edit & Hapus PO --}}
+                    @if(Auth::user()->isKepalaIt())
+                    <div class="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2 0 5.523-3.997 10.114-9.335 11.532C3.998 17.114 0 12.523 0 7c0-.68.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                            Kepala IT
+                        </p>
+                        <a wire:navigate href="{{ route('partner-orders.edit', $order) }}"
+                           class="btn btn-sm w-full inline-flex items-center justify-center gap-2"
+                           style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;font-weight:700;">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Edit PO
+                        </a>
+                        <form action="{{ route('partner-orders.destroy', $order) }}" method="POST"
+                              onsubmit="return confirm('HAPUS PERMANEN PO {{ $order->order_no }}?\nTindakan ini tidak dapat dibatalkan!')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn btn-sm w-full" style="background:#7f1d1d;color:#fff;font-weight:700;">
+                                <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                Hapus PO Permanen
+                            </button>
+                        </form>
+                    </div>
                     @endif
                 </div>
             </div>
