@@ -237,15 +237,14 @@
                                        class="form-input text-sm w-full" placeholder="0" id="unitPriceInput">
                             </div>
 
-                            {{-- Tipe Harga --}}
+                            {{-- Tipe Harga (Auto) --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 mb-1.5">
                                     Tipe Harga <span class="text-red-500">*</span>
                                 </label>
-                                <select name="price_type" class="form-input text-sm w-full" required>
-                                    <option value="eceran" {{ old('price_type') === 'eceran' ? 'selected' : '' }}>Eceran</option>
-                                    <option value="grosir" {{ old('price_type') === 'grosir' ? 'selected' : '' }}>Grosir</option>
-                                </select>
+                                <input type="text" class="form-input text-sm w-full bg-slate-100 text-slate-600 cursor-not-allowed capitalize font-semibold" 
+                                       value="{{ $partnerOrder->price_mode_snapshot === 'grosir' ? 'Grosir (Sesuai PO)' : 'Eceran (Sesuai PO)' }}" disabled>
+                                <input type="hidden" name="price_type" value="{{ $partnerOrder->price_mode_snapshot ?? 'eceran' }}">
                             </div>
 
                             {{-- Preview Subtotal --}}
@@ -396,7 +395,7 @@ const selectedDiv  = document.getElementById('selectedProduct');
 const selectedName = document.getElementById('selectedProductName');
 const unitPriceInp = document.getElementById('unitPriceInput');
 const qtyInp       = document.querySelector('input[name="quantity"]');
-const priceTypeInp = document.querySelector('select[name="price_type"]');
+const priceTypeInp = document.querySelector('input[name="price_type"]');
 const subtotalPrev = document.getElementById('subtotalPreview');
 
 function formatRp(n) {
