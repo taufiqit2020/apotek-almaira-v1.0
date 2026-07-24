@@ -238,13 +238,18 @@
                             </div>
 
                             {{-- Tipe Harga (Auto) --}}
+                            @php
+                                $resolvedPriceMode = $partnerOrder->payment_method === \App\Models\PartnerOrder::PAY_INVOICE 
+                                    ? 'grosir' 
+                                    : ($partnerOrder->price_mode_snapshot ?? 'eceran');
+                            @endphp
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 mb-1.5">
                                     Tipe Harga <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" class="form-input text-sm w-full bg-slate-100 text-slate-600 cursor-not-allowed capitalize font-semibold" 
-                                       value="{{ $partnerOrder->price_mode_snapshot === 'grosir' ? 'Grosir (Sesuai PO)' : 'Eceran (Sesuai PO)' }}" disabled>
-                                <input type="hidden" name="price_type" value="{{ $partnerOrder->price_mode_snapshot ?? 'eceran' }}">
+                                       value="{{ $resolvedPriceMode === 'grosir' ? 'Grosir (Sesuai PO)' : 'Eceran (Sesuai PO)' }}" disabled>
+                                <input type="hidden" name="price_type" value="{{ $resolvedPriceMode }}">
                             </div>
 
                             {{-- Preview Subtotal --}}
