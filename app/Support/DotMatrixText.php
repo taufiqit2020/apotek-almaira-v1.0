@@ -252,6 +252,35 @@ final class DotMatrixText
     }
 
     /**
+     * Baris ringkasan uang (Subtotal/Diskon/PPN/TOTAL) — titik dua, Rp, dan angka sejajar.
+     * Lebar blok nilai tetap, lalu rata kanan agar sejajar kolom SUBTOTAL tabel.
+     * Tidak memakai pad() pada seluruh blok agar spasi alignment tidak ter-collapse.
+     */
+    public static function moneySummaryLine(
+        string $label,
+        string $amountDigits,
+        int $labelWidth = 8,
+        int $amountWidth = 12,
+        int $gapAfterColon = 8,
+        int $totalWidth = self::WIDTH
+    ): string {
+        $label = preg_replace('/\s+/u', ' ', trim($label)) ?? '';
+        $amountDigits = preg_replace('/\s+/u', ' ', trim($amountDigits)) ?? '0';
+
+        $gap = max(1, $gapAfterColon);
+        $prefix = self::pad($label, $labelWidth, 'left').':'.str_repeat(' ', $gap);
+        $value = 'Rp '.self::pad($amountDigits, $amountWidth, 'right');
+        $block = $prefix.$value;
+
+        $len = mb_strlen($block, 'UTF-8');
+        if ($len > $totalWidth) {
+            return mb_substr($block, 0, $totalWidth, 'UTF-8');
+        }
+
+        return str_repeat(' ', $totalWidth - $len).$block;
+    }
+
+    /**
      * Baris detail item menjorok, dibungkus rapi.
      *
      * @return list<string>

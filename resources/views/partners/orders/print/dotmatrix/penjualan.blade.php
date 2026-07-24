@@ -109,17 +109,13 @@
 
     $lines[] = '';
 
-    $moneyLine = static function (string $label, string $amount) use ($dm, $W): string {
-        $block = $dm::pad($label, 8, 'left').': '.$amount;
-
-        return $dm::pad($block, $W, 'right');
-    };
-    $lines[] = $moneyLine('Subtotal', 'Rp '.$fmt($totals['subtotal']));
-    $lines[] = $moneyLine('Diskon', 'Rp '.$fmt($totals['discount_amount'] ?? 0));
+    // Ringkasan: label, ':', Rp, dan angka sejajar (lihat contoh referensi)
+    $lines[] = $dm::moneySummaryLine('Subtotal', $fmt($totals['subtotal']), 8, 12, 8, $W);
+    $lines[] = $dm::moneySummaryLine('Diskon', $fmt($totals['discount_amount'] ?? 0), 8, 12, 8, $W);
     if (($totals['ppn_amount'] ?? 0) > 0) {
-        $lines[] = $moneyLine('PPN', 'Rp '.$fmt($totals['ppn_amount']));
+        $lines[] = $dm::moneySummaryLine('PPN', $fmt($totals['ppn_amount']), 8, 12, 8, $W);
     }
-    $lines[] = $moneyLine('TOTAL', 'Rp '.$fmt($totals['grand_total']));
+    $lines[] = $dm::moneySummaryLine('TOTAL', $fmt($totals['grand_total']), 8, 12, 8, $W);
     $lines[] = '';
 
     $sigLeftName = null;
