@@ -7,8 +7,8 @@ namespace App\Support;
  */
 final class DotMatrixText
 {
-    /** Lebar grid karakter untuk kertas LX-310 ~25 cm (font 15pt). */
-    public const WIDTH = 72;
+    /** Lebar grid karakter — font ~11pt agar alamat/kontak muat 1 baris di kertas 25 cm. */
+    public const WIDTH = 96;
 
     public static function pad(string $text, int $width, string $align = 'left'): string
     {
@@ -194,6 +194,7 @@ final class DotMatrixText
 
     /**
      * Tiga field sejajar dalam 1 baris (mis. TANGGAL | Tempo | Status).
+     * Kolom kiri sedikit lebih lebar agar tanggal+jam tidak menabrak Tempo.
      */
     public static function fieldTriple(
         string $labelA,
@@ -205,8 +206,8 @@ final class DotMatrixText
         int $labelWidth = 8,
         int $totalWidth = self::WIDTH
     ): string {
-        $w1 = (int) floor($totalWidth / 3);
-        $w2 = (int) floor($totalWidth / 3);
+        $w1 = (int) floor($totalWidth * 0.38);
+        $w2 = (int) floor($totalWidth * 0.30);
         $w3 = $totalWidth - $w1 - $w2;
 
         $a = self::padRaw(self::field($labelA, $valueA, $labelWidth, $w1), $w1, 'left');
@@ -253,18 +254,17 @@ final class DotMatrixText
     }
 
     /**
-     * Baris kop dokumen LX-310 (nama, tagline, alamat, kontak, judul).
+     * Baris kop dokumen LX-310 (nama, tagline, alamat, kontak) — tanpa judul dokumen.
      *
      * @return list<string>
      */
-    public static function kopLines(
+    public static function kopHeaderLines(
         string $companyName,
         string $tagline,
         string $address,
         string $phone,
         string $website,
         string $instagram,
-        string $docTitle,
         int $width = self::WIDTH
     ): array {
         $addrLine = trim(preg_replace('/\s+/u', ' ', str_replace(["\r\n", "\n", "\r"], ' ', $address)) ?? '');
@@ -287,6 +287,26 @@ final class DotMatrixText
         foreach (self::wrap($contact, $width, 'center') as $row) {
             $lines[] = $row;
         }
+
+        return $lines;
+    }
+
+    /**
+     * Kop + judul dokumen (kompatibel pemanggilan lama).
+     *
+     * @return list<string>
+     */
+    public static function kopLines(
+        string $companyName,
+        string $tagline,
+        string $address,
+        string $phone,
+        string $website,
+        string $instagram,
+        string $docTitle,
+        int $width = self::WIDTH
+    ): array {
+        $lines = self::kopHeaderLines($companyName, $tagline, $address, $phone, $website, $instagram, $width);
         $lines[] = '';
         $lines[] = self::pad($docTitle, $width, 'center');
         $lines[] = '';
@@ -321,6 +341,24 @@ final class DotMatrixText
         }
 
         return str_repeat(' ', $totalWidth - $len).$block;
+    }
+
+    /**
+     * Ringkasan uang 1 baris: Subtotal / Diskon / PPN / TOTAL.
+     *
+     * @param  array<int, array{0: string, 1: string}>  $items  [label, amountDigits]
+     */
+    public static function moneySummaryOneLine(array $items, int $totalWidth = self::WIDTH): string
+    {
+        $parts = [];
+        foreach ($items as $item) {
+            $label = preg_replace('/\s+/u', ' ', trim((string) ($item[0] ?? ''))) ?? '';
+            $amount = preg_replace('/\s+/u', ' ', trim((string) ($item[1] ?? '0'))) ?? '0';
+            $parts[] = self::pad($label, 8, 'left').': Rp '.self::pad($amount, 10, 'right');
+        }
+        $block = implode('  ', $parts);
+
+        return self::padRaw($block, $totalWidth, 'right');
     }
 
     /**

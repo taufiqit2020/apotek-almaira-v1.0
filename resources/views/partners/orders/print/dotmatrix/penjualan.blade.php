@@ -42,21 +42,20 @@
         ? (string) ($kopTagline ?? 'Distributor & Mitra Pengadaan Alat Kesehatan & Farmasi')
         : 'Pelayanan Kesehatan & Kefarmasian Terpercaya';
 
-    $lines = $dm::kopLines(
+    $kopText = implode("\n", $dm::kopHeaderLines(
         $kopName,
         $kopTag,
         (string) $address,
         (string) $phone,
         (string) ($website ?? 'www.ptnurmadanifarma.com'),
         (string) ($instagram ?? '@apotekalmaira'),
-        'FAKTUR PENJUALAN - '.$payLabel,
         $W
-    );
+    ));
 
-    // Meta sesuai contoh:
-    // Kepada .............. No. PO
-    // Alamat  (wrap)
-    // TANGGAL .... Tempo .... Status
+    $lines = [];
+    $lines[] = $dm::pad('FAKTUR PENJUALAN - '.$payLabel, $W, 'center');
+    $lines[] = '';
+
     $lines[] = $dm::fieldPair(
         'Kepada',
         (string) ($order->partner?->name ?? '—'),
@@ -64,7 +63,7 @@
         (string) $order->order_no,
         $L,
         $W,
-        34
+        46
     );
     foreach ($dm::fieldWrap('Alamat', $alamatText, $L, $W) as $row) {
         $lines[] = $row;
@@ -81,23 +80,23 @@
     );
     $lines[] = '';
 
-    // NO KODE NAMA BARANG SATUAN QTY BENTUK HARGA SUBTOTAL = 72
+    // Tabel lebar 96
     $lines[] = $dm::row([
         ['NO', 2, 'left'],
         [' ', 1, 'left'],
-        ['KODE', 8, 'left'],
+        ['KODE', 9, 'left'],
         [' ', 1, 'left'],
-        ['NAMA BARANG', 19, 'left'],
+        ['NAMA BARANG', 30, 'left'],
         [' ', 1, 'left'],
-        ['SATUAN', 6, 'left'],
+        ['SATUAN', 7, 'left'],
         [' ', 1, 'left'],
-        ['QTY', 3, 'right'],
+        ['QTY', 4, 'right'],
         [' ', 1, 'left'],
-        ['BENTUK', 8, 'left'],
+        ['BENTUK', 10, 'left'],
         [' ', 1, 'left'],
-        ['HARGA', 9, 'right'],
+        ['HARGA', 12, 'right'],
         [' ', 1, 'left'],
-        ['SUBTOTAL', 10, 'right'],
+        ['SUBTOTAL', 14, 'right'],
     ]);
     $lines[] = '';
 
@@ -108,43 +107,45 @@
         $lines[] = $dm::row([
             [(string) ($i + 1), 2, 'left'],
             [' ', 1, 'left'],
-            [(string) $meta['code'], 8, 'left'],
+            [(string) $meta['code'], 9, 'left'],
             [' ', 1, 'left'],
-            [(string) $item->product_name, 19, 'left'],
+            [(string) $item->product_name, 30, 'left'],
             [' ', 1, 'left'],
-            [mb_strtoupper((string) $satuan, 'UTF-8'), 6, 'left'],
+            [mb_strtoupper((string) $satuan, 'UTF-8'), 7, 'left'],
             [' ', 1, 'left'],
-            [(string) $item->quantity, 3, 'right'],
+            [(string) $item->quantity, 4, 'right'],
             [' ', 1, 'left'],
-            [(string) $bentuk, 8, 'left'],
+            [(string) $bentuk, 10, 'left'],
             [' ', 1, 'left'],
-            [$fmt($item->unit_price), 9, 'right'],
+            [$fmt($item->unit_price), 12, 'right'],
             [' ', 1, 'left'],
-            [$fmt($item->subtotal), 10, 'right'],
+            [$fmt($item->subtotal), 14, 'right'],
         ]);
     }
 
     $lines[] = '';
 
-    // Ringkasan sejajar (titik dua + Rp + angka)
-    $lines[] = $dm::moneySummaryLine('Subtotal', $fmt($totals['subtotal']), 8, 10, 1, $W);
-    $lines[] = $dm::moneySummaryLine('Diskon', $fmt($totals['discount_amount'] ?? 0), 8, 10, 1, $W);
+    $moneyItems = [
+        ['Subtotal', $fmt($totals['subtotal'])],
+        ['Diskon', $fmt($totals['discount_amount'] ?? 0)],
+    ];
     if (($totals['ppn_amount'] ?? 0) > 0) {
-        $lines[] = $dm::moneySummaryLine('PPN', $fmt($totals['ppn_amount']), 8, 10, 1, $W);
+        $moneyItems[] = ['PPN', $fmt($totals['ppn_amount'])];
     }
-    $lines[] = $dm::moneySummaryLine('TOTAL', $fmt($totals['grand_total']), 8, 10, 1, $W);
+    $moneyItems[] = ['TOTAL', $fmt($totals['grand_total'])];
+    $lines[] = $dm::moneySummaryOneLine($moneyItems, $W);
     $lines[] = '';
 
     $sigLeftName = null;
     $sigRightName = null;
-    $sigLeftPt = 15.0;
-    $sigRightPt = 15.0;
+    $sigLeftPt = 10.5;
+    $sigRightPt = 10.5;
     if ($showSignature) {
         $sigLeftName = $directorName;
         $sigRightName = $penerimaName;
         $halfChars = (int) floor($W / 2);
-        $sigLeftPt = $dm::fitFontPt($sigLeftName, $halfChars, 15.0, 8.0);
-        $sigRightPt = $dm::fitFontPt($sigRightName, $halfChars, 15.0, 8.0);
+        $sigLeftPt = $dm::fitFontPt($sigLeftName, $halfChars, 10.5, 8.0);
+        $sigRightPt = $dm::fitFontPt($sigRightName, $halfChars, 10.5, 8.0);
     }
 
     $footerLines = [];
@@ -163,6 +164,7 @@
 
 <div class="page-wrapper">
 <div class="container">
+<pre class="dm-kop">{{ $kopText }}</pre>
 <pre class="dm-pre">{{ $document }}</pre>
 @if($showSignature)
 <div class="dm-sig">
@@ -178,7 +180,7 @@
     </div>
 </div>
 @endif
-<pre class="dm-pre">{{ $footer }}</pre>
+<pre class="dm-foot">{{ $footer }}</pre>
 </div>
 </div>
 </body>
