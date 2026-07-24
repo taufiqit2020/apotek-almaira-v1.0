@@ -251,7 +251,7 @@
                                 @if($isInvoiceOrder)
                                     <input type="text" class="form-input text-sm w-full bg-slate-100 text-slate-700 cursor-not-allowed font-bold" 
                                            value="Invoice (Sesuai PO)" disabled>
-                                    <input type="hidden" name="price_type" value="invoice">
+                                    <input type="hidden" name="price_type" value="eceran" data-is-invoice="1">
                                 @else
                                     <select name="price_type" id="priceTypeSelect" class="form-input text-sm w-full" required>
                                         <option value="eceran" {{ $poPriceMode === 'eceran' ? 'selected' : '' }}>Eceran</option>
@@ -414,7 +414,11 @@ const unitPriceInp = document.getElementById('unitPriceInput');
 const qtyInp       = document.querySelector('input[name="quantity"]');
 const subtotalPrev = document.getElementById('subtotalPreview');
 function getPriceType() {
-    const el = document.querySelector('input[name="price_type"], select[name="price_type"]');
+    const hiddenInvoice = document.querySelector('input[data-is-invoice="1"]');
+    if (hiddenInvoice) {
+        return 'invoice';
+    }
+    const el = document.querySelector('select[name="price_type"]');
     return el ? el.value : 'eceran';
 }
 

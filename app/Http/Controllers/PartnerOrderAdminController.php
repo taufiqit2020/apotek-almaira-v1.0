@@ -280,7 +280,7 @@ class PartnerOrderAdminController extends Controller
             'product_id' => 'required|exists:products,id',
             'quantity'   => 'required|integer|min:1',
             'unit_price' => 'required|numeric|min:0',
-            'price_type' => 'required|in:eceran,grosir,invoice',
+            'price_type' => 'required|in:eceran,grosir',
         ]);
 
         $product  = Product::with(['unit'])->findOrFail($data['product_id']);
