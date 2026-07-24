@@ -237,19 +237,21 @@
                                        class="form-input text-sm w-full" placeholder="0" id="unitPriceInput">
                             </div>
 
-                            {{-- Tipe Harga (Auto) --}}
-                            @php
-                                $resolvedPriceMode = $partnerOrder->payment_method === \App\Models\PartnerOrder::PAY_INVOICE 
-                                    ? 'grosir' 
-                                    : ($partnerOrder->price_mode_snapshot ?? 'eceran');
-                            @endphp
+                            {{-- Tipe Harga (Auto / Select) --}}
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 mb-1.5">
                                     Tipe Harga <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" class="form-input text-sm w-full bg-slate-100 text-slate-600 cursor-not-allowed capitalize font-semibold" 
-                                       value="{{ $resolvedPriceMode === 'grosir' ? 'Grosir (Sesuai PO)' : 'Eceran (Sesuai PO)' }}" disabled>
-                                <input type="hidden" name="price_type" value="{{ $resolvedPriceMode }}">
+                                @if($partnerOrder->payment_method === \App\Models\PartnerOrder::PAY_INVOICE)
+                                    <input type="text" class="form-input text-sm w-full bg-slate-100 text-slate-600 cursor-not-allowed font-semibold" 
+                                           value="Invoice (Sesuai PO)" disabled>
+                                    <input type="hidden" name="price_type" value="grosir">
+                                @else
+                                    <select name="price_type" class="form-input text-sm w-full" required>
+                                        <option value="eceran" {{ ($partnerOrder->price_mode_snapshot ?? 'eceran') === 'eceran' ? 'selected' : '' }}>Eceran</option>
+                                        <option value="grosir" {{ ($partnerOrder->price_mode_snapshot ?? 'eceran') === 'grosir' ? 'selected' : '' }}>Grosir</option>
+                                    </select>
+                                @endif
                             </div>
 
                             {{-- Preview Subtotal --}}
@@ -400,8 +402,12 @@ const selectedDiv  = document.getElementById('selectedProduct');
 const selectedName = document.getElementById('selectedProductName');
 const unitPriceInp = document.getElementById('unitPriceInput');
 const qtyInp       = document.querySelector('input[name="quantity"]');
-const priceTypeInp = document.querySelector('input[name="price_type"]');
 const subtotalPrev = document.getElementById('subtotalPreview');
+const priceTypeEl  = document.querySelector('input[name="price_type"], select[name="price_type"]');
+
+function getPriceType() {
+    return priceTypeEl ? priceTypeEl.value : 'eceran';
+}
 
 function formatRp(n) {
     return 'Rp ' + Math.round(n).toLocaleString('id-ID');
@@ -467,18 +473,19 @@ function selectProduct(id, name, eceranPrice, grosirPrice) {
     dropdown.classList.add('hidden');
 
     // Auto-isi harga sesuai tipe
-    const tipe = priceTypeInp?.value || 'eceran';
+    const tipe = getPriceType();
     unitPriceInp.value = tipe === 'grosir' ? grosirPrice : eceranPrice;
     updateSubtotal();
 }
 
-priceTypeInp?.addEventListener('change', function() {
+priceTypeEl?.addEventListener('change', function() {
     const id = productIdInp.value;
     if (!id) return;
     const p = allProducts.find(x => x.id == id);
-    if (!p) return;
-    unitPriceInp.value = this.value === 'grosir' ? p.grosir : p.eceran;
-    updateSubtotal();
+    if (p) {
+        unitPriceInp.value = this.value === 'grosir' ? p.grosir : p.eceran;
+        updateSubtotal();
+    }
 });
 
 function clearProduct() {
