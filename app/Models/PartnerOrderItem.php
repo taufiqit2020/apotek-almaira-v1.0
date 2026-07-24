@@ -30,7 +30,11 @@ class PartnerOrderItem extends Model
 
     public function getPriceTypeLabelAttribute(): string
     {
-        return $this->price_type === 'grosir' ? 'Grosir' : 'Eceran';
+        return match ($this->price_type) {
+            'invoice' => 'Invoice',
+            'grosir'  => 'Grosir',
+            default   => 'Eceran',
+        };
     }
 
     /**

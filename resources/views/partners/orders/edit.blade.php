@@ -119,7 +119,7 @@
                                     <p class="text-[10px] text-gray-400 font-mono mt-0.5">{{ $meta['code'] }} &middot; {{ $meta['unit'] }}</p>
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <span class="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold {{ $item->price_type === 'grosir' ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700' }}">
+                                    <span class="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold {{ $item->price_type === 'invoice' ? 'bg-purple-100 text-purple-800' : ($item->price_type === 'grosir' ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700') }}">
                                         {{ $item->price_type_label }}
                                     </span>
                                 </td>
@@ -380,13 +380,17 @@
 @push('scripts')
 @php
     $mappedProducts = $products->map(function($p) {
+        $sell = (float)($p->sell_price ?? 0);
+        $grosir = (float)($p->wholesale_price ?? $sell);
+        $invoice = \App\Services\InvoicePricingService::unitFromSellPrice($sell);
         return [
-            'id'    => $p->id,
-            'name'  => $p->name,
-            'code'  => $p->code ?? '',
-            'unit'  => $p->unit?->name ?? '',
-            'eceran'=> (float)($p->sell_price ?? 0),
-            'grosir'=> (float)($p->wholesale_price ?? $p->sell_price ?? 0),
+            'id'      => $p->id,
+            'name'    => $p->name,
+            'code'    => $p->code ?? '',
+            'unit'    => $p->unit?->name ?? '',
+            'eceran'  => $sell,
+            'grosir'  => $grosir,
+            'invoice' => $invoice,
         ];
     })->values()->all();
 @endphp
@@ -427,10 +431,13 @@ function renderDropdown(filtered) {
     } else {
         const tipe = getPriceType();
         dropdown.innerHTML = filtered.slice(0, 20).map(p => {
-            const price = tipe === 'grosir' ? p.grosir : p.eceran;
+            let price = p.eceran;
+            if (tipe === 'invoice') price = p.invoice;
+            else if (tipe === 'grosir') price = p.grosir;
+
             return `
             <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
-                 onclick="selectProduct(${p.id}, '${p.name.replace(/'/g,"\\'")}', ${p.eceran}, ${p.grosir})">
+                 onclick="selectProduct(${p.id}, '${p.name.replace(/'/g,"\\'")}', ${p.eceran}, ${p.grosir}, ${p.invoice})">
                 <div class="w-6 h-6 rounded-md bg-emerald-100 flex items-center justify-center shrink-0">
                     <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/></svg>
                 </div>
@@ -467,7 +474,7 @@ searchInput?.addEventListener('focus', function() {
     }
 });
 
-function selectProduct(id, name, eceranPrice, grosirPrice) {
+function selectProduct(id, name, eceranPrice, grosirPrice, invoicePrice) {
     productIdInp.value = id;
     searchInput.value  = name;
     selectedName.textContent = name;
@@ -477,7 +484,11 @@ function selectProduct(id, name, eceranPrice, grosirPrice) {
 
     // Auto-isi harga sesuai tipe
     const tipe = getPriceType();
-    unitPriceInp.value = tipe === 'grosir' ? grosirPrice : eceranPrice;
+    let price = eceranPrice;
+    if (tipe === 'invoice') price = invoicePrice;
+    else if (tipe === 'grosir') price = grosirPrice;
+
+    unitPriceInp.value = price;
     updateSubtotal();
 }
 
@@ -486,7 +497,11 @@ priceTypeEl?.addEventListener('change', function() {
     if (!id) return;
     const p = allProducts.find(x => x.id == id);
     if (p) {
-        unitPriceInp.value = this.value === 'grosir' ? p.grosir : p.eceran;
+        let price = p.eceran;
+        if (this.value === 'invoice') price = p.invoice;
+        else if (this.value === 'grosir') price = p.grosir;
+
+        unitPriceInp.value = price;
         updateSubtotal();
     }
 });

@@ -273,7 +273,7 @@
                                     </div>
                                 </td>
                                 <td class="px-3 py-3 align-top">
-                                    <span class="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold {{ $item->price_type === 'grosir' ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700' }}">
+                                    <span class="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold {{ $item->price_type === 'invoice' ? 'bg-purple-100 text-purple-800' : ($item->price_type === 'grosir' ? 'bg-amber-100 text-amber-800' : 'bg-blue-50 text-blue-700') }}">
                                         {{ $item->price_type_label }}
                                     </span>
                                 </td>
