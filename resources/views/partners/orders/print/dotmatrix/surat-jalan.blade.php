@@ -73,7 +73,7 @@
         [' ', 1, 'left'],
         ['KODE', 9, 'left'],
         [' ', 1, 'left'],
-        ['NAMA BARANG', 40, 'left'],
+        ['NAMA BARANG', 42, 'left'],
         [' ', 1, 'left'],
         ['SATUAN', 7, 'left'],
         [' ', 1, 'left'],
@@ -92,7 +92,7 @@
             [' ', 1, 'left'],
             [(string) $meta['code'], 9, 'left'],
             [' ', 1, 'left'],
-            [(string) $item->product_name, 40, 'left'],
+            [(string) $item->product_name, 42, 'left'],
             [' ', 1, 'left'],
             [mb_strtoupper((string) $satuan, 'UTF-8'), 7, 'left'],
             [' ', 1, 'left'],
@@ -103,7 +103,22 @@
     }
 
     $lines[] = '';
-    $lines[] = $dm::padRaw('TOTAL QTY : '.$qtyTotal.'  ('.$itemCount.' jenis)', $W, 'right');
+    // TOTAL QTY sejajar kolom SATUAN + angka di kolom QTY
+    $lines[] = $dm::row([
+        ['', 2, 'left'],
+        [' ', 1, 'left'],
+        ['', 9, 'left'],
+        [' ', 1, 'left'],
+        ['', 42, 'left'],
+        [' ', 1, 'left'],
+        ['TOTAL QTY', 7, 'right'],
+        [' ', 1, 'left'],
+        [(string) $qtyTotal, 5, 'right'],
+        [' ', 1, 'left'],
+        ['('.$itemCount.' jenis)', 26, 'left'],
+    ]);
+    $lines[] = '';
+    $lines[] = '';
     $lines[] = '';
 
     if ($order->notes) {
