@@ -237,21 +237,20 @@
                                        class="form-input text-sm w-full" placeholder="0" id="unitPriceInput">
                             </div>
 
-                            {{-- Tipe Harga (Auto / Select) --}}
+                            {{-- Tipe Harga --}}
+                            @php
+                                $poPriceMode = $partnerOrder->items->first()?->price_type 
+                                    ?? $partnerOrder->price_mode_snapshot 
+                                    ?? 'eceran';
+                            @endphp
                             <div>
                                 <label class="block text-xs font-bold text-gray-600 mb-1.5">
                                     Tipe Harga <span class="text-red-500">*</span>
                                 </label>
-                                @if($partnerOrder->payment_method === \App\Models\PartnerOrder::PAY_INVOICE)
-                                    <input type="text" class="form-input text-sm w-full bg-slate-100 text-slate-600 cursor-not-allowed font-semibold" 
-                                           value="Invoice (Sesuai PO)" disabled>
-                                    <input type="hidden" name="price_type" value="grosir">
-                                @else
-                                    <select name="price_type" class="form-input text-sm w-full" required>
-                                        <option value="eceran" {{ ($partnerOrder->price_mode_snapshot ?? 'eceran') === 'eceran' ? 'selected' : '' }}>Eceran</option>
-                                        <option value="grosir" {{ ($partnerOrder->price_mode_snapshot ?? 'eceran') === 'grosir' ? 'selected' : '' }}>Grosir</option>
-                                    </select>
-                                @endif
+                                <select name="price_type" id="priceTypeSelect" class="form-input text-sm w-full" required>
+                                    <option value="eceran" {{ $poPriceMode === 'eceran' ? 'selected' : '' }}>Eceran</option>
+                                    <option value="grosir" {{ $poPriceMode === 'grosir' ? 'selected' : '' }}>Grosir</option>
+                                </select>
                             </div>
 
                             {{-- Preview Subtotal --}}
@@ -426,7 +425,10 @@ function renderDropdown(filtered) {
     if (!filtered.length) {
         dropdown.innerHTML = '<div class="px-4 py-3 text-xs text-gray-400 text-center">Produk tidak ditemukan</div>';
     } else {
-        dropdown.innerHTML = filtered.slice(0, 20).map(p => `
+        const tipe = getPriceType();
+        dropdown.innerHTML = filtered.slice(0, 20).map(p => {
+            const price = tipe === 'grosir' ? p.grosir : p.eceran;
+            return `
             <div class="flex items-center gap-3 px-4 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors border-b border-gray-50 last:border-0"
                  onclick="selectProduct(${p.id}, '${p.name.replace(/'/g,"\\'")}', ${p.eceran}, ${p.grosir})">
                 <div class="w-6 h-6 rounded-md bg-emerald-100 flex items-center justify-center shrink-0">
@@ -437,10 +439,11 @@ function renderDropdown(filtered) {
                     <p class="text-[10px] text-gray-400 font-mono">${p.code} &middot; ${p.unit}</p>
                 </div>
                 <div class="ml-auto text-right shrink-0">
-                    <p class="text-xs font-bold text-emerald-700">${formatRp(p.eceran)}</p>
+                    <p class="text-xs font-bold text-emerald-700">${formatRp(price)}</p>
+                    <p class="text-[9px] text-gray-400 capitalize">${tipe}</p>
                 </div>
             </div>
-        `).join('');
+        `}).join('');
     }
     dropdown.classList.remove('hidden');
 }
